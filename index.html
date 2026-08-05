@@ -51,28 +51,13 @@
         .processing { background: #bee3f8; color: #2b6cb0; }
         .done { background: #c6f6d5; color: #22543d; }
         .failed { background: #fed7d7; color: #9b2c2c; }
-
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 100%; }
-        .login-box input { width: 100%; padding: 14px 20px; border-radius: 100px; border: 1px solid var(--border-color); font-size: 16px; box-sizing: border-box; outline: none; text-align: center; margin-bottom: 12px; }
-        .login-box input:focus { border-color: var(--accent-blue); }
-        .login-error { color: #c5221f; font-size: 14px; margin-top: 10px; font-weight: 500; }
         
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2 style="background: var(--gemini-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 0; margin-bottom: 24px;">Geschützter Space</h2>
-        <input type="password" id="passwordField" placeholder="Passwort eingeben">
-        <button style="width: 100%; padding: 12px;" onclick="window.checkPassword()">Schnittstelle entsperren</button>
-        <div id="loginError" class="login-error hidden">Falsches Passwort.</div>
-    </div>
-</div>
-
-<div id="appContent" class="container hidden">
+<div class="container">
     <header>
         <h1>Gemini Static Web Space</h1>
     </header>
@@ -128,7 +113,6 @@
     </div>
 </div>
 
-<!-- WICHTIG: Typ Module geladen für 1.js Import -->
 <script type="module" src="script.js"></script>
 </body>
 </html>
