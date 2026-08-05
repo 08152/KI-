@@ -9,34 +9,79 @@ document.addEventListener('DOMContentLoaded', () => {
     initAutocompleteStyles();
 });
 
-// KORRIGIERT: Liest nun die Datei [0] korrekt aus der Liste ein
+// Der fehlerfreie Datei-Einleser
 window.handleFileSelect = function(input) {
     if (!input.files || input.files.length === 0) return;
     
-    const file = input.files[0]; // Holt die erste ausgewählte Datei
+    const file = input.files[0]; 
 
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
             savedKnowledge = JSON.parse(e.target.result);
             
-            // Text im Upload-Feld aktualisieren
-            document.getElementById('uploadPrompt').innerHTML = `📚 <strong>Datenbank aktiv:</strong> ${file.name} (${savedKnowledge.length} Seiten geladen)`;
+            document.getElementById('uploadPrompt').innerHTML = `📚 <strong>Generator aktiv:</strong> ${file.name} (${savedKnowledge.length} Seiten gelernt)`;
             
-            // Chat und Button freischalten
             const qInput = document.getElementById('questionInput');
             qInput.disabled = false;
-            qInput.placeholder = "Stelle eine Frage an dein hochgeladenes Wissen...";
+            qInput.placeholder = "Stelle eine Frage, um eine neue Antwort zu generieren...";
             document.getElementById('askBtn').disabled = false;
             
-            appendMsg('gemini', "Ich habe dein Wissen gelernt! Stelle mir eine Frage.");
+            appendMsg('gemini', "Ich habe dein Wissen gelernt. Ich werde nun logisch neue Sätze für dich formulieren!");
         } catch (err) {
-            alert("Fehler beim Einlesen: Die Datei ist kein gültiges JSON. Hast du die richtige 1.json ausgewählt?");
+            alert("Fehler beim Einlesen der 1.json.");
             console.error(err);
         }
     };
-    reader.readAsText(file); // Lädt die Datei nun fehlerfrei
+    reader.readAsText(file);
 };
+
+// DER GENERATIVE LOKALE KI-ALGORITHMUS (Markov-Ketten Synthesizer)
+function generateNewSentence(baseText, keywords) {
+    // Text in einzelne Wörter zerlegen
+    const words = baseText.split(/\s+/);
+    const wordMap = {};
+
+    // Wörterbuch aufbauen, welches Wort logischerweise nach welchem folgt
+    for (let i = 0; i < words.length - 1; i++) {
+        const currentWord = words[i];
+        const nextWord = words[i + 1];
+        if (!wordMap[currentWord]) {
+            wordMap[currentWord] = [];
+        }
+        wordMap[currentWord].push(nextWord);
+    }
+
+    // Finde ein passendes Startwort aus den Benutzer-Keywords, das großgeschrieben ist
+    let currentWord = words.find(w => keywords.includes(w.toLowerCase()) && w[0] === w[0].toUpperCase());
+    
+    // Fallback falls kein direktes Keyword am Satzanfang steht
+    if (!currentWord) {
+        const startWords = words.filter(w => w[0] === w[0].toUpperCase() && w.length > 3);
+        currentWord = startWords[Math.floor(Math.random() * startWords.length)];
+    }
+
+    if (!currentWord) return baseText.substring(0, 200) + "...";
+
+    let generatedSentence = [currentWord];
+    let maxLength = 25; // Maximale Länge des neu generierten Satzes
+
+    // Generiere den neuen Satz logisch Wort für Wort
+    for (let i = 0; i < maxLength; i++) {
+        const nextPossibilities = wordMap[currentWord];
+        if (!nextPossibilities || nextPossibilities.length === 0) break;
+
+        // Wähle das nächste logische Wort aus
+        const nextWord = nextPossibilities[Math.floor(Math.random() * nextPossibilities.length)];
+        generatedSentence.push(nextWord);
+        currentWord = nextWord;
+
+        // Beende den Satz, wenn ein Punkt erreicht wird
+        if (nextWord.endsWith('.') || nextWord.endsWith('!') || nextWord.endsWith('?')) break;
+    }
+
+    return generatedSentence.join(' ');
+}
 
 window.askQuestion = function() {
     const input = document.getElementById('questionInput');
@@ -56,6 +101,7 @@ window.askQuestion = function() {
     let bestSentenceIndex = -1;
     let textSentences = [];
 
+    // Finde den relevantesten Textabschnitt über die dichte Wort-Kette
     savedKnowledge.forEach(doc => {
         if (!doc.text) return;
         const sentences = doc.text.split(/(?<!\bz\.\s*B)(?<!\bdr)(?<!\bprof)\.\s+/i);
@@ -82,12 +128,7 @@ window.askQuestion = function() {
                         correctOrderCount++;
                         const distance = matches[i+1].pos - (matches[i].pos + matches[i].word.length);
                         if (distance < 30) chainScore += 35;
-                        else if (distance < 100) chainScore += 15;
                     }
-                }
-
-                if (correctOrderCount === keywords.length - 1 && keywords.length > 1) {
-                    chainScore += 50;
                 }
 
                 if (chainScore > highestChainScore) {
@@ -102,15 +143,16 @@ window.askQuestion = function() {
 
     let structuredAnswer = "";
     if (highestChainScore > 0 && bestMatch && bestSentenceIndex !== -1) {
-        let fullContext = textSentences[bestSentenceIndex].trim() + ".";
-        if (bestSentenceIndex + 1 < textSentences.length) {
-            fullContext += " " + textSentences[bestSentenceIndex + 1].trim() + ".";
-        }
+        // Nimm den Kontext-Textbereich für den Generator
+        let contextBlock = textSentences.slice(Math.max(0, bestSentenceIndex - 1), bestSentenceIndex + 3).join(" ");
+        
+        // Starte die ECHTE NEUE GENERIERUNG aus dem gelernten Kontext
+        let newGeneratedResponse = generateNewSentence(contextBlock, keywords);
 
-        structuredAnswer = `<p style="margin:0 0 8px 0; font-weight:500; color:var(--accent-blue);">Das habe ich gefunden:</p>
-                            <span style="font-size:14.5px; line-height:1.6;">„${fullContext}“</span>`;
+        structuredAnswer = `<p style="margin:0 0 8px 0; font-weight:500; color:var(--accent-blue);">Das habe ich neu für dich formuliert:</p>
+                            <span style="font-size:14.5px; line-height:1.6;">„${newGeneratedResponse}“</span>`;
     } else {
-        structuredAnswer = "Dazu konnte ich leider keine passenden Zusammenhänge in den hochgeladenen Dokumenten finden.";
+        structuredAnswer = "Dazu konnte ich leider keine passenden Zusammenhänge in den Dokumenten finden, um eine Antwort zu generieren.";
     }
 
     appendMsg('gemini', structuredAnswer);
