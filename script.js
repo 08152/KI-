@@ -1,8 +1,28 @@
+const PASSWORD_HASH = "ca66436f568600f601f7871b693240212fbe93da6c879d7494ee09b441cb5f69"; // Standard: "Geheim123"
+
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPassword() {
+    const passwordInput = document.getElementById('passwordField').value;
+    if ((await sha256(passwordInput)) === PASSWORD_HASH) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('appContent').classList.remove('hidden');
+    } else {
+        document.getElementById('loginError').classList.remove('hidden');
+    }
+}
+
+document.getElementById('passwordField')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') checkPassword();
+});
+
 let urlStack = [];
 let savedKnowledge = [];
 let isProcessing = false;
-let aiEngine = null;
-let aiReady = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('questionInput')?.addEventListener('keypress', (e) => {
@@ -24,7 +44,6 @@ function addUrlsToStack() {
     renderUI();
 }
 
-// ARBEITET DIE WARTESCHLANGE DIREKT IM BROWSER AB
 async function processStack() {
     if (isProcessing) return;
     isProcessing = true;
@@ -36,30 +55,25 @@ async function processStack() {
             renderUI();
 
             try {
-                // Nutzung eines kostenlosen Proxy-Dienstes, um CORS-Sperren im Browser zu umgehen
-                const proxyUrl = `https://allorigins.win{encodeURIComponent(urlStack[i].length ? urlStack[i] : urlStack[i].url)}`;
+                const proxyUrl = `https://allorigins.win{encodeURIComponent(urlStack[i].url)}`;
                 const response = await fetch(proxyUrl);
-                
                 if (!response.ok) throw new Error();
                 const data = await response.json();
                 
-                // HTML-Code via DOMParser bereinigen (Ersatz für Cheerio im reinen Frontend)
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(data.contents, 'text/html');
                 
-                // Unwichtige Elemente löschen
-                const scripts = doc.querySelectorAll('script, style, nav, footer, iframe, header, noscript');
-                scripts.forEach(s => s.remove());
+                // Radikale Säuberung von Müll-Elementen
+                doc.querySelectorAll('script, style, nav, footer, iframe, header, noscript, ads, .mw-jump-link, .navbox').forEach(s => s.remove());
                 
-                const cleanText = doc.body.textContent.replace(/\s+/g, ' ').trim();
+                let cleanText = doc.body.textContent.replace(/\s+/g, ' ').trim();
 
-                if (cleanText.length > 10) {
+                // INTELLIGENTER FILTER: Entfernt typische Wikipedia- und Web-Menüreste
+                cleanText = cleanText.replace(/(Inhaltsverzeichnis|Navigation umschalten|Suche|Hauptmenü öffnen|Zum Inhalt springen|Einzelnachweise|Weblinks|Literatur)\s?/gi, '');
+
+                if (cleanText.length > 20) {
                     urlStack[i].status = 'done';
-                    savedKnowledge.push({
-                        url: urlStack[i].url,
-                        text: cleanText
-                    });
-                    if(!aiReady) initLocalAI();
+                    savedKnowledge.push({ url: urlStack[i].url, text: cleanText });
                 } else {
                     urlStack[i].status = 'failed';
                 }
@@ -76,55 +90,107 @@ async function processStack() {
     renderUI();
 }
 
-async function initLocalAI() {
-    if(aiReady) return;
-    const chat = document.getElementById('chatContainer');
-    chat.innerHTML += `<div class="chat-message gemini-message">🤖 Initialisiere lokale WebGPU KI... Bitte warten.</div>`;
+// DER LINGUISTISCHE CONTEXT-SYNTHESIZER (Erweitert)
+function askQuestion() {
+    const input = document.getElementById('questionInput');
+    const questionText = input.value.trim();
+    if (!questionText || savedKnowledge.length === 0) return;
+
+    appendMsg('user', questionText);
+    input.value = '';
+
+    const lowerQuestion = questionText.toLowerCase();
     
-    try {
-        const modelId = "Llama-3-8B-Instruct-q4f16_1-MLC";
-        aiEngine = await window.webllm.createEngine(modelId, {
-            initProgressCallback: (report) => {
-                document.getElementById('questionInput').placeholder = `KI lädt: ${Math.round(report.progress * 100)}%`;
+    // Linguistische Stoppwörter eliminieren
+    const stopWords = ['wie', 'was', 'wer', 'warum', 'wo', 'ist', 'sind', 'ein', 'eine', 'der', 'die', 'das', 'ich', 'du', 'er', 'sie', 'es', 'in', 'auf', 'mit', 'von', 'den'];
+    const keywords = lowerQuestion.split(/[^a-zA-ZäöüÄÖÜß\d]/).filter(w => w.length > 2 && !stopWords.includes(w));
+
+    let bestMatch = null;
+    let highestScore = 0;
+    let bestSentenceIndex = -1;
+    let textSentences = [];
+
+    // 1. Dokumente scannen
+    savedKnowledge.forEach(doc => {
+        if (!doc.text) return;
+        
+        // Smarter Satz-Splitter (verhindert Fehler bei Abkürzungen wie z.B.)
+        const sentences = doc.text.split(/(?<!\bz\.\s*B)(?<!\bdr)(?<!\bprof)\.\s+/i);
+        
+        sentences.forEach((sentence, index) => {
+            let score = 0;
+            const lowerSentence = sentence.toLowerCase();
+            
+            keywords.forEach(word => {
+                if (lowerSentence.includes(word)) {
+                    score += 10; // Worttreffer
+                    // Bonus für exakte Wortgrenzen
+                    if (new RegExp(`\\b${word}\\b`).test(lowerSentence)) score += 5;
+                }
+            });
+
+            // Relevanz-Bonus, wenn Wörter nah beieinander stehen
+            if (score > 10) {
+                const positions = keywords.map(w => lowerSentence.indexOf(w)).filter(p => p !== -1);
+                if (positions.length > 1) {
+                    const distance = Math.max(...positions) - Math.min(...positions);
+                    if (distance < 60) score += 8; // Dichte-Bonus
+                }
+            }
+
+            if (score > highestScore) {
+                highestScore = score;
+                bestMatch = doc;
+                bestSentenceIndex = index;
+                textSentences = sentences;
             }
         });
-        document.getElementById('questionInput').disabled = false;
-        document.getElementById('questionInput').placeholder = "Frage an dein Wissen stellen...";
-        document.getElementById('askBtn').disabled = false;
-        aiReady = true;
-        chat.innerHTML += `<div class="chat-message gemini-message">✅ KI startklar! Stelle eine Frage.</div>`;
-    } catch(e) {
-        chat.innerHTML += `<div class="chat-message gemini-message" style="color:red">❌ WebGPU-Fehler. Bitte Chrome oder Edge nutzen!</div>`;
+    });
+
+    // 2. Antwort logisch formulieren und mit dem Folgesatz verknüpfen
+    let structuredAnswer = "";
+
+    if (highestScore > 0 && bestMatch && bestSentenceIndex !== -1) {
+        const topic = keywords.length > 0 ? keywords.join(' & ').toUpperCase() : "Thema";
+        const cleanUrl = bestMatch.url.replace(/^https?:\/\/(www\.)?/, '').substring(0, 40) + "...";
+
+        // Hauptsatz + Folgesatz für perfekten logischen Kontext extrahieren
+        let fullContext = textSentences[bestSentenceIndex].trim() + ".";
+        if (bestSentenceIndex + 1 < textSentences.length) {
+            fullContext += " " + textSentences[bestSentenceIndex + 1].trim() + ".";
+        }
+
+        // Intelligente Satzbausteine je nach Frageabsicht anwenden
+        if (lowerQuestion.startsWith("warum") || lowerQuestion.includes("grund") || lowerQuestion.includes("weshalb")) {
+            structuredAnswer = `Bezüglich der Ursache oder Begründung zu <strong>${topic}</strong> liefert die Auswertung von <em>${cleanUrl}</em> folgenden logischen Zusammenhang:<br><br>👉 „${fullContext}“`;
+        } 
+        else if (lowerQuestion.startsWith("wer") || lowerQuestion.includes("person") || lowerQuestion.includes("erfinder")) {
+            structuredAnswer = `Die verantwortlichen Akteure, Personen oder Entitäten im Kontext von <strong>${topic}</strong> werden in den Daten wie folgt identifiziert:<br><br>👉 „${fullContext}“`;
+        } 
+        else if (lowerQuestion.startsWith("wie") || lowerQuestion.includes("prozess") || lowerQuestion.includes("ablauf")) {
+            structuredAnswer = `Hinsichtlich der Methodik, des Ablaufs oder der Funktionsweise von <strong>${topic}</strong> dokumentiert das System diesen Prozess:<br><br>👉 „${fullContext}“`;
+        } 
+        else if (lowerQuestion.startsWith("wo ") || lowerQuestion.includes("ort") || lowerQuestion.includes("land")) {
+            structuredAnswer = `Die geografische Verortung oder Platzierung bezüglich des Suchbegriffs <strong>${topic}</strong> lässt sich wie folgt rekonstruieren:<br><br>👉 „${fullContext}“`;
+        }
+        else {
+            // Universelle, logische Zusammenfassung (für "Was ist...", "Definiere...")
+            structuredAnswer = `Bei der strukturellen Textanalyse zum Thema <strong>${topic}</strong> konnte auf der Webseite <em>${cleanUrl}</em> diese logische Kerndefinition ermittelt werden:<br><br>👉 „${fullContext}“`;
+        }
+    } else {
+        structuredAnswer = "❌ <strong>Logische Analyse fehlgeschlagen:</strong> Keine ausreichenden Text-Zusammenhänge oder Übereinstimmungen für diese Suchbegriffe in der Datenbank gefunden.";
     }
-}
 
-async function askQuestion() {
-    const input = document.getElementById('questionInput');
-    const question = input.value.trim();
-    if(!question || !aiReady) return;
-
-    appendMsg('user', question);
-    input.value = '';
-    const loadId = appendMsg('gemini', 'KI generiert Antwort...');
-
-    let context = savedKnowledge.map(d => `Quelle: ${d.url}\nText: ${d.text.substring(0,800)}`).join('\n\n');
-    const messages = [
-        { role: "system", content: "Beantworte die Frage ausschließlich basierend auf dem Kontext auf Deutsch." },
-        { role: "user", content: `Kontext:\n${context}\n\nFrage: ${question}` }
-    ];
-
-    try {
-        const reply = await aiEngine.chat.completions.create({ messages });
-        document.getElementById(loadId).textContent = reply.choices.message.content;
-    } catch(e) {
-        document.getElementById(loadId).textContent = "Fehler bei der Generierung.";
-    }
+    appendMsg('gemini', structuredAnswer);
 }
 
 function appendMsg(sender, text) {
-    const id = 'm-' + Date.now();
-    document.getElementById('chatContainer').innerHTML += `<div id="${id}" class="chat-message ${sender}-message">${text}</div>`;
-    return id;
+    const chatContainer = document.getElementById('chatContainer');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${sender}-message`;
+    msgDiv.innerHTML = text;
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function countTokens(text) {
@@ -145,7 +211,7 @@ function renderUI() {
         const tkn = countTokens(item.text);
         total += tkn;
         kList.innerHTML += `<li onclick="document.getElementById('detText').value = savedKnowledge[${index}].text" style="cursor:pointer">
-            <span>🌐 ${item.url.substring(0,30)}...</span><strong>${tkn} tkn</strong>
+            <span>🌐 ${item.url.replace(/^https?:\/\/(www\.)?/, '').substring(0,30)}...</span><strong>${tkn} tkn</strong>
         </li>`;
     });
 
@@ -155,21 +221,21 @@ function renderUI() {
 
 function downloadKnowledge() {
     if(!savedKnowledge.length) return alert("Keine Daten!");
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedKnowledge, null, 2));
-    const a = document.createElement('a');
-    a.href = dataStr;
-    a.download = "1.json";
-    a.click();
+const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedKnowledge, null, 2));
+const a = document.createElement('a');
+a.href = dataStr;
+a.download = "1.json";
+a.click();
 }
 
 function uploadKnowledge(input) {
-    const file = input.files;
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        savedKnowledge = JSON.parse(e.target.result);
-        renderUI();
-        initLocalAI();
-    };
-    reader.readAsText(file);
+const file = input.files;
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) {
+savedKnowledge = JSON.parse(e.target.result);
+renderUI();
+};
+reader.readAsText(file);
 }
+
