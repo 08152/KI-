@@ -1,24 +1,5 @@
 import { countTokens, findBestChainMatch } from './1.js';
 
-const PASSWORD_HASH = "ca66436f568600f601f7871b693240212fbe93da6c879d7494ee09b441cb5f69"; // "Geheim123"
-
-async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-window.checkPassword = async function() {
-    const passwordInput = document.getElementById('passwordField').value;
-    if ((await sha256(passwordInput)) === PASSWORD_HASH) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('appContent').classList.remove('hidden');
-        initAutocompleteStyles();
-    } else {
-        document.getElementById('loginError').classList.remove('hidden');
-    }
-};
-
 let urlStack = [];
 let savedKnowledge = [];
 let isProcessing = false;
@@ -30,10 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     qInput?.addEventListener('input', handleAutocomplete);
     
-    // Passwort mit Enter abschicken
-    document.getElementById('passwordField')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') window.checkPassword();
-    });
+    // Autocomplete-Styles direkt beim Start laden, da kein Login mehr blockiert
+    initAutocompleteStyles();
 });
 
 window.addUrlsToStack = function() {
@@ -101,7 +80,6 @@ window.askQuestion = function() {
     appendMsg('user', questionText);
     input.value = '';
 
-    // Such-Logik aus 1.js ausführen
     const { bestMatch, highestChainScore, bestSentenceIndex, textSentences } = findBestChainMatch(savedKnowledge, questionText);
 
     let structuredAnswer = "";
@@ -111,7 +89,6 @@ window.askQuestion = function() {
             fullContext += " " + textSentences[bestSentenceIndex + 1].trim() + ".";
         }
 
-        // GEÄNDERT: Kein "Von Wiki", sondern sauberes, logisches Gemini-Layout
         structuredAnswer = `<p style="margin:0 0 8px 0; font-weight:500; color:var(--accent-blue);">Das habe ich gefunden:</p>
                             <span style="font-size:14.5px; line-height:1.6;">„${fullContext}“</span>`;
     } else {
@@ -225,7 +202,7 @@ window.downloadKnowledge = function() {
 };
 
 window.uploadKnowledge = function(input) {
-    const file = input.files[0];
+    const file = input.files;
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
