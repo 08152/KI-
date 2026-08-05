@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Static AI Space</title>
+    <title>Gemini Static Search Hub</title>
     <style>
         :root {
             --gemini-gradient: linear-gradient(135deg, #4285f4 0%, #9b51e0 50%, #e051b8 100%);
@@ -39,7 +39,7 @@
         .url-list li, .knowledge-list li { padding: 10px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; font-size: 13px; }
         
         .chat-container { flex-grow: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 8px; }
-        .chat-message { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 13.5px; }
+        .chat-message { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
         .user-message { background: #e3f2fd; color: #0d47a1; align-self: flex-end; }
         .gemini-message { background: white; border: 1px solid var(--border-color); align-self: flex-start; }
         
@@ -51,16 +51,28 @@
         .processing { background: #bee3f8; color: #2b6cb0; }
         .done { background: #c6f6d5; color: #22543d; }
         .failed { background: #fed7d7; color: #9b2c2c; }
+
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 100%; }
+        .login-box input { width: 100%; padding: 14px 20px; border-radius: 100px; border: 1px solid var(--border-color); font-size: 16px; box-sizing: border-box; outline: none; text-align: center; margin-bottom: 12px; }
+        .login-box input:focus { border-color: var(--accent-blue); }
+        .login-error { color: #c5221f; font-size: 14px; margin-top: 10px; font-weight: 500; }
+        
+        .hidden { display: none !important; }
     </style>
-    <!-- Importiert die WebLLM KI direkt im Browser -->
-    <script type="module">
-        import * as webllm from "https://esm.run";
-        window.webllm = webllm;
-    </script>
 </head>
 <body>
 
-<div class="container">
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="background: var(--gemini-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 0; margin-bottom: 24px;">Geschützter Space</h2>
+        <input type="password" id="passwordField" placeholder="Passwort eingeben">
+        <button style="width: 100%; padding: 12px;" onclick="window.checkPassword()">Schnittstelle entsperren</button>
+        <div id="loginError" class="login-error hidden">Falsches Passwort.</div>
+    </div>
+</div>
+
+<div id="appContent" class="container hidden">
     <header>
         <h1>Gemini Static Web Space</h1>
     </header>
@@ -69,8 +81,8 @@
         <div class="panel">
             <h3>1. Webseiten stacken & live durchsuchen</h3>
             <textarea id="urlInput" placeholder="URLs hier einfügen (Eine pro Zeile)"></textarea>
-            <button onclick="addUrlsToStack()">＋ Hinzufügen</button>
-            <button id="startBtn" style="background:#38a169" onclick="processStack()">▶ Webseiten auslesen</button>
+            <button onclick="window.addUrlsToStack()">＋ Hinzufügen</button>
+            <button id="startBtn" style="background:#38a169" onclick="window.processStack()">▶ Webseiten auslesen</button>
             
             <h4>Warteschlange</h4>
             <ul id="urlStackList" class="url-list"></ul>
@@ -78,9 +90,9 @@
         <div class="panel">
             <h3>2. Backup & Daten-Sicherung</h3>
             <p>Sichern Sie das gesammelte Wissen als Datei ab oder laden Sie es hoch.</p>
-            <button onclick="downloadKnowledge()">💾 Wissen runterladen (1.json)</button><br><br>
+            <button onclick="window.downloadKnowledge()">💾 Wissen runterladen (1.json)</button><br><br>
             <button class="btn-sec" onclick="document.getElementById('uploadInput').click()">📂 Backup hochladen</button>
-            <input type="file" id="uploadInput" accept=".json" style="display:none" onchange="uploadKnowledge(this)">
+            <input type="file" id="uploadInput" accept=".json" style="display:none" onchange="window.uploadKnowledge(this)">
         </div>
     </div>
 
@@ -97,14 +109,14 @@
 
         <div class="right-split">
             <div class="window">
-                <h3>Lokale In-Browser KI (WebGPU)</h3>
+                <h3>Wissens-Abfrage (Offline-Suche)</h3>
                 <div class="chat-area">
                     <div class="chat-container" id="chatContainer">
-                        <div class="chat-message gemini-message">Fügen Sie Links hinzu oder laden Sie ein Backup hoch, um die KI freizuschalten.</div>
+                        <div class="chat-message gemini-message">Schnittstelle bereit. Geben Sie Links ein oder laden Sie ein Backup hoch, um Fragen zu Ihren Daten zu stellen.</div>
                     </div>
                     <div class="chat-input">
-                        <input type="text" id="questionInput" disabled placeholder="Warte auf KI-Modell...">
-                        <button id="askBtn" disabled onclick="askQuestion()">Fragen</button>
+                        <input type="text" id="questionInput" placeholder="Stelle eine Frage zu deinen Webseiten...">
+                        <button id="askBtn" onclick="window.askQuestion()">Suchen</button>
                     </div>
                 </div>
             </div>
@@ -116,6 +128,7 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<!-- WICHTIG: Typ Module geladen für 1.js Import -->
+<script type="module" src="script.js"></script>
 </body>
 </html>
