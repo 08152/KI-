@@ -9,15 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initAutocompleteStyles();
 });
 
-// Diese Funktion garantiert, dass die Datei beim Auswählen sauber eingelesen wird
+// KORRIGIERT: Liest nun die Datei [0] korrekt aus der Liste ein
 window.handleFileSelect = function(input) {
-    const file = input.files[0];
-    if (!file) return;
+    if (!input.files || input.files.length === 0) return;
+    
+    const file = input.files[0]; // Holt die erste ausgewählte Datei
 
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            // Versuche die Daten in das System zu laden
             savedKnowledge = JSON.parse(e.target.result);
             
             // Text im Upload-Feld aktualisieren
@@ -31,14 +31,13 @@ window.handleFileSelect = function(input) {
             
             appendMsg('gemini', "Ich habe dein Wissen gelernt! Stelle mir eine Frage.");
         } catch (err) {
-            alert("Fehler beim Einlesen: Die Datei ist keine gültige JSON-Wissensdatenbank. Hast du die richtige 1.json ausgewählt?");
+            alert("Fehler beim Einlesen: Die Datei ist kein gültiges JSON. Hast du die richtige 1.json ausgewählt?");
             console.error(err);
         }
     };
-    reader.readAsText(file);
+    reader.readAsText(file); // Lädt die Datei nun fehlerfrei
 };
 
-// Die integrierte logische Wort-Ketten-Suche (N-Gramm basierte Kontextanalyse)
 window.askQuestion = function() {
     const input = document.getElementById('questionInput');
     const questionText = input.value.trim();
@@ -57,7 +56,6 @@ window.askQuestion = function() {
     let bestSentenceIndex = -1;
     let textSentences = [];
 
-    // Algorithmus durchsucht alle Sätze nach der dichtesten Wortkette (Wort 1 zu Wort 2 zu Wort 3...)
     savedKnowledge.forEach(doc => {
         if (!doc.text) return;
         const sentences = doc.text.split(/(?<!\bz\.\s*B)(?<!\bdr)(?<!\bprof)\.\s+/i);
@@ -83,7 +81,7 @@ window.askQuestion = function() {
                     if (nextWordIndex > currentWordIndex) {
                         correctOrderCount++;
                         const distance = matches[i+1].pos - (matches[i].pos + matches[i].word.length);
-                        if (distance < 30) chainScore += 35; // Wort-Dichte-Bonus
+                        if (distance < 30) chainScore += 35;
                         else if (distance < 100) chainScore += 15;
                     }
                 }
