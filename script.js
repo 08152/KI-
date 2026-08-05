@@ -1,64 +1,44 @@
-import { findBestChainMatch } from './1.js';
-
 let savedKnowledge = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const qInput = document.getElementById('questionInput');
     qInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') window.askQuestion();
+        if (e.key === 'Enter') askQuestion();
     });
     qInput?.addEventListener('input', handleAutocomplete);
-    
     initAutocompleteStyles();
-    setupDragAndDrop();
 });
 
-function setupDragAndDrop() {
-    const dropZone = document.getElementById('dropZone');
-    if (!dropZone) return;
+// Diese Funktion garantiert, dass die Datei beim Auswählen sauber eingelesen wird
+window.handleFileSelect = function(input) {
+    const file = input.files[0];
+    if (!file) return;
 
-    ['dragenter', 'dragover'].forEach(name => {
-        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.style.background = "#f1f7fe"; });
-    });
-    ['dragleave', 'drop'].forEach(name => {
-        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.style.background = "#ffffff"; });
-    });
-    dropZone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            document.getElementById('uploadInput').files = files;
-            processJsonData(files[0]);
-        }
-    });
-}
-
-window.uploadKnowledge = function(input) {
-    if (input.files && input.files[0]) {
-        processJsonData(input.files[0]);
-    }
-};
-
-function processJsonData(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
+            // Versuche die Daten in das System zu laden
             savedKnowledge = JSON.parse(e.target.result);
-            document.getElementById('uploadPrompt').innerHTML = `📚 Datenbank erfolgreich aktiv: <strong>${file.name}</strong> (${savedKnowledge.length} Seiten geladen)`;
             
-            // Chat aktivieren
+            // Text im Upload-Feld aktualisieren
+            document.getElementById('uploadPrompt').innerHTML = `📚 <strong>Datenbank aktiv:</strong> ${file.name} (${savedKnowledge.length} Seiten geladen)`;
+            
+            // Chat und Button freischalten
             const qInput = document.getElementById('questionInput');
             qInput.disabled = false;
             qInput.placeholder = "Stelle eine Frage an dein hochgeladenes Wissen...";
             document.getElementById('askBtn').disabled = false;
             
-            appendMsg('gemini', "Wissen erfolgreich gelernt! Du kannst mir jetzt freie Fragen stellen.");
+            appendMsg('gemini', "Ich habe dein Wissen gelernt! Stelle mir eine Frage.");
         } catch (err) {
-            alert("Fehler beim Lesen der Datei. Bitte lade eine gültige 1.json hoch.");
+            alert("Fehler beim Einlesen: Die Datei ist keine gültige JSON-Wissensdatenbank. Hast du die richtige 1.json ausgewählt?");
+            console.error(err);
         }
     };
     reader.readAsText(file);
-}
+};
 
+// Die integrierte logische Wort-Ketten-Suche (N-Gramm basierte Kontextanalyse)
 window.askQuestion = function() {
     const input = document.getElementById('questionInput');
     const questionText = input.value.trim();
@@ -68,8 +48,59 @@ window.askQuestion = function() {
     appendMsg('user', questionText);
     input.value = '';
 
-    // Logik aus der 1.js Datei triggern
-    const { bestMatch, highestChainScore, bestSentenceIndex, textSentences } = findBestChainMatch(savedKnowledge, questionText);
+    const lowerQuestion = questionText.toLowerCase();
+    const stopWords = ['wie', 'was', 'wer', 'warum', 'wo', 'ist', 'sind', 'ein', 'eine', 'der', 'die', 'das', 'ich', 'du', 'er', 'sie', 'es', 'in', 'auf', 'mit', 'von', 'den', 'zu'];
+    const keywords = lowerQuestion.split(/[^a-zA-ZäöüÄÖÜß\d]/).filter(w => w.length > 2 && !stopWords.includes(w));
+
+    let bestMatch = null;
+    let highestChainScore = 0;
+    let bestSentenceIndex = -1;
+    let textSentences = [];
+
+    // Algorithmus durchsucht alle Sätze nach der dichtesten Wortkette (Wort 1 zu Wort 2 zu Wort 3...)
+    savedKnowledge.forEach(doc => {
+        if (!doc.text) return;
+        const sentences = doc.text.split(/(?<!\bz\.\s*B)(?<!\bdr)(?<!\bprof)\.\s+/i);
+        
+        sentences.forEach((sentence, index) => {
+            const lowerSentence = sentence.toLowerCase();
+            let matches = [];
+            
+            keywords.forEach(word => {
+                const pos = lowerSentence.indexOf(word);
+                if (pos !== -1) matches.push({ word: word, pos: pos });
+            });
+
+            if (matches.length > 0) {
+                matches.sort((a, b) => a.pos - b.pos);
+                let chainScore = matches.length * 15;
+                let correctOrderCount = 0;
+
+                for (let i = 0; i < matches.length - 1; i++) {
+                    const currentWordIndex = keywords.indexOf(matches[i].word);
+                    const nextWordIndex = keywords.indexOf(matches[i+1].word);
+                    
+                    if (nextWordIndex > currentWordIndex) {
+                        correctOrderCount++;
+                        const distance = matches[i+1].pos - (matches[i].pos + matches[i].word.length);
+                        if (distance < 30) chainScore += 35; // Wort-Dichte-Bonus
+                        else if (distance < 100) chainScore += 15;
+                    }
+                }
+
+                if (correctOrderCount === keywords.length - 1 && keywords.length > 1) {
+                    chainScore += 50;
+                }
+
+                if (chainScore > highestChainScore) {
+                    highestChainScore = chainScore;
+                    bestMatch = doc;
+                    bestSentenceIndex = index;
+                    textSentences = sentences;
+                }
+            }
+        });
+    });
 
     let structuredAnswer = "";
     if (highestChainScore > 0 && bestMatch && bestSentenceIndex !== -1) {
@@ -78,11 +109,10 @@ window.askQuestion = function() {
             fullContext += " " + textSentences[bestSentenceIndex + 1].trim() + ".";
         }
 
-        // Reine Gemini-Antwortstruktur ohne Meta-Gequatsche
-        structuredAnswer = `<p style="margin:0 0 6px 0; font-weight:500; color:var(--accent-blue);">Das habe ich gefunden:</p>
-                            <span>„${fullContext}“</span>`;
+        structuredAnswer = `<p style="margin:0 0 8px 0; font-weight:500; color:var(--accent-blue);">Das habe ich gefunden:</p>
+                            <span style="font-size:14.5px; line-height:1.6;">„${fullContext}“</span>`;
     } else {
-        structuredAnswer = "Dazu konnte ich leider keine logischen Zusammenhänge in den hochgeladenen Dokumenten finden.";
+        structuredAnswer = "Dazu konnte ich leider keine passenden Zusammenhänge in den hochgeladenen Dokumenten finden.";
     }
 
     appendMsg('gemini', structuredAnswer);
@@ -124,7 +154,7 @@ function handleAutocomplete() {
         item.addEventListener("click", () => {
             input.value = suggestion;
             closeAutocomplete();
-            window.askQuestion();
+            askQuestion();
         });
         listDiv.appendChild(item);
     });
