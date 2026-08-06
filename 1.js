@@ -12,10 +12,9 @@ function findBestChainMatch(savedKnowledge, questionText) {
     const lowerQuestion = questionText.toLowerCase();
     const stopWords = ['wie', 'was', 'wer', 'warum', 'wo', 'ist', 'sind', 'ein', 'eine', 'der', 'die', 'das', 'ich', 'du', 'er', 'sie', 'es', 'in', 'auf', 'mit', 'von', 'den', 'zu', 'für', 'welche', 'welches'];
     
-    // Aktuelle Suchbegriffe
     const keywords = lowerQuestion.split(/[^a-zA-ZäöüÄÖÜß\d]/).filter(w => w.length > 2 && !stopWords.includes(w));
 
-    // Kontext-Keywords aus dem GESAMTEN letzten Satz extrahieren (Fokus-Schutz)
+    // Kontext-Keywords aus dem GESAMTEN letzten Satz extrahieren (Themenwechsel-Schutz)
     let contextKeywords = [];
     if (lastContextSentence) {
         contextKeywords = lastContextSentence.toLowerCase()
@@ -66,11 +65,11 @@ function findBestChainMatch(savedKnowledge, questionText) {
                     chainScore += 80;
                 }
 
-                // GANZ-SATZ-FOKUS-BEWERTUNG (Anti-Universum-Schokolade-Bremse)
+                // GANZ-SATZ-FOKUS-BEWERTUNG (Verhindert das Abdriften des Themas)
                 if (contextMatches > 0) {
                     chainScore += (contextMatches / contextKeywords.length) * 120;
                 } else if (lastContextSentence && contextMatches === 0) {
-                    chainScore -= 50; // Punktabzug bei unlogischem Themenwechsel
+                    chainScore -= 50; // Strafe bei abruptem, themenfernem Sprung
                 }
 
                 if (chainScore > highestChainScore) {
@@ -94,7 +93,7 @@ function generateSmartResponse(matchResult) {
         return "Ich habe meine Datenbank durchsucht, konnte aber im Kontext keinen logischen Bezug herstellen.";
     }
 
-    // Neue Frage als Kontext für den nächsten Durchlauf merken
+    // Aktuelle Frage als Kontext für das nächste Mal abspeichern
     lastContextSentence = questionText;
 
     let rawBlocks = textSentences.slice(Math.max(0, bestSentenceIndex), bestSentenceIndex + 3);
@@ -102,7 +101,7 @@ function generateSmartResponse(matchResult) {
     
     rawBlocks.forEach(s => {
         let temp = s.trim();
-        temp = temp.replace(/\s*\([^)]*\)/g, ""); // Entfernt Wiki-Klammern
+        temp = temp.replace(/\s*\([^)]*\)/g, ""); // Entfernt Klammern
         temp = temp.replace(/ist die Bezeichnung für|wird als.*?bezeichnet/gi, "beschreibt");
         temp = temp.replace(/ist ein[e]? von/gi, "gehört zu");
         if (temp.length > 12) cleanSentences.push(temp);
