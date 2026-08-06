@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAutocompleteStyles();
 });
 
-// Der fehlerfreie Datei-Einleser (Unterstützt jetzt dein Server-JSON-Format)
+// Der fehlerfreie Datei-Einleser
 window.handleFileSelect = function(input) {
     if (!input.files || input.files.length === 0) return;
     
@@ -45,13 +45,13 @@ window.handleFileSelect = function(input) {
             const qInput = document.getElementById('questionInput');
             if (qInput) {
                 qInput.disabled = false;
-                qInput.placeholder = "Stelle mir eine logische Frage...";
+                qInput.placeholder = "Frage mich etwas (Rechtschreibfehler sind kein Problem)...";
             }
             
             const askBtn = document.getElementById('askBtn');
             if (askBtn) askBtn.disabled = false;
             
-            appendMsg('gemini', "Mein logisches KI-Zentrum ist bereit. Ich analysiere Zusammenhänge und antworte in meinen eigenen Worten!");
+            appendMsg('gemini', "Mein logisches KI-Zentrum ist bereit. Ich korrigiere Tippfehler automatisch und antworte in eigenen Worten!");
         } catch (err) {
             alert("Fehler beim Einlesen der Datei. Bitte überprüfe das JSON-Format.");
             console.error("JSON-Parsing- oder Strukturfehler:", err);
@@ -75,7 +75,6 @@ window.askQuestion = function() {
     const matchResult = findBestChainMatch(savedKnowledge, questionText);
     const aiResponse = generateSmartResponse(matchResult);
 
-    // KORREKTUR: color von #e0e0e0 auf #202124 geändert, damit der Text im hellen Design sichtbar ist!
     const structuredAnswer = `
         <p style="margin:0 0 6px 0; font-size:12px; font-weight:600; color:var(--accent-blue); text-transform:uppercase; letter-spacing:0.5px;">🧠 Generative Synthese:</p>
         <span style="font-size:15px; line-height:1.6; color:#202124;">${aiResponse}</span>
@@ -84,7 +83,7 @@ window.askQuestion = function() {
     appendMsg('gemini', structuredAnswer);
 };
 
-// Smart Autocomplete
+// Smart Autocomplete mit integrierter Tippfehler-Toleranz
 function handleAutocomplete() {
     const input = document.getElementById('questionInput');
     if (!input) return;
@@ -106,9 +105,11 @@ function handleAutocomplete() {
         let sentences = doc.text.split(/(?<!\bz\.\s*B)(?<!\bdr)(?<!\bprof)\.\s+/i);
         
         for (let sentence of sentences) {
-            if (sentence.toLowerCase().includes(val)) {
+            let lowerSentence = sentence.toLowerCase();
+            // Erlaubt Treffer auch bei ungenauer Schreibweise
+            if (lowerSentence.includes(val) || (val.length > 3 && checkFuzzyMatch(lowerSentence, val))) {
                 let cleanPhrase = sentence.trim();
-                if (cleanPhrase.length > 60) cleanPhrase = cleanPhrase.substring(0, 60) + "...";
+                if (cleanPhrase.length > 65) cleanPhrase = cleanPhrase.substring(0, 65) + "...";
                 if (!suggestions.includes(cleanPhrase)) {
                     suggestions.push(cleanPhrase);
                 }
@@ -128,6 +129,12 @@ function handleAutocomplete() {
         });
         listDiv.appendChild(item);
     });
+}
+
+// Einfacher, schneller Fuzzy-Precheck für das Autocomplete
+function checkFuzzyMatch(text, search) {
+    let words = text.split(/[^a-zA-ZäöüÄÖÜß\d]/);
+    return words.some(w => w.startsWith(search.substring(0, 3)));
 }
 
 function closeAutocomplete() {
