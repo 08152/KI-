@@ -1,20 +1,55 @@
-// Globaler Kontext-Speicher (Merkt sich das Gespräch, um beim Thema zu bleiben)
+// Globaler Kontext-Speicher
 let lastContextSentence = "";
 let lastAnswerContext = "";
 
-// Berechnet die Token-Anzahl (Wort- und Zeichenfragmente)
+// Berechnet die Token-Anzahl
 function countTokens(text) {
     return text ? (text.match(/[a-zA-ZäöüÄÖÜß]+|\d+|[^\s\w]/g) || []).length : 0;
 }
 
-// Sucht nach der logischsten Satz-Kette unter Einbeziehung des GESAMTEN vorherigen Satzes
+// Mathematische Levenshtein-Distanz zur Behebung von Rechtschreibfehlern
+function levenshteinDistance(str1, str2) {
+    const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    for (let i = 0; i <= str1.length; i += 1) track[0][i] = i;
+    for (let j = 0; j <= str2.length; j += 1) track[j][0] = j;
+    for (let j = 1; j <= str2.length; j += 1) {
+        for (let i = 1; i <= str1.length; i += 1) {
+            const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+            track[j][i] = Math.min(
+                track[j][i - 1] + 1, // Löschen
+                track[j - 1][i] + 1, // Einfügen
+                track[j - 1][i - 1] + indicator // Ersetzen
+            );
+        }
+    }
+    return track[str2.length][str1.length];
+}
+
+// Prüft fehlertolerant, ob und wie gut ein gesuchtes Wort in einem Text-Wort vorkommt
+function getFuzzyScore(targetWord, queryWord) {
+    if (targetWord === queryWord) return 1.0; // Exakter Treffer
+    if (targetWord.includes(queryWord)) return 0.8; // Teil-Treffer (z.B. Groß/Kleinschreibung gelöst)
+    
+    // Wenn das Wort lang genug ist, berechnen wir die Editier-Distanz für Tippfehler
+    if (queryWord.length > 4) {
+        let maxDistance = Math.floor(queryWord.length * 0.3); // Erlaubt bis zu 30% Fehler im Wort
+        let distance = levenshteinDistance(targetWord.substring(0, queryWord.length + 1), queryWord);
+        if (distance <= maxDistance) {
+            return 1.0 - (distance / queryWord.length); // Score sinkt leicht je mehr Fehler
+        }
+    }
+    return 0;
+}
+
+// Sucht nach der logischsten Satz-Kette (Komplett fehlertolerant)
 function findBestChainMatch(savedKnowledge, questionText) {
     const lowerQuestion = questionText.toLowerCase();
-    const stopWords = ['wie', 'was', 'wer', 'warum', 'wo', 'ist', 'sind', 'ein', 'eine', 'der', 'die', 'das', 'ich', 'du', 'er', 'sie', 'es', 'in', 'auf', 'mit', 'von', 'den', 'zu', 'für', 'welche', 'welches'];
+    const stopWords = ['wie', 'was', 'wer', 'warum', 'wo', 'ist', 'sind', 'ein', 'eine', 'der', 'die', 'das', 'ich', 'du', 'er', 'sie', 'es', 'in', 'auf', 'mit', 'von', 'den', 'zu', 'für', 'welche', 'welches', 'und', 'oder'];
     
+    // Keywords der Frage
     const keywords = lowerQuestion.split(/[^a-zA-ZäöüÄÖÜß\d]/).filter(w => w.length > 2 && !stopWords.includes(w));
 
-    // Kontext-Keywords aus dem GESAMTEN letzten Satz extrahieren (Themenwechsel-Schutz)
+    // Kontext-Keywords aus dem vorherigen Satz
     let contextKeywords = [];
     if (lastContextSentence) {
         contextKeywords = lastContextSentence.toLowerCase()
@@ -33,43 +68,54 @@ function findBestChainMatch(savedKnowledge, questionText) {
         
         sentences.forEach((sentence, index) => {
             const lowerSentence = sentence.toLowerCase();
+            const sentenceWords = lowerSentence.split(/[^a-zA-ZäöüÄÖÜß\d]/).filter(w => w.length > 2);
+            
             let matches = [];
             let contextMatches = 0;
             
-            keywords.forEach(word => {
-                const pos = lowerSentence.indexOf(word);
-                if (pos !== -1) matches.push({ word: word, pos: pos });
+            // Fehlertolerante Keyword-Prüfung
+            keywords.forEach(qWord => {
+                sentenceWords.forEach((sWord, posInSentence) => {
+                    let score = getFuzzyScore(sWord, qWord);
+                    if (score > 0) {
+                        matches.push({ word: qWord, pos: posInSentence, quality: score });
+                    }
+                });
             });
 
-            contextKeywords.forEach(word => {
-                if (lowerSentence.includes(word)) contextMatches++;
+            // Kontext-Abgleich
+            contextKeywords.forEach(cWord => {
+                if (sentenceWords.some(sWord => getFuzzyScore(sWord, cWord) > 0.6)) {
+                    contextMatches++;
+                }
             });
 
             if (matches.length > 0) {
+                // Sortiere nach Position im Satz
                 matches.sort((a, b) => a.pos - b.pos);
-                let chainScore = matches.length * 30; 
+                
+                let chainScore = 0;
+                matches.forEach(m => chainScore += (m.quality * 50)); // Bezieht Tippfehler-Qualität ein
+                
                 let correctOrderCount = 0;
-
                 for (let i = 0; i < matches.length - 1; i++) {
                     const currentWordIndex = keywords.indexOf(matches[i].word);
                     const nextWordIndex = keywords.indexOf(matches[i+1].word);
                     
                     if (nextWordIndex > currentWordIndex) {
                         correctOrderCount++;
-                        const distance = matches[i+1].pos - (matches[i].pos + matches[i].word.length);
-                        if (distance < 50) chainScore += 65; 
+                        const distance = matches[i+1].pos - matches[i].pos;
+                        if (distance < 4) chainScore += 45; // Bonus für logische Dichte im Satz
                     }
                 }
 
                 if (correctOrderCount === keywords.length - 1 && keywords.length > 1) {
-                    chainScore += 80;
+                    chainScore += 50;
                 }
 
-                // GANZ-SATZ-FOKUS-BEWERTUNG (Verhindert das Abdriften des Themas)
-                if (contextMatches > 0) {
-                    chainScore += (contextMatches / contextKeywords.length) * 120;
-                } else if (lastContextSentence && contextMatches === 0) {
-                    chainScore -= 50; // Strafe bei abruptem, themenfernem Sprung
+                // Sanfter Fokus-Schutz
+                if (contextKeywords.length > 0 && contextMatches > 0) {
+                    chainScore += (contextMatches / contextKeywords.length) * 35;
                 }
 
                 if (chainScore > highestChainScore) {
@@ -90,10 +136,9 @@ function generateSmartResponse(matchResult) {
     const { bestSentenceIndex, textSentences, highestChainScore, questionText } = matchResult;
     
     if (highestChainScore <= 0 || !textSentences || bestSentenceIndex === -1) {
-        return "Ich habe meine Datenbank durchsucht, konnte aber im Kontext keinen logischen Bezug herstellen.";
+        return "Ich habe mein gelerntes Wissen analysiert, konnte jedoch keinen ausreichenden Bezug im aktuellen Kontext feststellen.";
     }
 
-    // Aktuelle Frage als Kontext für das nächste Mal abspeichern
     lastContextSentence = questionText;
 
     let rawBlocks = textSentences.slice(Math.max(0, bestSentenceIndex), bestSentenceIndex + 3);
@@ -101,7 +146,7 @@ function generateSmartResponse(matchResult) {
     
     rawBlocks.forEach(s => {
         let temp = s.trim();
-        temp = temp.replace(/\s*\([^)]*\)/g, ""); // Entfernt Klammern
+        temp = temp.replace(/\s*\([^)]*\)/g, ""); 
         temp = temp.replace(/ist die Bezeichnung für|wird als.*?bezeichnet/gi, "beschreibt");
         temp = temp.replace(/ist ein[e]? von/gi, "gehört zu");
         if (temp.length > 12) cleanSentences.push(temp);
@@ -110,15 +155,15 @@ function generateSmartResponse(matchResult) {
     if (cleanSentences.length === 0) return "Die gelieferten Daten reichen nicht für eine eigene Formulierung aus.";
 
     const smartOpeners = [
-        "Betrachtet man den gesamten Kontext, wird deutlich, dass ",
+        "In Bezug auf deine Frage zeigt sich, dass ",
         "Daraus lässt sich logisch ableiten, dass ",
-        "Diese Verbindung zeigt auf, dass ",
+        "Diese Verbindung verdeutlicht, dass ",
         "Das bedeutet konkret: ",
         "Analysiert man diesen Sachverhalt, beschreibt es vor allem, dass "
     ];
 
     const analyticalConnectors = [
-        ". Ergänzend dazu verdeutlicht sich, dass ",
+        ". Ergänzend dazu zeigt sich, dass ",
         ", während im selben Zuge klar wird, dass ",
         ". Dies führt folglich dazu, dass ",
         ", was wiederum untermauert, dass "
