@@ -21,19 +21,15 @@ window.handleFileSelect = function(input) {
         try {
             let parsedData = JSON.parse(e.target.result);
             
-            // Konvertiert das JSON-Format deines Express-Servers bei Bedarf in ein einheitliches Array
             let rawArray = [];
             if (Array.isArray(parsedData)) {
                 rawArray = parsedData;
             } else if (parsedData && typeof parsedData === 'object') {
-                // Wenn es ein Einzelobjekt vom Server ist, hüllen wir es in ein Array ein
                 rawArray = [parsedData];
             }
 
-            // Strukturieren und filtern
             savedKnowledge = rawArray.map(doc => {
                 if (typeof doc === 'string') return { text: doc, tags: [] };
-                // Unterstützt die .text-Eigenschaft deines Express-Outputs
                 return { text: doc.text || '', tags: doc.tags || [] };
             }).filter(doc => doc.text.length > 10);
 
@@ -41,7 +37,6 @@ window.handleFileSelect = function(input) {
                 throw new Error("Kein nutzbarer Textinhalt im JSON gefunden.");
             }
 
-            // UI-Aktualisierung
             const uploadPrompt = document.getElementById('uploadPrompt');
             if (uploadPrompt) {
                 uploadPrompt.innerHTML = `📚 <strong>KI-Brain aktiv:</strong> ${file.name} (${savedKnowledge.length} Wissenskomplexe geladen)`;
@@ -77,19 +72,19 @@ window.askQuestion = function() {
     appendMsg('user', questionText);
     input.value = '';
 
-    // Such- und Syntheseprozess über die Logik-Funktionen aus 1.js triggern
     const matchResult = findBestChainMatch(savedKnowledge, questionText);
     const aiResponse = generateSmartResponse(matchResult);
 
+    // KORREKTUR: color von #e0e0e0 auf #202124 geändert, damit der Text im hellen Design sichtbar ist!
     const structuredAnswer = `
         <p style="margin:0 0 6px 0; font-size:12px; font-weight:600; color:var(--accent-blue); text-transform:uppercase; letter-spacing:0.5px;">🧠 Generative Synthese:</p>
-        <span style="font-size:15px; line-height:1.6; color:#e0e0e0;">${aiResponse}</span>
+        <span style="font-size:15px; line-height:1.6; color:#202124;">${aiResponse}</span>
     `;
 
     appendMsg('gemini', structuredAnswer);
 };
 
-// Smart Autocomplete (Phrasen statt Wörter)
+// Smart Autocomplete
 function handleAutocomplete() {
     const input = document.getElementById('questionInput');
     if (!input) return;
@@ -146,28 +141,28 @@ function initAutocompleteStyles() {
     style.innerHTML = `
         .autocomplete-items {
             position: absolute;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(0,0,0,0.1);
             border-radius: 8px;
             z-index: 99;
             top: 100%;
             left: 0;
             right: 0;
-            background: #1e1e24;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin-top: 5px;
             overflow: hidden;
         }
         .autocomplete-items div {
             padding: 12px;
             cursor: pointer;
-            color: #cdcdcd;
+            color: #333333;
             font-size: 13.5px;
             transition: background 0.2s;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
         .autocomplete-items div:hover {
-            background-color: rgba(255,255,255,0.08);
-            color: #fff;
+            background-color: rgba(0,0,0,0.04);
+            color: #000;
         }
     `;
     document.head.appendChild(style);
