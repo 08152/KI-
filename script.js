@@ -10,11 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initAutocompleteStyles();
 });
 
-// Der fehlerfreie Datei-Einleser (KORRIGIERT)
+// Der fehlerfreie Datei-Einleser (Unterstützt jetzt dein Server-JSON-Format)
 window.handleFileSelect = function(input) {
     if (!input.files || input.files.length === 0) return;
     
-    // Greift exakt auf das erste Datei-Objekt zu
     const file = input.files[0]; 
 
     const reader = new FileReader();
@@ -22,11 +21,25 @@ window.handleFileSelect = function(input) {
         try {
             let parsedData = JSON.parse(e.target.result);
             
-            // Flexiblere Datenstruktur-Validierung
-            savedKnowledge = parsedData.map(doc => {
+            // Konvertiert das JSON-Format deines Express-Servers bei Bedarf in ein einheitliches Array
+            let rawArray = [];
+            if (Array.isArray(parsedData)) {
+                rawArray = parsedData;
+            } else if (parsedData && typeof parsedData === 'object') {
+                // Wenn es ein Einzelobjekt vom Server ist, hüllen wir es in ein Array ein
+                rawArray = [parsedData];
+            }
+
+            // Strukturieren und filtern
+            savedKnowledge = rawArray.map(doc => {
                 if (typeof doc === 'string') return { text: doc, tags: [] };
+                // Unterstützt die .text-Eigenschaft deines Express-Outputs
                 return { text: doc.text || '', tags: doc.tags || [] };
             }).filter(doc => doc.text.length > 10);
+
+            if (savedKnowledge.length === 0) {
+                throw new Error("Kein nutzbarer Textinhalt im JSON gefunden.");
+            }
 
             // UI-Aktualisierung
             const uploadPrompt = document.getElementById('uploadPrompt');
@@ -64,8 +77,7 @@ window.askQuestion = function() {
     appendMsg('user', questionText);
     input.value = '';
 
-    // RUFT DIE LOGIK AUS DER 1.JS AUF:
-    // Such- und Syntheseprozess triggern
+    // Such- und Syntheseprozess über die Logik-Funktionen aus 1.js triggern
     const matchResult = findBestChainMatch(savedKnowledge, questionText);
     const aiResponse = generateSmartResponse(matchResult);
 
