@@ -75,18 +75,19 @@ canvas{
 
 <script>
 
-/* ==============================
-   SCENE
-============================== */
+/* =================================
+   SZENE
+================================= */
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0xffffff);
+scene.background =
+    new THREE.Color(0xffffff);
 
 
-/* ==============================
-   CAMERA
-============================== */
+/* =================================
+   KAMERA
+================================= */
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -95,16 +96,21 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-camera.position.set(0,1.7,6);
+camera.position.set(
+    0,
+    1.7,
+    6
+);
 
 
-/* ==============================
+/* =================================
    RENDERER
-============================== */
+================================= */
 
-const renderer = new THREE.WebGLRenderer({
-    antialias:true
-});
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
 
 renderer.setSize(
     innerWidth,
@@ -115,12 +121,14 @@ renderer.setPixelRatio(
     Math.min(devicePixelRatio,2)
 );
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 
-/* ==============================
-   LIGHT
-============================== */
+/* =================================
+   LICHT
+================================= */
 
 scene.add(
     new THREE.AmbientLight(
@@ -129,36 +137,88 @@ scene.add(
     )
 );
 
-const light = new THREE.DirectionalLight(
-    0xffffff,
-    1.5
-);
+const light =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.5
+    );
 
-light.position.set(5,10,5);
+light.position.set(
+    5,
+    10,
+    5
+);
 
 scene.add(light);
 
 
-/* ==============================
-   ROOM MATERIAL
-============================== */
+/* =================================
+   WANDTEXTUR
+   CC0
+================================= */
 
-const roomMaterial =
+const textureLoader =
+    new THREE.TextureLoader();
+
+const wallTexture =
+    textureLoader.load(
+        "https://opengameart.org/sites/default/files/8bs-wall_seamless_a_2048.png"
+    );
+
+
+/*
+   Textur kacheln
+*/
+
+wallTexture.wrapS =
+    THREE.RepeatWrapping;
+
+wallTexture.wrapT =
+    THREE.RepeatWrapping;
+
+
+/*
+   Schärferes Rendering
+*/
+
+wallTexture.anisotropy =
+    renderer.capabilities.getMaxAnisotropy();
+
+
+/* =================================
+   MATERIAL
+================================= */
+
+const wallMaterial =
     new THREE.MeshStandardMaterial({
+
+        map:wallTexture,
+
         color:0xffffff,
-        roughness:0.8,
+
+        roughness:0.9,
+
         metalness:0
+
     });
 
 
-/* ==============================
-   FLOOR
-============================== */
+/* =================================
+   BODEN
+================================= */
 
-const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(20,0.2,20),
-    roomMaterial
-);
+const floor =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            20,
+            0.2,
+            20
+        ),
+
+        wallMaterial
+
+    );
 
 floor.position.set(
     0,
@@ -166,17 +226,47 @@ floor.position.set(
     0
 );
 
+
+/*
+   Boden etwas größer kacheln
+*/
+
+floor.material =
+    wallMaterial.clone();
+
+floor.material.map =
+    wallTexture.clone();
+
+floor.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+floor.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+floor.material.map.repeat.set(
+    6,
+    6
+);
+
 scene.add(floor);
 
 
-/* ==============================
-   CEILING
-============================== */
+/* =================================
+   DECKE
+================================= */
 
-const ceiling = new THREE.Mesh(
-    new THREE.BoxGeometry(20,0.2,20),
-    roomMaterial
-);
+const ceiling =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            20,
+            0.2,
+            20
+        ),
+
+        wallMaterial.clone()
+
+    );
 
 ceiling.position.set(
     0,
@@ -184,17 +274,39 @@ ceiling.position.set(
     0
 );
 
+ceiling.material.map =
+    wallTexture.clone();
+
+ceiling.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+ceiling.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+ceiling.material.map.repeat.set(
+    6,
+    6
+);
+
 scene.add(ceiling);
 
 
-/* ==============================
-   BACK WALL
-============================== */
+/* =================================
+   RÜCKWAND
+================================= */
 
-const backWall = new THREE.Mesh(
-    new THREE.BoxGeometry(20,6,0.2),
-    roomMaterial
-);
+const backWall =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            20,
+            6,
+            0.2
+        ),
+
+        wallMaterial.clone()
+
+    );
 
 backWall.position.set(
     0,
@@ -202,17 +314,39 @@ backWall.position.set(
     -10
 );
 
+backWall.material.map =
+    wallTexture.clone();
+
+backWall.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+backWall.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+backWall.material.map.repeat.set(
+    4,
+    2
+);
+
 scene.add(backWall);
 
 
-/* ==============================
-   FRONT WALL
-============================== */
+/* =================================
+   VORDERWAND
+================================= */
 
-const frontWall = new THREE.Mesh(
-    new THREE.BoxGeometry(20,6,0.2),
-    roomMaterial
-);
+const frontWall =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            20,
+            6,
+            0.2
+        ),
+
+        wallMaterial.clone()
+
+    );
 
 frontWall.position.set(
     0,
@@ -220,17 +354,39 @@ frontWall.position.set(
     10
 );
 
+frontWall.material.map =
+    wallTexture.clone();
+
+frontWall.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+frontWall.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+frontWall.material.map.repeat.set(
+    4,
+    2
+);
+
 scene.add(frontWall);
 
 
-/* ==============================
-   LEFT WALL
-============================== */
+/* =================================
+   LINKE WAND
+================================= */
 
-const leftWall = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2,6,20),
-    roomMaterial
-);
+const leftWall =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            0.2,
+            6,
+            20
+        ),
+
+        wallMaterial.clone()
+
+    );
 
 leftWall.position.set(
     -10,
@@ -238,17 +394,39 @@ leftWall.position.set(
     0
 );
 
+leftWall.material.map =
+    wallTexture.clone();
+
+leftWall.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+leftWall.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+leftWall.material.map.repeat.set(
+    4,
+    2
+);
+
 scene.add(leftWall);
 
 
-/* ==============================
-   RIGHT WALL
-============================== */
+/* =================================
+   RECHTE WAND
+================================= */
 
-const rightWall = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2,6,20),
-    roomMaterial
-);
+const rightWall =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            0.2,
+            6,
+            20
+        ),
+
+        wallMaterial.clone()
+
+    );
 
 rightWall.position.set(
     10,
@@ -256,23 +434,40 @@ rightWall.position.set(
     0
 );
 
+rightWall.material.map =
+    wallTexture.clone();
+
+rightWall.material.map.wrapS =
+    THREE.RepeatWrapping;
+
+rightWall.material.map.wrapT =
+    THREE.RepeatWrapping;
+
+rightWall.material.map.repeat.set(
+    4,
+    2
+);
+
 scene.add(rightWall);
 
 
-/* ==============================
+/* =================================
    POINTER LOCK
-============================== */
+================================= */
 
 let locked = false;
 
-const startButton =
+const start =
     document.getElementById("start");
 
-startButton.addEventListener("click",function(){
+start.addEventListener(
+    "click",
+    function(){
 
-    renderer.domElement.requestPointerLock();
+        renderer.domElement.requestPointerLock();
 
-});
+    }
+);
 
 
 document.addEventListener(
@@ -283,16 +478,16 @@ document.addEventListener(
             document.pointerLockElement ===
             renderer.domElement;
 
-        startButton.style.display =
+        start.style.display =
             locked ? "none" : "block";
 
     }
 );
 
 
-/* ==============================
+/* =================================
    MOUSE LOOK
-============================== */
+================================= */
 
 let yaw = 0;
 let pitch = 0;
@@ -303,32 +498,45 @@ document.addEventListener(
 
         if(!locked) return;
 
-        const sensitivity = 0.0025;
+        const sensitivity =
+            0.0025;
 
-        yaw -= e.movementX * sensitivity;
+        yaw -=
+            e.movementX *
+            sensitivity;
 
-        pitch -= e.movementY * sensitivity;
+        pitch -=
+            e.movementY *
+            sensitivity;
 
         const limit =
             Math.PI / 2 - 0.05;
 
-        pitch = Math.max(
-            -limit,
-            Math.min(limit,pitch)
-        );
+        pitch =
+            Math.max(
+                -limit,
+                Math.min(
+                    limit,
+                    pitch
+                )
+            );
 
-        camera.rotation.order = "YXZ";
+        camera.rotation.order =
+            "YXZ";
 
-        camera.rotation.y = yaw;
-        camera.rotation.x = pitch;
+        camera.rotation.y =
+            yaw;
+
+        camera.rotation.x =
+            pitch;
 
     }
 );
 
 
-/* ==============================
-   KEYBOARD
-============================== */
+/* =================================
+   TASTEN
+================================= */
 
 const keys = {};
 
@@ -351,11 +559,12 @@ document.addEventListener(
 );
 
 
-/* ==============================
-   PLAYER
-============================== */
+/* =================================
+   SPIELER
+================================= */
 
-const player = new THREE.Object3D();
+const player =
+    new THREE.Object3D();
 
 player.position.set(
     0,
@@ -366,11 +575,12 @@ player.position.set(
 scene.add(player);
 
 
-/* ==============================
-   MOVEMENT
-============================== */
+/* =================================
+   BEWEGUNG
+================================= */
 
-const velocity = new THREE.Vector3();
+const velocity =
+    new THREE.Vector3();
 
 let onGround = true;
 
@@ -378,109 +588,135 @@ const speed = 5;
 const gravity = 18;
 const jumpPower = 7;
 
-
-/* ==============================
-   CLOCK
-============================== */
-
-const clock = new THREE.Clock();
+const clock =
+    new THREE.Clock();
 
 
-/* ==============================
-   ANIMATION
-============================== */
+/* =================================
+   LOOP
+================================= */
 
 function animate(){
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
     const delta =
-        Math.min(clock.getDelta(),0.05);
+        Math.min(
+            clock.getDelta(),
+            0.05
+        );
+
 
     if(locked){
 
         /*
-        WASD relativ zur Blickrichtung
+           Blickrichtung
         */
 
-        const forward = new THREE.Vector3();
+        const forward =
+            new THREE.Vector3();
 
-        camera.getWorldDirection(forward);
+        camera.getWorldDirection(
+            forward
+        );
 
         forward.y = 0;
 
         forward.normalize();
 
 
-        const right = new THREE.Vector3(
-            forward.z,
-            0,
-            -forward.x
-        );
+        /*
+           Seitwärtsrichtung
+        */
+
+        const right =
+            new THREE.Vector3(
+                forward.z,
+                0,
+                -forward.x
+            );
 
 
         /*
-        W
+           W
         */
 
         if(keys["KeyW"]){
 
             player.position.x +=
-                forward.x * speed * delta;
+                forward.x *
+                speed *
+                delta;
 
             player.position.z +=
-                forward.z * speed * delta;
+                forward.z *
+                speed *
+                delta;
 
         }
 
 
         /*
-        S
+           S
         */
 
         if(keys["KeyS"]){
 
             player.position.x -=
-                forward.x * speed * delta;
+                forward.x *
+                speed *
+                delta;
 
             player.position.z -=
-                forward.z * speed * delta;
+                forward.z *
+                speed *
+                delta;
 
         }
 
 
         /*
-        A
+           A
         */
 
         if(keys["KeyA"]){
 
             player.position.x -=
-                right.x * speed * delta;
+                right.x *
+                speed *
+                delta;
 
             player.position.z -=
-                right.z * speed * delta;
+                right.z *
+                speed *
+                delta;
 
         }
 
 
         /*
-        D
+           D
         */
 
         if(keys["KeyD"]){
 
             player.position.x +=
-                right.x * speed * delta;
+                right.x *
+                speed *
+                delta;
 
             player.position.z +=
-                right.z * speed * delta;
+                right.z *
+                speed *
+                delta;
 
         }
 
 
         /*
-        SPRINGEN
+           SPRINGEN
         */
 
         if(
@@ -488,7 +724,8 @@ function animate(){
             onGround
         ){
 
-            velocity.y = jumpPower;
+            velocity.y =
+                jumpPower;
 
             onGround = false;
 
@@ -496,23 +733,28 @@ function animate(){
 
 
         /*
-        GRAVITATION
+           GRAVITATION
         */
 
         velocity.y -=
-            gravity * delta;
+            gravity *
+            delta;
 
         player.position.y +=
-            velocity.y * delta;
+            velocity.y *
+            delta;
 
 
         /*
-        BODEN
+           BODEN
         */
 
-        if(player.position.y <= 1.7){
+        if(
+            player.position.y <= 1.7
+        ){
 
-            player.position.y = 1.7;
+            player.position.y =
+                1.7;
 
             velocity.y = 0;
 
@@ -522,7 +764,7 @@ function animate(){
 
 
         /*
-        RAUMGRENZEN
+           WÄNDE
         */
 
         player.position.x =
@@ -547,7 +789,7 @@ function animate(){
 
 
     /*
-    Kamera folgt Spieler
+       Kamera
     */
 
     camera.position.copy(
@@ -565,16 +807,17 @@ function animate(){
 animate();
 
 
-/* ==============================
+/* =================================
    RESIZE
-============================== */
+================================= */
 
 window.addEventListener(
     "resize",
     function(){
 
         camera.aspect =
-            innerWidth / innerHeight;
+            innerWidth /
+            innerHeight;
 
         camera.updateProjectionMatrix();
 
