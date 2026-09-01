@@ -2,12 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>3D Raum</title>
+<title>3D White Room</title>
 
 <style>
 html,body{
     margin:0;
+    padding:0;
     width:100%;
     height:100%;
     overflow:hidden;
@@ -26,7 +26,7 @@ canvas{
     height:18px;
     transform:translate(-50%,-50%);
     pointer-events:none;
-    z-index:10;
+    z-index:20;
 }
 
 #crosshair::before,
@@ -55,13 +55,13 @@ canvas{
     left:50%;
     top:50%;
     transform:translate(-50%,-50%);
-    padding:14px 25px;
-    border:2px solid #000;
+    padding:15px 30px;
+    background:white;
+    border:2px solid black;
     border-radius:8px;
-    background:#fff;
     font-size:18px;
     cursor:pointer;
-    z-index:20;
+    z-index:30;
 }
 </style>
 </head>
@@ -71,30 +71,26 @@ canvas{
 <div id="crosshair"></div>
 <button id="start">START</button>
 
-<script type="module">
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+<script>
 
-import { PointerLockControls } from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
-
-
-/* =========================
-   SZENE
-========================= */
+/* ==============================
+   SCENE
+============================== */
 
 const scene = new THREE.Scene();
+
 scene.background = new THREE.Color(0xffffff);
 
 
-/* =========================
-   KAMERA
-========================= */
+/* ==============================
+   CAMERA
+============================== */
 
 const camera = new THREE.PerspectiveCamera(
     75,
-    window.innerWidth / window.innerHeight,
+    innerWidth / innerHeight,
     0.1,
     1000
 );
@@ -102,279 +98,493 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0,1.7,6);
 
 
-/* =========================
+/* ==============================
    RENDERER
-========================= */
+============================== */
 
 const renderer = new THREE.WebGLRenderer({
     antialias:true
 });
 
 renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
+    innerWidth,
+    innerHeight
 );
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio,2)
+    Math.min(devicePixelRatio,2)
 );
 
 document.body.appendChild(renderer.domElement);
 
 
-/* =========================
-   LICHT
-========================= */
+/* ==============================
+   LIGHT
+============================== */
 
-const ambient = new THREE.AmbientLight(
-    0xffffff,
-    1.8
+scene.add(
+    new THREE.AmbientLight(
+        0xffffff,
+        1.5
+    )
 );
-
-scene.add(ambient);
 
 const light = new THREE.DirectionalLight(
     0xffffff,
-    2
+    1.5
 );
 
 light.position.set(5,10,5);
+
 scene.add(light);
 
 
-/* =========================
-   MATERIAL
-========================= */
+/* ==============================
+   ROOM MATERIAL
+============================== */
 
-const white = new THREE.MeshStandardMaterial({
-    color:0xffffff,
-    roughness:0.8,
-    metalness:0
-});
+const roomMaterial =
+    new THREE.MeshStandardMaterial({
+        color:0xffffff,
+        roughness:0.8,
+        metalness:0
+    });
 
 
-/* =========================
-   RAUM
-========================= */
+/* ==============================
+   FLOOR
+============================== */
 
 const floor = new THREE.Mesh(
     new THREE.BoxGeometry(20,0.2,20),
-    white
+    roomMaterial
 );
 
-floor.position.y=-0.1;
+floor.position.set(
+    0,
+    -0.1,
+    0
+);
+
 scene.add(floor);
 
 
+/* ==============================
+   CEILING
+============================== */
+
 const ceiling = new THREE.Mesh(
     new THREE.BoxGeometry(20,0.2,20),
-    white
+    roomMaterial
 );
 
-ceiling.position.y=6;
+ceiling.position.set(
+    0,
+    6,
+    0
+);
+
 scene.add(ceiling);
 
 
+/* ==============================
+   BACK WALL
+============================== */
+
 const backWall = new THREE.Mesh(
     new THREE.BoxGeometry(20,6,0.2),
-    white
+    roomMaterial
 );
 
-backWall.position.set(0,3,-10);
+backWall.position.set(
+    0,
+    3,
+    -10
+);
+
 scene.add(backWall);
 
 
+/* ==============================
+   FRONT WALL
+============================== */
+
 const frontWall = new THREE.Mesh(
     new THREE.BoxGeometry(20,6,0.2),
-    white
+    roomMaterial
 );
 
-frontWall.position.set(0,3,10);
+frontWall.position.set(
+    0,
+    3,
+    10
+);
+
 scene.add(frontWall);
 
 
+/* ==============================
+   LEFT WALL
+============================== */
+
 const leftWall = new THREE.Mesh(
     new THREE.BoxGeometry(0.2,6,20),
-    white
+    roomMaterial
 );
 
-leftWall.position.set(-10,3,0);
+leftWall.position.set(
+    -10,
+    3,
+    0
+);
+
 scene.add(leftWall);
 
 
+/* ==============================
+   RIGHT WALL
+============================== */
+
 const rightWall = new THREE.Mesh(
     new THREE.BoxGeometry(0.2,6,20),
-    white
+    roomMaterial
 );
 
-rightWall.position.set(10,3,0);
+rightWall.position.set(
+    10,
+    3,
+    0
+);
+
 scene.add(rightWall);
 
 
-/* =========================
+/* ==============================
    POINTER LOCK
-========================= */
+============================== */
 
-const controls = new PointerLockControls(
-    camera,
-    document.body
+let locked = false;
+
+const startButton =
+    document.getElementById("start");
+
+startButton.addEventListener("click",function(){
+
+    renderer.domElement.requestPointerLock();
+
+});
+
+
+document.addEventListener(
+    "pointerlockchange",
+    function(){
+
+        locked =
+            document.pointerLockElement ===
+            renderer.domElement;
+
+        startButton.style.display =
+            locked ? "none" : "block";
+
+    }
 );
 
-const start = document.getElementById("start");
 
-start.addEventListener("click",()=>{
-    controls.lock();
-});
+/* ==============================
+   MOUSE LOOK
+============================== */
 
-controls.addEventListener("lock",()=>{
-    start.style.display="none";
-});
+let yaw = 0;
+let pitch = 0;
 
-controls.addEventListener("unlock",()=>{
-    start.style.display="block";
-});
+document.addEventListener(
+    "mousemove",
+    function(e){
 
+        if(!locked) return;
 
-/* =========================
-   WASD
-========================= */
+        const sensitivity = 0.0025;
 
-const keys = {
-    KeyW:false,
-    KeyA:false,
-    KeyS:false,
-    KeyD:false,
-    Space:false
-};
+        yaw -= e.movementX * sensitivity;
 
-document.addEventListener("keydown",(e)=>{
-    if(e.code in keys){
-        keys[e.code]=true;
+        pitch -= e.movementY * sensitivity;
+
+        const limit =
+            Math.PI / 2 - 0.05;
+
+        pitch = Math.max(
+            -limit,
+            Math.min(limit,pitch)
+        );
+
+        camera.rotation.order = "YXZ";
+
+        camera.rotation.y = yaw;
+        camera.rotation.x = pitch;
+
     }
-});
+);
 
-document.addEventListener("keyup",(e)=>{
-    if(e.code in keys){
-        keys[e.code]=false;
+
+/* ==============================
+   KEYBOARD
+============================== */
+
+const keys = {};
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        keys[e.code] = true;
+
     }
-});
+);
+
+document.addEventListener(
+    "keyup",
+    function(e){
+
+        keys[e.code] = false;
+
+    }
+);
 
 
-/* =========================
-   BEWEGUNG
-========================= */
+/* ==============================
+   PLAYER
+============================== */
+
+const player = new THREE.Object3D();
+
+player.position.set(
+    0,
+    1.7,
+    6
+);
+
+scene.add(player);
+
+
+/* ==============================
+   MOVEMENT
+============================== */
 
 const velocity = new THREE.Vector3();
 
-let canJump = true;
+let onGround = true;
 
 const speed = 5;
 const gravity = 18;
 const jumpPower = 7;
 
-let previousTime = performance.now();
+
+/* ==============================
+   CLOCK
+============================== */
+
+const clock = new THREE.Clock();
 
 
-function move(){
+/* ==============================
+   ANIMATION
+============================== */
 
-    const time = performance.now();
-    const delta = Math.min(
-        (time-previousTime)/1000,
-        0.05
-    );
+function animate(){
 
-    previousTime=time;
+    requestAnimationFrame(animate);
 
-    if(controls.isLocked){
+    const delta =
+        Math.min(clock.getDelta(),0.05);
 
-        /* Vorwärts / Rückwärts */
+    if(locked){
 
-        if(keys.KeyW){
-            controls.moveForward(speed*delta);
-        }
+        /*
+        WASD relativ zur Blickrichtung
+        */
 
-        if(keys.KeyS){
-            controls.moveForward(-speed*delta);
-        }
+        const forward = new THREE.Vector3();
 
-        /* Links / Rechts */
+        camera.getWorldDirection(forward);
 
-        if(keys.KeyA){
-            controls.moveRight(-speed*delta);
-        }
+        forward.y = 0;
 
-        if(keys.KeyD){
-            controls.moveRight(speed*delta);
-        }
+        forward.normalize();
 
 
-        /* Gravitation */
-
-        velocity.y -= gravity*delta;
-
-        camera.position.y += velocity.y*delta;
-
-
-        /* Boden */
-
-        if(camera.position.y <= 1.7){
-
-            camera.position.y=1.7;
-
-            velocity.y=0;
-
-            canJump=true;
-        }
+        const right = new THREE.Vector3(
+            forward.z,
+            0,
+            -forward.x
+        );
 
 
-        /* Springen */
+        /*
+        W
+        */
 
-        if(keys.Space && canJump){
+        if(keys["KeyW"]){
 
-            velocity.y=jumpPower;
+            player.position.x +=
+                forward.x * speed * delta;
 
-            canJump=false;
+            player.position.z +=
+                forward.z * speed * delta;
+
         }
 
 
-        /* Raumbegrenzung */
+        /*
+        S
+        */
 
-        camera.position.x =
-            Math.max(-9.5,
-            Math.min(9.5,camera.position.x));
+        if(keys["KeyS"]){
 
-        camera.position.z =
-            Math.max(-9.5,
-            Math.min(9.5,camera.position.z));
+            player.position.x -=
+                forward.x * speed * delta;
+
+            player.position.z -=
+                forward.z * speed * delta;
+
+        }
+
+
+        /*
+        A
+        */
+
+        if(keys["KeyA"]){
+
+            player.position.x -=
+                right.x * speed * delta;
+
+            player.position.z -=
+                right.z * speed * delta;
+
+        }
+
+
+        /*
+        D
+        */
+
+        if(keys["KeyD"]){
+
+            player.position.x +=
+                right.x * speed * delta;
+
+            player.position.z +=
+                right.z * speed * delta;
+
+        }
+
+
+        /*
+        SPRINGEN
+        */
+
+        if(
+            keys["Space"] &&
+            onGround
+        ){
+
+            velocity.y = jumpPower;
+
+            onGround = false;
+
+        }
+
+
+        /*
+        GRAVITATION
+        */
+
+        velocity.y -=
+            gravity * delta;
+
+        player.position.y +=
+            velocity.y * delta;
+
+
+        /*
+        BODEN
+        */
+
+        if(player.position.y <= 1.7){
+
+            player.position.y = 1.7;
+
+            velocity.y = 0;
+
+            onGround = true;
+
+        }
+
+
+        /*
+        RAUMGRENZEN
+        */
+
+        player.position.x =
+            Math.max(
+                -9.3,
+                Math.min(
+                    9.3,
+                    player.position.x
+                )
+            );
+
+        player.position.z =
+            Math.max(
+                -9.3,
+                Math.min(
+                    9.3,
+                    player.position.z
+                )
+            );
 
     }
 
-    renderer.render(scene,camera);
 
-    requestAnimationFrame(move);
-}
+    /*
+    Kamera folgt Spieler
+    */
 
-move();
-
-
-/* =========================
-   FENSTERGRÖSSE
-========================= */
-
-window.addEventListener("resize",()=>{
-
-    camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
+    camera.position.copy(
+        player.position
     );
 
-});
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+animate();
+
+
+/* ==============================
+   RESIZE
+============================== */
+
+window.addEventListener(
+    "resize",
+    function(){
+
+        camera.aspect =
+            innerWidth / innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+
+    }
+);
 
 </script>
 
