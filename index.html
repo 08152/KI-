@@ -1,99 +1,382 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Offline Chat Hub</title>
-    <style>
-        :root {
-            --gemini-gradient: linear-gradient(135deg, #4285f4 0%, #9b51e0 50%, #e051b8 100%);
-            --bg-color: #f8fafd;
-            --card-bg: #ffffff;
-            --text-main: #1f1f1f;
-            --text-sub: #5f6368;
-            --border-color: #dadce0;
-            --accent-blue: #1a73e8;
-            --active-blue: #e8f0fe;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>3D Raum</title>
 
-        body { font-family: 'Segoe UI', -apple-system, sans-serif; background-color: var(--bg-color); margin: 0; padding: 24px; color: var(--text-main); }
-        .container { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; height: calc(100vh - 48px); }
-        
-        header { margin-bottom: 20px; }
-        h1 { font-size: 26px; font-weight: 400; margin: 0; background: var(--gemini-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .upload-bar { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; position: relative; }
-        .upload-bar p { margin: 0 0 10px 0; font-size: 14px; color: var(--text-sub); }
-        
-        input[type="file"] { display: block; margin: 10px auto 0 auto; font-size: 13px; }
+<style>
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:white;
+}
 
-        .chat-window { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; flex-grow: 1; display: flex; flex-direction: column; box-shadow: 0 2px 6px rgba(0,0,0,0.02); overflow: hidden; position: relative; }
-        .chat-container { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
-        
-        .chat-message { max-width: 80%; padding: 14px 18px; border-radius: 18px; font-size: 14.5px; line-height: 1.6; word-break: break-word; }
-        .user-message { background: #e3f2fd; color: #0d47a1; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .gemini-message { background: #f1f3f4; color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; }
+canvas{
+    display:block;
+}
 
-        .chat-input-wrapper { display: flex; gap: 12px; align-items: center; position: relative; }
-        .chat-input-wrapper input { flex-grow: 1; padding: 14px 20px; border: 1px solid var(--border-color); border-radius: 100px; outline: none; font-size: 15px; }
-        .chat-input-wrapper input:focus { border-color: var(--accent-blue); }
-        
-        .ask-btn { background: var(--accent-blue); color: white; border: none; padding: 14px 28px; border-radius: 100px; cursor: pointer; font-weight: 500; font-size: 15px; }
-        .ask-btn:hover { background: #1557b0; }
-        .ask-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+#crosshair{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:18px;
+    height:18px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    z-index:10;
+}
 
-        .hidden { display: none !important; }
-    </style>
+#crosshair::before,
+#crosshair::after{
+    content:"";
+    position:absolute;
+    background:#000;
+}
+
+#crosshair::before{
+    width:2px;
+    height:18px;
+    left:8px;
+    top:0;
+}
+
+#crosshair::after{
+    width:18px;
+    height:2px;
+    left:0;
+    top:8px;
+}
+
+#start{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    padding:14px 25px;
+    border:2px solid #000;
+    border-radius:8px;
+    background:#fff;
+    font-size:18px;
+    cursor:pointer;
+    z-index:20;
+}
+</style>
 </head>
+
 <body>
 
-<div class="container">
-    <header>
-        <h1>Gemini Space Knowledge Chat</h1>
-    </header>
+<div id="crosshair"></div>
+<button id="start">START</button>
 
-    <div class="upload-bar" id="dropZone">
-        <p id="uploadPrompt">Wähle deine <strong>1.json</strong>-Datei über das Feld aus, um dein Wissen zu aktivieren:</p>
-        <input type="file" id="uploadInput" accept=".json" onchange="handleFileSelect(this)">
-    </div>
+<script type="module">
 
-    <div class="chat-window">
-        <div class="chat-container" id="chatContainer">
-            <div class="chat-message gemini-message">
-                Hallo! Bitte wähle oben über den Button deine <strong>1.json</strong> aus. Sobald das erledigt ist, können wir sofort loslegen!
-            </div>
-        </div>
-        <div class="chat-input-wrapper">
-            <input type="text" id="questionInput" disabled placeholder="Bitte zuerst die 1.json oben hochladen...">
-            <button id="askBtn" class="ask-btn" disabled onclick="askQuestion()">Senden</button>
-        </div>
-    </div>
-</div>
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-<!-- WICHTIG: 1.js MUSS vor script.js geladen werden, damit die Logik-Funktionen bekannt sind -->
-<script src="1.js"></script>
-<script src="script.js"></script>
+import { PointerLockControls } from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
-<script>
-    // Hilfsfunktion zum Hinzufügen von Nachrichten in das Chat-Fenster
-    window.appendMsg = function(sender, text) {
-        const container = document.getElementById('chatContainer');
-        if (!container) return;
 
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('chat-message');
-        
-        if (sender === 'user') {
-            msgDiv.classList.add('user-message');
-            msgDiv.textContent = text;
-        } else {
-            msgDiv.classList.add('gemini-message');
-            msgDiv.innerHTML = text; // Erlaubt HTML-Formatierungen für KI-Synthese-Überschriften
+/* =========================
+   SZENE
+========================= */
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+
+
+/* =========================
+   KAMERA
+========================= */
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+camera.position.set(0,1.7,6);
+
+
+/* =========================
+   RENDERER
+========================= */
+
+const renderer = new THREE.WebGLRenderer({
+    antialias:true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio,2)
+);
+
+document.body.appendChild(renderer.domElement);
+
+
+/* =========================
+   LICHT
+========================= */
+
+const ambient = new THREE.AmbientLight(
+    0xffffff,
+    1.8
+);
+
+scene.add(ambient);
+
+const light = new THREE.DirectionalLight(
+    0xffffff,
+    2
+);
+
+light.position.set(5,10,5);
+scene.add(light);
+
+
+/* =========================
+   MATERIAL
+========================= */
+
+const white = new THREE.MeshStandardMaterial({
+    color:0xffffff,
+    roughness:0.8,
+    metalness:0
+});
+
+
+/* =========================
+   RAUM
+========================= */
+
+const floor = new THREE.Mesh(
+    new THREE.BoxGeometry(20,0.2,20),
+    white
+);
+
+floor.position.y=-0.1;
+scene.add(floor);
+
+
+const ceiling = new THREE.Mesh(
+    new THREE.BoxGeometry(20,0.2,20),
+    white
+);
+
+ceiling.position.y=6;
+scene.add(ceiling);
+
+
+const backWall = new THREE.Mesh(
+    new THREE.BoxGeometry(20,6,0.2),
+    white
+);
+
+backWall.position.set(0,3,-10);
+scene.add(backWall);
+
+
+const frontWall = new THREE.Mesh(
+    new THREE.BoxGeometry(20,6,0.2),
+    white
+);
+
+frontWall.position.set(0,3,10);
+scene.add(frontWall);
+
+
+const leftWall = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2,6,20),
+    white
+);
+
+leftWall.position.set(-10,3,0);
+scene.add(leftWall);
+
+
+const rightWall = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2,6,20),
+    white
+);
+
+rightWall.position.set(10,3,0);
+scene.add(rightWall);
+
+
+/* =========================
+   POINTER LOCK
+========================= */
+
+const controls = new PointerLockControls(
+    camera,
+    document.body
+);
+
+const start = document.getElementById("start");
+
+start.addEventListener("click",()=>{
+    controls.lock();
+});
+
+controls.addEventListener("lock",()=>{
+    start.style.display="none";
+});
+
+controls.addEventListener("unlock",()=>{
+    start.style.display="block";
+});
+
+
+/* =========================
+   WASD
+========================= */
+
+const keys = {
+    KeyW:false,
+    KeyA:false,
+    KeyS:false,
+    KeyD:false,
+    Space:false
+};
+
+document.addEventListener("keydown",(e)=>{
+    if(e.code in keys){
+        keys[e.code]=true;
+    }
+});
+
+document.addEventListener("keyup",(e)=>{
+    if(e.code in keys){
+        keys[e.code]=false;
+    }
+});
+
+
+/* =========================
+   BEWEGUNG
+========================= */
+
+const velocity = new THREE.Vector3();
+
+let canJump = true;
+
+const speed = 5;
+const gravity = 18;
+const jumpPower = 7;
+
+let previousTime = performance.now();
+
+
+function move(){
+
+    const time = performance.now();
+    const delta = Math.min(
+        (time-previousTime)/1000,
+        0.05
+    );
+
+    previousTime=time;
+
+    if(controls.isLocked){
+
+        /* Vorwärts / Rückwärts */
+
+        if(keys.KeyW){
+            controls.moveForward(speed*delta);
         }
 
-        container.appendChild(msgDiv);
-        container.scrollTop = container.scrollHeight; // Automatisch nach unten scrollen
-    };
+        if(keys.KeyS){
+            controls.moveForward(-speed*delta);
+        }
+
+        /* Links / Rechts */
+
+        if(keys.KeyA){
+            controls.moveRight(-speed*delta);
+        }
+
+        if(keys.KeyD){
+            controls.moveRight(speed*delta);
+        }
+
+
+        /* Gravitation */
+
+        velocity.y -= gravity*delta;
+
+        camera.position.y += velocity.y*delta;
+
+
+        /* Boden */
+
+        if(camera.position.y <= 1.7){
+
+            camera.position.y=1.7;
+
+            velocity.y=0;
+
+            canJump=true;
+        }
+
+
+        /* Springen */
+
+        if(keys.Space && canJump){
+
+            velocity.y=jumpPower;
+
+            canJump=false;
+        }
+
+
+        /* Raumbegrenzung */
+
+        camera.position.x =
+            Math.max(-9.5,
+            Math.min(9.5,camera.position.x));
+
+        camera.position.z =
+            Math.max(-9.5,
+            Math.min(9.5,camera.position.z));
+
+    }
+
+    renderer.render(scene,camera);
+
+    requestAnimationFrame(move);
+}
+
+move();
+
+
+/* =========================
+   FENSTERGRÖSSE
+========================= */
+
+window.addEventListener("resize",()=>{
+
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+});
+
 </script>
+
 </body>
 </html>
