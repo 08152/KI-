@@ -1,852 +1,1606 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+
 <meta charset="UTF-8">
-<title>MECHA CHAMELEON 3D</title>
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
+
+<title>MECHA CHAMELEON</title>
+
 <style>
-body{margin:0;overflow:hidden;background:#87cfff;font-family:Arial}
-#menu{
-position:absolute;inset:0;z-index:20;
-display:flex;align-items:center;justify-content:center;
-background:linear-gradient(#0008,#000b);
-color:white;text-align:center
+
+*{
+box-sizing:border-box;
 }
-#box{
-background:#101820ee;padding:40px 60px;border-radius:20px;
-box-shadow:0 20px 80px #000;
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+font-family:Arial,sans-serif;
+background:#111;
 }
-h1{font-size:48px;margin:0 0 10px}
+
+canvas{
+display:block;
+}
+
+.screen{
+position:fixed;
+inset:0;
+z-index:100;
+display:flex;
+align-items:center;
+justify-content:center;
+background:
+radial-gradient(
+circle,
+#405b72,
+#030507 75%
+);
+color:white;
+}
+
+.box{
+width:600px;
+max-width:92%;
+padding:42px;
+border-radius:25px;
+background:#101820f5;
+border:1px solid #ffffff22;
+text-align:center;
+box-shadow:0 30px 100px #000;
+}
+
+h1{
+font-size:52px;
+letter-spacing:4px;
+margin:0 0 15px;
+}
+
+h2{
+font-size:32px;
+}
+
+p{
+color:#bac6ce;
+line-height:1.6;
+}
+
 button{
-font-size:24px;padding:15px 45px;border:0;border-radius:12px;
-background:#36e878;color:#07150c;font-weight:bold;cursor:pointer
+border:0;
+border-radius:12px;
+padding:15px 42px;
+font-size:20px;
+font-weight:bold;
+cursor:pointer;
+background:#42e87a;
+color:#06140a;
 }
-button:hover{transform:scale(1.05)}
-#ui{
-position:absolute;top:10px;left:10px;
-color:white;background:#0008;padding:12px;
-z-index:10;display:none
+
+#waiting{
+display:none;
 }
+
+#game{
+display:none;
+position:fixed;
+inset:0;
+z-index:20;
+pointer-events:none;
+color:white;
+}
+
+.hud{
+position:absolute;
+top:15px;
+left:15px;
+background:#071018dd;
+padding:13px 18px;
+border-radius:12px;
+line-height:1.6;
+}
+
+#role{
+left:auto;
+right:15px;
+}
+
+#hunterTimer{
+position:absolute;
+top:95px;
+left:50%;
+transform:translateX(-50%);
+padding:13px 25px;
+border-radius:12px;
+background:#111b24ee;
+font-size:18px;
+font-weight:bold;
+}
+
 #crosshair{
-position:absolute;left:50%;top:50%;
-width:20px;height:20px;transform:translate(-50%,-50%);
-z-index:5;display:none
+position:absolute;
+left:50%;
+top:50%;
+width:20px;
+height:20px;
+transform:translate(-50%,-50%);
 }
-#crosshair:before,#crosshair:after{
-content:"";position:absolute;background:white
+
+#crosshair:before,
+#crosshair:after{
+content:"";
+position:absolute;
+background:white;
+box-shadow:0 0 5px #000;
 }
-#crosshair:before{width:20px;height:2px;top:9px}
-#crosshair:after{height:20px;width:2px;left:9px}
-#paint{
-position:absolute;right:20px;bottom:20px;
-width:55px;height:55px;border-radius:50%;
-background:#ff304f;border:4px solid white;
-box-shadow:0 0 20px #ff304f;display:none
+
+#crosshair:before{
+width:20px;
+height:2px;
+top:9px;
 }
+
+#crosshair:after{
+width:2px;
+height:20px;
+left:9px;
+}
+
+#help{
+position:absolute;
+left:15px;
+bottom:15px;
+background:#071018dd;
+padding:10px 14px;
+border-radius:10px;
+font-size:13px;
+line-height:1.5;
+}
+
+#message{
+position:absolute;
+top:145px;
+left:50%;
+transform:translateX(-50%);
+background:#101820ee;
+padding:12px 25px;
+border-radius:10px;
+opacity:0;
+transition:.2s;
+}
+
+#paintMenu{
+display:none;
+position:fixed;
+inset:0;
+z-index:200;
+align-items:center;
+justify-content:center;
+background:#0009;
+}
+
+.paintBox{
+width:850px;
+max-width:94%;
+max-height:90vh;
+overflow:auto;
+background:#101820fa;
+border-radius:22px;
+padding:30px;
+color:white;
+text-align:center;
+}
+
+.palette{
+display:grid;
+grid-template-columns:repeat(10,1fr);
+gap:11px;
+margin:25px 0;
+}
+
+.color{
+height:52px;
+width:52px;
+border-radius:50%;
+border:3px solid #ffffff44;
+cursor:pointer;
+}
+
+.color:hover{
+transform:scale(1.1);
+}
+
+.color.active{
+border-color:white;
+box-shadow:
+0 0 0 4px #ffffff33,
+0 0 20px currentColor;
+}
+
+#preview{
+margin:15px auto;
+width:90px;
+height:90px;
+border-radius:50%;
+border:6px solid white;
+}
+
 #end{
-position:absolute;inset:0;z-index:30;
-display:none;align-items:center;justify-content:center;
-background:#000b;color:white;text-align:center
+display:none;
 }
+
 </style>
+
 </head>
 
 <body>
 
-<div id="menu">
-<div id="box">
-<h1>🦎 MECHA CHAMELEON</h1>
-<p>Finde die versteckten Menschen und male sie an!</p>
-<p>WASD = Bewegen · Maus = Umschauen · Linksklick = Farbe</p>
-<button id="start">START</button>
-</div>
+
+<div class="screen" id="start">
+
+<div class="box">
+
+<h1>
+🦎 MECHA<br>
+CHAMELEON
+</h1>
+
+<p>
+
+Eine Farbbombe ist explodiert.<br>
+Die gesamte Welt ist voller Farbe.<br><br>
+
+Male deinen Charakter passend zu deiner Umgebung an.<br>
+
+Ein anderer Spieler wird zum Hunter.
+
+</p>
+
+<button id="startButton">
+START
+</button>
+
 </div>
 
-<div id="ui">
-🎨 Gefunden: <span id="found">0</span>/8<br>
-⏱ Zeit: <span id="time">90</span>
 </div>
+
+
+<div class="screen" id="waiting">
+
+<div class="box">
+
+<h2>👥 WARTE AUF SPIELER</h2>
+
+<p>
+Du bist momentan alleine.
+</p>
+
+<p>
+Spieler:
+<strong id="playerCount">
+1
+</strong>
+/
+2
+</p>
+
+<p>
+Sobald ein zweiter Spieler joint,
+startet die Runde automatisch.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="screen" id="end">
+
+<div class="box">
+
+<h1>🔎 GEFUNDEN!</h1>
+
+<p id="endText"></p>
+
+<button onclick="location.reload()">
+NOCHMAL
+</button>
+
+</div>
+
+</div>
+
+
+<div id="game">
+
+<div class="hud">
+
+🎨 <span id="colorName">
+ROT
+</span>
+
+<br>
+
+🎭 Rolle:
+<span id="myRole">
+...
+</span>
+
+<br>
+
+👥 Spieler:
+<span id="playersOnline">
+2
+</span>
+
+</div>
+
+
+<div class="hud" id="role">
+
+🦎 MECHA CHAMELEON
+
+</div>
+
+
+<div id="hunterTimer">
+Warte auf Spielstart...
+</div>
+
+
+<div id="message"></div>
+
 
 <div id="crosshair"></div>
-<div id="paint"></div>
 
-<div id="end">
-<div id="box">
-<h1 id="endTitle">RUNDE VORBEI</h1>
-<p id="endText"></p>
-<button onclick="location.reload()">NOCHMAL</button>
+
+<div id="help">
+
+WASD = Bewegen<br>
+SHIFT = Rennen<br>
+Maus = Kamera<br>
+M = Anmalen<br>
+E = Verstecken
+
 </div>
+
 </div>
+
+
+<div id="paintMenu">
+
+<div class="paintBox">
+
+<h2>🎨 PAINT LAB</h2>
+
+<p>
+Passe deine Farbe an die explodierte Farbwelt an.
+</p>
+
+<div id="preview"></div>
+
+<div class="palette" id="palette"></div>
+
+<button id="donePaint">
+FERTIG
+</button>
+
+</div>
+
+</div>
+
+
+<script src="/socket.io/socket.io.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
+
 <script>
-/* ================= SCENE ================= */
+
+/* =====================================================
+SOCKET
+===================================================== */
+
+const socket=io();
+
+let myId=null;
+
+let players={};
+
+let myRole=null;
+
+let hunterId=null;
+
+let gameStarted=false;
+
+let selectedColor=0xff1744;
+
+
+/* =====================================================
+COLORS
+===================================================== */
+
+const colors=[
+
+["ROT",0xff1744],
+["DUNKELROT",0x850018],
+["KORALLE",0xff625f],
+["ORANGE",0xff7200],
+["MANDARINE",0xff9d00],
+["GELB",0xffe000],
+["GOLD",0xffb800],
+["LIMETTE",0xb8ff00],
+["GRÜN",0x23dc55],
+["DUNKELGRÜN",0x075b2a],
+
+["MOOS",0x667d32],
+["MINT",0x55ffc0],
+["TÜRKIS",0x00d7c5],
+["CYAN",0x00edff],
+["HIMMELBLAU",0x64c7ff],
+["BLAU",0x1680ff],
+["DUNKELBLAU",0x153b91],
+["NAVY",0x111b4b],
+["VIOLETT",0x793cff],
+["LILA",0xb56cff],
+
+["MAGENTA",0xff00bd],
+["PINK",0xff579f],
+["WEISS",0xffffff],
+["SILBER",0xc6ccd1],
+["GRAU",0x777d82],
+["DUNKELGRAU",0x3c4146],
+["SCHWARZ",0x111316],
+["BRAUN",0x754326],
+["KUPFER",0xb86b35],
+["BEIGE",0xe7c994],
+["KHAKI",0x929b65],
+
+["OLIV",0x687329],
+["PETROL",0x176b70],
+["SMARAGD",0x00a873],
+["SAPHIR",0x2458ff],
+["RUBIN",0xd10030],
+["AMETHYST",0x9966cc],
+["LAVENDEL",0xc8a5ff],
+["PFIRSICH",0xffb18e],
+["TERRAKOTTA",0xc65c3b],
+["CHAMPAGNER",0xf7e4c5],
+
+["PLATIN",0xe4e4e4],
+["NACHTBLAU",0x101b45],
+["WALDGRÜN",0x164c2d],
+["MOOSGRÜN",0x536d35],
+["MEERBLAU",0x087da5],
+["SONNENGELB",0xffee00],
+["KIRSCHROT",0xc91e3b],
+["AQUA",0x00ffff],
+["FUCHSIA",0xff00a8],
+["INDIGO",0x4b0082],
+
+["SCHOKO",0x472719],
+["ASCHGRAU",0x777777],
+["STEINGRAU",0x8c8b83],
+["NEONPINK",0xff008c],
+["NEONGRÜN",0x00ff65],
+["NEONBLAU",0x008cff],
+["NEONLILA",0x9d00ff],
+["NEONGELB",0xdfff00]
+
+];
+
+
+const palette=document.getElementById("palette");
+
+colors.forEach((c,i)=>{
+
+const el=document.createElement("div");
+
+el.className="color"+(i===0?" active":"");
+
+el.style.background=
+"#"+c[1].toString(16).padStart(6,"0");
+
+el.onclick=()=>{
+
+selectedColor=c[1];
+
+document
+.querySelectorAll(".color")
+.forEach(x=>x.classList.remove("active"));
+
+el.classList.add("active");
+
+document.getElementById("colorName")
+.textContent=c[0];
+
+document.getElementById("preview")
+.style.background=
+"#"+c[1].toString(16).padStart(6,"0");
+
+
+socket.emit("paint",selectedColor);
+
+paintMyCharacter();
+
+};
+
+palette.appendChild(el);
+
+});
+
+
+/* =====================================================
+THREE
+===================================================== */
 
 const scene=new THREE.Scene();
+
 scene.background=new THREE.Color(0x87cfff);
-scene.fog=new THREE.Fog(0x87cfff,35,110);
+
+scene.fog=new THREE.Fog(
+0x87cfff,
+35,
+125
+);
+
 
 const camera=new THREE.PerspectiveCamera(
-75,
+70,
 innerWidth/innerHeight,
-0.1,
+.1,
 1000
 );
+
 
 const renderer=new THREE.WebGLRenderer({
 antialias:true
 });
 
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+renderer.setPixelRatio(
+Math.min(devicePixelRatio,2)
+);
+
 renderer.shadowMap.enabled=true;
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+renderer.domElement
+);
 
-
-/* ================= LIGHT ================= */
 
 scene.add(
-new THREE.AmbientLight(0xffffff,1.3)
+new THREE.HemisphereLight(
+0xffffff,
+0x304020,
+2.2
+)
 );
+
 
 const sun=new THREE.DirectionalLight(
-0xffffff,2.5
+0xffffff,
+3
 );
 
-sun.position.set(30,50,20);
+sun.position.set(
+30,
+50,
+20
+);
+
 sun.castShadow=true;
+
 scene.add(sun);
 
 
-/* ================= PLAYER ================= */
-
-const player=new THREE.Object3D();
-player.position.set(0,2,35);
-scene.add(player);
-
-const controls=new THREE.PointerLockControls(
-camera,
-document.body
-);
-
-let keys={};
-
-window.addEventListener("keydown",e=>{
-keys[e.code]=true;
-});
-
-window.addEventListener("keyup",e=>{
-keys[e.code]=false;
-});
-
-
-/* ================= GAME VARIABLES ================= */
-
-let running=false;
-let time=90;
-let found=0;
-
-let humans=[];
-let shots=[];
-let particles=[];
-
-
-/* ================= START ================= */
-
-document.getElementById("start").onclick=()=>{
-
-document.getElementById("menu").style.display="none";
-document.getElementById("ui").style.display="block";
-document.getElementById("crosshair").style.display="block";
-document.getElementById("paint").style.display="block";
-
-running=true;
-
-controls.lock();
-};
-
-
-/* ================= WORLD ================= */
+/* =====================================================
+GROUND
+===================================================== */
 
 const ground=new THREE.Mesh(
-new THREE.PlaneGeometry(100,100),
+
+new THREE.PlaneGeometry(
+110,
+110
+),
+
 new THREE.MeshStandardMaterial({
-color:0x4c914d,
+color:0x638855,
 roughness:1
 })
+
 );
 
 ground.rotation.x=-Math.PI/2;
+
 ground.receiveShadow=true;
+
 scene.add(ground);
 
 
-/* ================= ROADS ================= */
+/* =====================================================
+PAINT BOMB WORLD
+===================================================== */
 
-const roadMat=new THREE.MeshStandardMaterial({
-color:0x30363b
-});
+const paintColors=[
+0xff1744,
+0xff7200,
+0xffe000,
+0x23dc55,
+0x00dfff,
+0x1680ff,
+0x823cff,
+0xff19bd
+];
 
-function road(x,z,w,d){
 
-const r=new THREE.Mesh(
-new THREE.BoxGeometry(w,.08,d),
-roadMat
+for(let i=0;i<220;i++){
+
+const splash=new THREE.Mesh(
+
+new THREE.CircleGeometry(
+2+Math.random()*7,
+24
+),
+
+new THREE.MeshStandardMaterial({
+color:
+paintColors[
+Math.floor(
+Math.random()*paintColors.length
+)
+],
+roughness:1
+})
+
 );
 
-r.position.set(x,.04,z);
-scene.add(r);
+splash.rotation.x=-Math.PI/2;
+
+splash.position.set(
+
+(Math.random()-.5)*100,
+
+.025,
+
+(Math.random()-.5)*100
+
+);
+
+splash.scale.y=
+.4+Math.random();
+
+scene.add(splash);
+
 }
 
-road(0,0,100,12);
-road(0,0,12,100);
+
+/* =====================================================
+BUILDINGS
+===================================================== */
+
+function building(x,z,w,d,h,c){
+
+const group=new THREE.Group();
 
 
-/* ================= BUILDINGS ================= */
+const body=new THREE.Mesh(
 
-function building(x,z,w,d,h,color){
+new THREE.BoxGeometry(
+w,h,d
+),
 
-const b=new THREE.Mesh(
-new THREE.BoxGeometry(w,h,d),
 new THREE.MeshStandardMaterial({
-color:color,
-roughness:.8
+color:c,
+roughness:.9
 })
+
 );
 
-b.position.set(x,h/2,z);
-b.castShadow=true;
-b.receiveShadow=true;
-scene.add(b);
+body.position.y=h/2;
 
+body.castShadow=true;
 
-/* roof */
+group.add(body);
+
 
 const roof=new THREE.Mesh(
-new THREE.BoxGeometry(w+.4,.4,d+.4),
+
+new THREE.BoxGeometry(
+w+.5,
+.45,
+d+.5
+),
+
 new THREE.MeshStandardMaterial({
-color:0x443a35
+color:0x463b36
 })
+
 );
 
-roof.position.set(x,h+.2,z);
-roof.castShadow=true;
-scene.add(roof);
+roof.position.y=h+.23;
+
+group.add(roof);
 
 
-/* windows */
+for(let i=0;i<8;i++){
 
-for(let wx=-w/2+2;wx<w/2;wx+=3){
+const blob=new THREE.Mesh(
 
-const win=new THREE.Mesh(
-new THREE.BoxGeometry(1.1,1.4,.08),
+new THREE.SphereGeometry(
+.5+Math.random()*1.7,
+12,
+8
+),
+
 new THREE.MeshStandardMaterial({
-color:0x6ebbd8,
-metalness:.3
+
+color:
+paintColors[
+Math.floor(
+Math.random()*paintColors.length
+)
+]
+
 })
+
 );
 
-win.position.set(
-x+wx,
-h*.62,
-z-d/2-.05
+blob.scale.y=.15;
+
+blob.position.set(
+
+(Math.random()-.5)*w,
+
+1+Math.random()*h*.8,
+
+d/2+.08
+
 );
 
-scene.add(win);
+group.add(blob);
+
 }
+
+
+group.position.set(x,0,z);
+
+scene.add(group);
+
 }
 
 
-/* detailed town */
-
-building(-30,-27,13,12,8,0xb6a58c);
-building(29,-27,15,11,7,0x8e9da5);
-building(-30,28,14,13,9,0xc2b18e);
-building(30,27,15,13,8,0xa38e7c);
-building(-18,-5,9,8,6,0x777e86);
-building(18,8,10,9,7,0x9c8f7e);
+building(-30,-28,15,13,8,0xb7a88e);
+building(30,-28,16,12,8,0x8e9ba2);
+building(-30,28,15,13,9,0xc1ad8c);
+building(30,28,16,13,8,0xa38b78);
+building(-18,-5,9,8,6,0x777f84);
+building(18,8,10,9,7,0x998b77);
 
 
-/* ================= TREES ================= */
+/* =====================================================
+TREES
+===================================================== */
 
 function tree(x,z){
 
 const g=new THREE.Group();
 
+
 const trunk=new THREE.Mesh(
-new THREE.CylinderGeometry(.25,.4,3,8),
+
+new THREE.CylinderGeometry(
+.25,.4,3,8
+),
+
 new THREE.MeshStandardMaterial({
-color:0x68452d
+color:0x68462e
 })
+
 );
 
 trunk.position.y=1.5;
-trunk.castShadow=true;
+
 g.add(trunk);
 
-const leaves=new THREE.Mesh(
-new THREE.IcosahedronGeometry(2.2,1),
+
+const crown=new THREE.Mesh(
+
+new THREE.IcosahedronGeometry(
+2.2,
+1
+),
+
 new THREE.MeshStandardMaterial({
-color:0x28723b
+
+color:
+paintColors[
+Math.floor(
+Math.random()*paintColors.length
+)
+]
+
 })
+
 );
 
-leaves.position.y=4;
-leaves.castShadow=true;
-g.add(leaves);
+crown.position.y=4;
+
+g.add(crown);
+
 
 g.position.set(x,0,z);
+
 scene.add(g);
+
 }
 
-for(let i=0;i<55;i++){
 
-let x=(Math.random()-.5)*85;
-let z=(Math.random()-.5)*85;
+for(let i=0;i<75;i++){
 
-if(Math.abs(x)<9||Math.abs(z)<9)continue;
+let x=(Math.random()-.5)*90;
+
+let z=(Math.random()-.5)*90;
+
+if(
+Math.abs(x)<8 ||
+Math.abs(z)<8
+)continue;
 
 tree(x,z);
+
 }
 
 
-/* ================= CARS ================= */
+/* =====================================================
+CHARACTER CREATION
+===================================================== */
 
-function car(x,z,color){
+function createCharacter(color){
 
 const g=new THREE.Group();
 
-const body=new THREE.Mesh(
-new THREE.BoxGeometry(2.2,.7,4),
-new THREE.MeshStandardMaterial({
+const mat=new THREE.MeshStandardMaterial({
 color:color,
-metalness:.5,
-roughness:.3
-})
-);
-
-body.position.y=.65;
-g.add(body);
-
-const cabin=new THREE.Mesh(
-new THREE.BoxGeometry(1.7,.8,2),
-new THREE.MeshStandardMaterial({
-color:0x26343b,
-metalness:.3
-})
-);
-
-cabin.position.y=1.25;
-g.add(cabin);
-
-for(let sx of [-1,1]){
-for(let sz of [-1.25,1.25]){
-
-const wheel=new THREE.Mesh(
-new THREE.CylinderGeometry(.35,.35,.25,12),
-new THREE.MeshStandardMaterial({
-color:0x111111
-})
-);
-
-wheel.rotation.z=Math.PI/2;
-wheel.position.set(sx,0.4,sz);
-g.add(wheel);
-}
-}
-
-g.position.set(x,0,z);
-g.rotation.y=Math.random()*Math.PI;
-scene.add(g);
-}
-
-car(-8,-18,0xb62e36);
-car(10,-19,0x28578c);
-car(-18,18,0xc79d27);
-car(20,-20,0x555b60);
-
-
-/* ================= BENCHES ================= */
-
-function bench(x,z){
-
-const seat=new THREE.Mesh(
-new THREE.BoxGeometry(3,.25,.7),
-new THREE.MeshStandardMaterial({
-color:0x79502e
-})
-);
-
-seat.position.set(x,1,z);
-scene.add(seat);
-
-const back=new THREE.Mesh(
-new THREE.BoxGeometry(3,1,.18),
-new THREE.MeshStandardMaterial({
-color:0x79502e
-})
-);
-
-back.position.set(x,1.45,z+.3);
-scene.add(back);
-}
-
-bench(-13,-12);
-bench(13,13);
-bench(-35,8);
-bench(35,-8);
-
-
-/* ================= HUMANS ================= */
-
-const shirtColors=[
-0x315e91,
-0xb63737,
-0x3d7748,
-0x8b612f,
-0x754d8d,
-0x417b83,
-0x9c7728,
-0x555555
-];
-
-function createHuman(x,z,id){
-
-const h=new THREE.Group();
-
-const skin=new THREE.MeshStandardMaterial({
-color:0xd49a78
+roughness:.7
 });
 
-const shirt=new THREE.MeshStandardMaterial({
-color:shirtColors[id]
+const skin=new THREE.MeshStandardMaterial({
+color:0xd59b78
 });
 
 const pants=new THREE.MeshStandardMaterial({
-color:0x252e38
+color:0x29313a
 });
 
 
-/* body */
-
 const body=new THREE.Mesh(
-new THREE.BoxGeometry(.7,1.25,.45),
-shirt
+new THREE.BoxGeometry(.75,1.3,.48),
+mat
 );
 
 body.position.y=1.45;
-body.castShadow=true;
-h.add(body);
 
+g.add(body);
 
-/* head */
 
 const head=new THREE.Mesh(
-new THREE.SphereGeometry(.38,16,16),
+new THREE.SphereGeometry(.39,16,16),
 skin
 );
 
 head.position.y=2.35;
-head.castShadow=true;
-h.add(head);
 
+g.add(head);
 
-/* hair */
 
 const hair=new THREE.Mesh(
-new THREE.SphereGeometry(.39,16,16),
+new THREE.SphereGeometry(.4,16,16),
 new THREE.MeshStandardMaterial({
-color:0x241d19
+color:0x201b18
 })
 );
 
 hair.scale.y=.45;
+
 hair.position.y=2.58;
-h.add(hair);
+
+g.add(hair);
 
 
-/* arms */
-
-for(let s of [-1,1]){
+for(const s of[-1,1]){
 
 const arm=new THREE.Mesh(
-new THREE.BoxGeometry(.23,1,.23),
-shirt
+new THREE.BoxGeometry(.24,1,.24),
+mat
 );
 
-arm.position.set(s*.5,1.5,0);
-h.add(arm);
+arm.position.set(
+s*.52,
+1.5,
+0
+);
 
+g.add(arm);
 
-/* legs */
 
 const leg=new THREE.Mesh(
 new THREE.BoxGeometry(.27,1.05,.3),
 pants
 );
 
-leg.position.set(s*.19,.55,0);
-h.add(leg);
+leg.position.set(
+s*.2,
+.55,
+0
+);
+
+g.add(leg);
+
 }
 
 
-h.position.set(x,0,z);
+return g;
 
-h.userData={
-painted:false,
-baseX:x,
-baseZ:z,
-phase:Math.random()*10,
-id:id
+}
+
+
+let myCharacter=
+createCharacter(selectedColor);
+
+myCharacter.position.set(
+0,0,35
+);
+
+scene.add(myCharacter);
+
+
+let otherCharacters={};
+
+
+/* =====================================================
+MY CHARACTER PAINT
+===================================================== */
+
+function paintMyCharacter(){
+
+myCharacter.traverse(obj=>{
+
+if(
+obj.isMesh &&
+obj.position.y!==2.35 &&
+obj.position.y!==2.58
+){
+
+if(obj.material){
+obj.material=obj.material.clone();
+obj.material.color.setHex(
+selectedColor
+);
+}
+
+}
+
+});
+
+}
+
+
+/* =====================================================
+START
+===================================================== */
+
+document.getElementById("startButton").onclick=()=>{
+
+document.getElementById("start")
+.style.display="none";
+
+document.getElementById("waiting")
+.style.display="flex";
+
+socket.emit("requestState");
+
 };
 
-scene.add(h);
-humans.push(h);
-}
 
-const positions=[
-[-22,-21],
-[23,-20],
-[-23,22],
-[24,21],
-[-16,13],
-[16,-13],
-[-35,4],
-[35,-4]
-];
+/* =====================================================
+SOCKET EVENTS
+===================================================== */
 
-positions.forEach((p,i)=>{
-createHuman(p[0],p[1],i);
+socket.on("connect",()=>{
+
+myId=socket.id;
+
 });
 
 
-/* ================= PAINT ================= */
+socket.on("waiting",data=>{
 
-function shootPaint(){
+document.getElementById("start")
+.style.display="none";
 
-const dir=new THREE.Vector3();
+document.getElementById("waiting")
+.style.display="flex";
 
-camera.getWorldDirection(dir);
+document.getElementById("playerCount")
+.textContent=data.players;
 
-const shot=new THREE.Mesh(
-new THREE.SphereGeometry(.13,10,10),
-new THREE.MeshBasicMaterial({
-color:0xff304f
-})
-);
-
-shot.position.copy(camera.position);
-
-shot.userData.velocity=
-dir.multiplyScalar(45);
-
-shot.userData.life=2;
-
-scene.add(shot);
-shots.push(shot);
-}
-
-
-/* ================= PAINT HUMAN ================= */
-
-function paintHuman(h){
-
-if(h.userData.painted)return;
-
-h.userData.painted=true;
-found++;
-
-document.getElementById("found").textContent=found;
-
-h.traverse(obj=>{
-
-if(obj.isMesh){
-
-obj.material=obj.material.clone();
-obj.material.color.set(0xff304f);
-}
 });
 
-paintBurst(
-h.position.clone().add(
-new THREE.Vector3(0,1.5,0)
-)
-);
 
-if(found===humans.length){
-finish(true);
-}
-}
+socket.on("gameStart",data=>{
 
+players=data.players;
 
-/* ================= PAINT BURST ================= */
+hunterId=data.hunterId;
 
-function paintBurst(pos){
+gameStarted=true;
 
-for(let i=0;i<25;i++){
-
-const p=new THREE.Mesh(
-new THREE.SphereGeometry(.06,6,6),
-new THREE.MeshBasicMaterial({
-color:0xff304f
-})
-);
-
-p.position.copy(pos);
-
-p.userData.velocity=new THREE.Vector3(
-(Math.random()-.5)*6,
-Math.random()*6,
-(Math.random()-.5)*6
-);
-
-p.userData.life=1;
-
-scene.add(p);
-particles.push(p);
-}
-}
+myRole=
+myId===hunterId
+?"hunter"
+:"chameleon";
 
 
-/* ================= UPDATE SHOTS ================= */
+document.getElementById("waiting")
+.style.display="none";
 
-function updateShots(dt){
+document.getElementById("game")
+.style.display="block";
 
-for(let i=shots.length-1;i>=0;i--){
 
-const s=shots[i];
+document.getElementById("myRole")
+.textContent=
+myRole==="hunter"
+?"🔎 HUNTER"
+:"🦎 CHAMELEON";
 
-s.position.addScaledVector(
-s.userData.velocity,
-dt
-);
 
-s.userData.life-=dt;
+if(myRole==="hunter"){
 
-let hit=false;
+document.getElementById("role")
+.textContent=
+"🔎 DU BIST DER HUNTER";
 
-for(const h of humans){
+}else{
 
-if(h.userData.painted)continue;
+document.getElementById("role")
+.textContent=
+"🦎 VERSTECKE DICH";
 
-const center=h.position.clone();
-center.y+=1.4;
-
-if(s.position.distanceTo(center)<.9){
-
-paintHuman(h);
-
-scene.remove(s);
-shots.splice(i,1);
-
-hit=true;
-break;
-}
-}
-
-if(hit)continue;
-
-if(s.userData.life<=0){
-
-scene.remove(s);
-shots.splice(i,1);
-}
-}
 }
 
 
-/* ================= HUMAN MOVEMENT ================= */
+createOtherPlayers();
 
-function updateHumans(dt){
-
-humans.forEach(h=>{
-
-if(h.userData.painted)return;
-
-const u=h.userData;
-
-u.phase+=dt;
-
-h.position.x=
-u.baseX+
-Math.sin(u.phase*.6+u.id)*1.5;
-
-h.position.z=
-u.baseZ+
-Math.cos(u.phase*.5+u.id)*1.5;
-
-h.rotation.y=
-Math.sin(u.phase*.7)*.6;
 });
-}
 
 
-/* ================= PARTICLES ================= */
+/* =====================================================
+OTHER PLAYER
+===================================================== */
 
-function updateParticles(dt){
+function createOtherPlayers(){
 
-for(let i=particles.length-1;i>=0;i--){
+Object.keys(players).forEach(id=>{
 
-const p=particles[i];
+if(id===myId)return;
 
-p.position.addScaledVector(
-p.userData.velocity,
-dt
+if(otherCharacters[id])return;
+
+const char=
+createCharacter(
+players[id].color ||
+0xff1744
 );
 
-p.userData.velocity.y-=9*dt;
-p.userData.life-=dt;
+scene.add(char);
 
-if(p.userData.life<=0){
+otherCharacters[id]=char;
 
-scene.remove(p);
-particles.splice(i,1);
-}
-}
+});
+
 }
 
 
-/* ================= PLAYER MOVEMENT ================= */
+/* =====================================================
+PLAYER UPDATE
+===================================================== */
+
+socket.on("playerUpdate",data=>{
+
+if(data.id===myId)return;
+
+if(!otherCharacters[data.id]){
+
+const char=
+createCharacter(
+data.color ||
+0xff1744
+);
+
+scene.add(char);
+
+otherCharacters[data.id]=char;
+
+}
+
+
+const char=
+otherCharacters[data.id];
+
+
+char.position.set(
+data.x,
+data.y,
+data.z
+);
+
+char.rotation.y=
+data.rotation;
+
+
+char.visible=true;
+
+});
+
+
+/* =====================================================
+PAINT OTHER PLAYER
+===================================================== */
+
+socket.on("playerPaint",data=>{
+
+if(data.id===myId)return;
+
+if(!otherCharacters[data.id])return;
+
+
+otherCharacters[data.id]
+.traverse(obj=>{
+
+if(
+obj.isMesh &&
+obj.position.y!==2.35 &&
+obj.position.y!==2.58
+){
+
+obj.material=
+obj.material.clone();
+
+obj.material.color.setHex(
+data.color
+);
+
+}
+
+});
+
+});
+
+
+/* =====================================================
+HUNTER TIMER
+===================================================== */
+
+socket.on("hunterTimer",data=>{
+
+const sec=
+Math.ceil(data.remaining/1000);
+
+
+if(myRole==="hunter"){
+
+if(sec>0){
+
+document.getElementById("hunterTimer")
+.textContent=
+"🔒 Hunter gesperrt: "+sec+" Sekunden";
+
+}else{
+
+document.getElementById("hunterTimer")
+.textContent=
+"🔎 DU DARFST JETZT SUCHEN!";
+
+}
+
+}else{
+
+if(sec>0){
+
+document.getElementById("hunterTimer")
+.textContent=
+"🫥 Noch "+sec+
+"Sekunden zum Verstecken!";
+
+}else{
+
+document.getElementById("hunterTimer")
+.textContent=
+"🔎 Der Hunter sucht dich!";
+
+}
+
+}
+
+});
+
+
+/* =====================================================
+MOVEMENT
+===================================================== */
+
+const keys={};
+
+let hidden=false;
+
+window.addEventListener("keydown",e=>{
+
+keys[e.code]=true;
+
+
+if(e.code==="KeyM"){
+
+openPaint();
+
+}
+
+
+if(e.code==="KeyE"){
+
+hidden=!hidden;
+
+showMessage(
+hidden
+?"🫥 Du bist versteckt."
+:"👀 Du bist sichtbar."
+);
+
+}
+
+});
+
+
+window.addEventListener("keyup",e=>{
+
+keys[e.code]=false;
+
+});
+
 
 function updatePlayer(dt){
 
-if(!running)return;
+if(!gameStarted)return;
 
-const speed=8;
+const speed=
+keys.ShiftLeft||
+keys.ShiftRight
+?9
+:5.5;
+
 
 let f=0;
 let r=0;
 
+
 if(keys.KeyW)f++;
 if(keys.KeyS)f--;
+
 if(keys.KeyA)r--;
 if(keys.KeyD)r++;
 
+
 if(f||r){
 
-const forward=new THREE.Vector3();
+const forward=
+new THREE.Vector3();
 
-camera.getWorldDirection(forward);
+camera.getWorldDirection(
+forward
+);
+
 forward.y=0;
+
 forward.normalize();
 
-const right=new THREE.Vector3();
+
+const right=
+new THREE.Vector3();
 
 right.crossVectors(
 forward,
 camera.up
 ).normalize();
 
-player.position.addScaledVector(
+
+myCharacter.position
+.addScaledVector(
 forward,
 f*speed*dt
 );
 
-player.position.addScaledVector(
+myCharacter.position
+.addScaledVector(
 right,
 r*speed*dt
 );
+
 }
 
-camera.position.copy(player.position);
-camera.position.y=2.2;
 
-camera.position.x=
+myCharacter.position.x=
 THREE.MathUtils.clamp(
-camera.position.x,-46,46
+myCharacter.position.x,
+-48,
+48
 );
 
-camera.position.z=
+myCharacter.position.z=
 THREE.MathUtils.clamp(
-camera.position.z,-46,46
+myCharacter.position.z,
+-48,
+48
 );
+
+
+const targetCamera=
+new THREE.Vector3(
+
+myCharacter.position.x+5,
+
+myCharacter.position.y+3.3,
+
+myCharacter.position.z+7
+
+);
+
+
+camera.position.lerp(
+targetCamera,
+.12
+);
+
+camera.lookAt(
+
+myCharacter.position.x,
+
+1.3,
+
+myCharacter.position.z
+
+);
+
+
+/*
+An Server senden
+*/
+
+socket.emit("playerMove",{
+
+x:myCharacter.position.x,
+
+y:myCharacter.position.y,
+
+z:myCharacter.position.z,
+
+rotation:myCharacter.rotation.y,
+
+hidden
+
+});
+
 }
 
 
-/* ================= MOUSE SHOOT ================= */
+/* =====================================================
+PAINT MENU
+===================================================== */
 
-window.addEventListener("mousedown",e=>{
+function openPaint(){
 
-if(
-e.button===0 &&
-running &&
-controls.isLocked
-){
-shootPaint();
+document.getElementById("paintMenu")
+.style.display="flex";
+
 }
+
+function closePaint(){
+
+document.getElementById("paintMenu")
+.style.display="none";
+
+}
+
+document.getElementById("donePaint")
+.onclick=closePaint;
+
+
+/* =====================================================
+CATCH
+===================================================== */
+
+function checkCatch(){
+
+if(myRole!=="hunter")return;
+
+if(!gameStarted)return;
+
+
+let target=null;
+
+Object.keys(otherCharacters)
+.forEach(id=>{
+
+if(target)return;
+
+const p=
+otherCharacters[id];
+
+const d=
+myCharacter.position.distanceTo(
+p.position
+);
+
+if(d<2.8){
+
+target=id;
+
+}
+
 });
 
 
-/* ================= GAME END ================= */
+if(target){
 
-function finish(won){
+socket.emit(
+"catchPlayer",
+target
+);
 
-running=false;
+}
 
-if(controls.isLocked)
-controls.unlock();
-
-document.getElementById("end").style.display="flex";
-
-document.getElementById("endTitle").textContent=
-won?"🏆 ALLE GEFUNDEN!":"⏱ ZEIT ABGELAUFEN";
-
-document.getElementById("endText").innerHTML=
-"Du hast <b>"+found+
-"</b> von <b>"+humans.length+
-"</b> Menschen gefunden.";
 }
 
 
-/* ================= LOOP ================= */
+setInterval(
+checkCatch,
+100
+);
 
-let last=performance.now();
+
+/* =====================================================
+CAUGHT
+===================================================== */
+
+socket.on("playerCaught",data=>{
+
+gameStarted=false;
+
+
+if(data.targetId===myId){
+
+document.getElementById("end")
+.style.display="flex";
+
+document.getElementById("endText")
+.textContent=
+"Der Hunter hat dich gefunden!";
+
+}else{
+
+document.getElementById("end")
+.style.display="flex";
+
+document.getElementById("endText")
+.textContent=
+"Du hast den Chameleon-Spieler gefunden!";
+
+}
+
+});
+
+
+socket.on("hunterLocked",()=>{
+
+showMessage(
+"🔒 Du musst noch warten!"
+);
+
+});
+
+
+/* =====================================================
+MESSAGE
+===================================================== */
+
+function showMessage(text){
+
+const m=
+document.getElementById("message");
+
+m.textContent=text;
+
+m.style.opacity="1";
+
+clearTimeout(window.messageTimer);
+
+window.messageTimer=
+setTimeout(()=>{
+
+m.style.opacity="0";
+
+},1500);
+
+}
+
+
+/* =====================================================
+ANIMATION
+===================================================== */
+
+let last=
+performance.now();
+
 
 function animate(){
 
-requestAnimationFrame(animate);
+requestAnimationFrame(
+animate
+);
 
-const now=performance.now();
-const dt=Math.min((now-last)/1000,.05);
+
+const now=
+performance.now();
+
+const dt=
+Math.min(
+(now-last)/1000,
+.05
+);
+
 last=now;
 
-if(running){
 
-time-=dt;
-
-document.getElementById("time").textContent=
-Math.ceil(time);
-
-if(time<=0){
-finish(false);
-}else{
 updatePlayer(dt);
-updateHumans(dt);
-updateShots(dt);
-updateParticles(dt);
-}
-}
 
-renderer.render(scene,camera);
+
+renderer.render(
+scene,
+camera
+);
+
 }
 
 animate();
 
 
-/* ================= RESIZE ================= */
+/* =====================================================
+RESIZE
+===================================================== */
 
 window.addEventListener("resize",()=>{
 
-camera.aspect=innerWidth/innerHeight;
+camera.aspect=
+innerWidth/innerHeight;
+
 camera.updateProjectionMatrix();
 
 renderer.setSize(
 innerWidth,
 innerHeight
 );
+
 });
+
 </script>
+
 </body>
 </html>
