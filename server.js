@@ -1,52 +1,187 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
 const path = require("path");
+const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "*"
+        origin: "*",
+        methods: ["GET", "POST"]
     }
 });
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 
+const MAX_PLAYERS = 2;
+const HUNTER_WAIT = 30000;
+
+let waitingPlayers = [];
 let players = {};
 
-let hunterId = null;
-let gameStarted = false;
-let gameStartTime = 0;
+let game = {
+    running: false,
+    hunterId: null,
+    startedAt: 0
+};
 
-const MAX_PLAYERS = 2;
-const HUNTER_DELAY = 30000;
+
+/* =========================
+   LOBBY
+========================= */
+
+function sendLobbyState() {
+
+    const count = waitingPlayers.length;
+
+    io.emit("lobbyUpdate", {
+        players: count,
+        needed: Math.max(0, MAX_PLAYERS - count)
+    });
+}
 
 
-/*
-PLAYER JOIN
-*/
+function startGame() {
+
+    if (game.running) return;
+
+    if (waitingPlayers.length < MAX_PLAYERS) return;
+
+
+    const ids = waitingPlayers.splice(0, MAX_PLAYERS);
+
+    const hunter =
+        ids[Math.floor(Math.random() * ids.length)];
+
+    game.running = true;
+    game.hunterId = hunter;
+    game.startedAt = Date.now();
+
+
+    ids.forEach((id, index) => {
+
+        if (!players[id]) return;
+
+        players[id].role =
+            id === hunter
+                ? "hunter"
+                : "chameleon";
+
+        players[id].x =
+            id === hunter ? 0 : 6;
+
+        players[id].y = 0;
+
+        players[id].z = 35;
+
+        players[id].inGame = true;
+    });
+
+
+    io.to(ids[0]).emit("gameStart", {
+        myId: ids[0],
+        hunterId: hunter,
+        players: getPublicPlayers(ids)
+    });
+
+    io.to(ids[1]).emit("gameStart", {
+        myId: ids[1],
+        hunterId: hunter,
+        players: getPublicPlayers(ids)
+    });
+
+
+    sendLobbyState();
+
+    console.log(
+        "GAME START:",
+        ids,
+        "Hunter:",
+        hunter
+    );
+}
+
+
+function getPublicPlayers(ids) {
+
+    const result = {};
+
+    ids.forEach(id => {
+
+        if (!players[id]) return;
+
+        result[id] = {
+            id,
+            x: players[id].x,
+            y: players[id].y,
+            z: players[id].z,
+            rotation: players[id].rotation,
+            color: players[id].color,
+            role: players[id].role,
+            hidden: players[id].hidden
+        };
+    });
+
+    return result;
+}
+
+
+/* =========================
+   NEXT ROUND
+========================= */
+
+function endGame() {
+
+    game.running = false;
+    game.hunterId = null;
+    game.startedAt = 0;
+
+
+    Object.keys(players).forEach(id => {
+
+        if (players[id]) {
+            players[id].inGame = false;
+            players[id].role = null;
+        }
+
+    });
+
+
+    /*
+    Alle Spieler, die noch verbunden sind,
+    kommen wieder in die Lobby.
+    */
+
+    waitingPlayers = Object.keys(players);
+
+
+    io.emit("returnToLobby");
+
+    sendLobbyState();
+
+    setTimeout(startGame, 300);
+}
+
+
+/* =========================
+   CONNECTION
+========================= */
 
 io.on("connection", socket => {
 
-    console.log("Spieler verbunden:", socket.id);
-
-    if (Object.keys(players).length >= MAX_PLAYERS) {
-
-        socket.emit("roomFull");
-
-        socket.disconnect();
-
-        return;
-    }
+    console.log(
+        "JOIN:",
+        socket.id
+    );
 
 
     players[socket.id] = {
@@ -54,163 +189,178 @@ io.on("connection", socket => {
         id: socket.id,
 
         x: 0,
-
         y: 0,
-
         z: 35,
 
         rotation: 0,
 
         color: 0xff1744,
 
+        hidden: false,
+
         role: null,
 
-        hidden: false
-
+        inGame: false
     };
 
 
     /*
-    Zweiten Spieler warten lassen
+    Spieler kommt in Warteschlange.
     */
 
-    if (Object.keys(players).length === 1) {
-
-        socket.emit("waiting", {
-            players: 1,
-            needed: 1
-        });
-
-    }
+    waitingPlayers.push(socket.id);
 
 
     /*
-    Zwei Spieler vorhanden
+    Sofort Lobby anzeigen.
     */
 
-    if (Object.keys(players).length === 2) {
+    socket.emit("lobbyUpdate", {
 
-        const ids = Object.keys(players);
+        players: waitingPlayers.length,
 
-        hunterId =
-            ids[Math.floor(Math.random() * ids.length)];
-
-
-        ids.forEach(id => {
-
-            players[id].role =
-                id === hunterId
-                ? "hunter"
-                : "chameleon";
-
-        });
+        needed:
+            Math.max(
+                0,
+                MAX_PLAYERS -
+                waitingPlayers.length
+            )
+    });
 
 
-        gameStarted = true;
-
-        gameStartTime = Date.now();
-
-
-        io.emit("gameStart", {
-
-            hunterId,
-
-            players,
-
-            hunterDelay: HUNTER_DELAY
-
-        });
-
-    }
+    sendLobbyState();
 
 
     /*
-    Bewegung vom Client
+    Wenn 2 Spieler da sind:
+    Runde starten.
     */
+
+    if (
+        waitingPlayers.length >=
+        MAX_PLAYERS &&
+        !game.running
+    ) {
+
+        setTimeout(
+            startGame,
+            300
+        );
+    }
+
+
+    /* =========================
+       PLAYER MOVE
+    ========================= */
 
     socket.on("playerMove", data => {
 
-        if (!players[socket.id]) return;
-
         const p = players[socket.id];
 
+        if (!p) return;
 
-        if (typeof data.x === "number")
-            p.x = data.x;
-
-        if (typeof data.y === "number")
-            p.y = data.y;
-
-        if (typeof data.z === "number")
-            p.z = data.z;
-
-        if (typeof data.rotation === "number")
-            p.rotation = data.rotation;
-
-        if (typeof data.hidden === "boolean")
-            p.hidden = data.hidden;
+        if (!p.inGame) return;
 
 
-        io.emit("playerUpdate", {
+        if (
+            typeof data.x === "number"
+        ) p.x = data.x;
 
-            id: socket.id,
 
-            x: p.x,
+        if (
+            typeof data.y === "number"
+        ) p.y = data.y;
 
-            y: p.y,
 
-            z: p.z,
+        if (
+            typeof data.z === "number"
+        ) p.z = data.z;
 
-            rotation: p.rotation,
 
-            color: p.color,
+        if (
+            typeof data.rotation === "number"
+        ) p.rotation = data.rotation;
 
-            hidden: p.hidden
 
-        });
+        if (
+            typeof data.hidden === "boolean"
+        ) p.hidden = data.hidden;
+
+
+        /*
+        Bewegung nur an Spieler
+        der aktuellen Runde senden.
+        */
+
+        socket.broadcast.emit(
+            "playerUpdate",
+            {
+                id: socket.id,
+
+                x: p.x,
+                y: p.y,
+                z: p.z,
+
+                rotation: p.rotation,
+
+                color: p.color,
+
+                hidden: p.hidden
+            }
+        );
 
     });
 
 
-    /*
-    Farbe ändern
-    */
+    /* =========================
+       PAINT
+    ========================= */
 
     socket.on("paint", color => {
 
-        if (!players[socket.id]) return;
+        const p = players[socket.id];
+
+        if (!p) return;
 
         if (
-            typeof color !== "number" ||
-            !Number.isFinite(color)
+            typeof color !== "number"
         ) return;
 
 
-        players[socket.id].color = color;
+        p.color = color;
 
 
-        io.emit("playerPaint", {
-
-            id: socket.id,
-
-            color
-
-        });
+        socket.broadcast.emit(
+            "playerPaint",
+            {
+                id: socket.id,
+                color: color
+            }
+        );
 
     });
 
 
-    /*
-    Hunter versucht Spieler zu finden
-    */
+    /* =========================
+       CATCH
+    ========================= */
 
     socket.on("catchPlayer", targetId => {
 
-        if (!gameStarted) return;
+        if (!game.running) return;
 
-        if (socket.id !== hunterId) return;
+        if (socket.id !== game.hunterId)
+            return;
 
-        if (Date.now() - gameStartTime < HUNTER_DELAY) {
+        /*
+        30 Sekunden Schutzzeit.
+        */
+
+        if (
+            Date.now() -
+            game.startedAt <
+            HUNTER_WAIT
+        ) {
 
             socket.emit("hunterLocked");
 
@@ -218,96 +368,144 @@ io.on("connection", socket => {
         }
 
 
-        if (!players[targetId]) return;
+        const hunter =
+            players[socket.id];
+
+        const target =
+            players[targetId];
 
 
-        const hunter = players[socket.id];
+        if (!hunter || !target)
+            return;
 
-        const target = players[targetId];
 
+        const dx =
+            hunter.x -
+            target.x;
 
-        const dx = hunter.x - target.x;
+        const dz =
+            hunter.z -
+            target.z;
 
-        const dz = hunter.z - target.z;
 
         const distance =
-            Math.sqrt(dx * dx + dz * dz);
+            Math.sqrt(
+                dx * dx +
+                dz * dz
+            );
 
 
-        /*
-        Der Hunter muss nahe genug sein.
-        */
+        if (distance <= 3.2) {
 
-        if (distance < 2.8) {
+            io.emit(
+                "playerCaught",
+                {
+                    hunterId: socket.id,
+                    targetId
+                }
+            );
 
-            io.emit("playerCaught", {
 
-                hunterId: socket.id,
-
-                targetId
-
-            });
-
-            gameStarted = false;
-
+            endGame();
         }
 
     });
 
 
-    /*
-    Ping / Zustand
-    */
+    /* =========================
+       STATE
+    ========================= */
 
-    socket.on("requestState", () => {
+    socket.on(
+        "requestState",
+        () => {
 
-        socket.emit("state", {
+            socket.emit(
+                "state",
+                {
+                    lobbyPlayers:
+                        waitingPlayers.length,
 
-            players,
+                    gameRunning:
+                        game.running,
 
-            hunterId,
+                    hunterId:
+                        game.hunterId
+                }
+            );
 
-            gameStarted,
-
-            gameStartTime
-
-        });
-
-    });
+        }
+    );
 
 
-    /*
-    Disconnect
-    */
+    /* =========================
+       DISCONNECT
+    ========================= */
 
     socket.on("disconnect", () => {
 
         console.log(
-            "Spieler verlassen:",
+            "LEAVE:",
             socket.id
         );
+
+
+        waitingPlayers =
+            waitingPlayers.filter(
+                id => id !== socket.id
+            );
 
 
         delete players[socket.id];
 
 
-        if (Object.keys(players).length < 2) {
+        /*
+        Wenn ein Spieler während
+        der Runde verschwindet,
+        Runde beenden.
+        */
 
-            gameStarted = false;
+        if (game.running) {
 
-            hunterId = null;
+            const remaining =
+                Object.keys(players)
+                    .filter(
+                        id =>
+                            players[id].inGame
+                    );
 
-            io.emit("waiting", {
 
-                players:
-                    Object.keys(players).length,
+            if (remaining.length < 2) {
 
-                needed:
-                    MAX_PLAYERS -
-                    Object.keys(players).length
+                game.running = false;
 
-            });
+                game.hunterId = null;
 
+                io.emit(
+                    "returnToLobby"
+                );
+            }
+
+        }
+
+
+        sendLobbyState();
+
+
+        /*
+        Falls danach wieder
+        zwei Spieler warten.
+        */
+
+        if (
+            !game.running &&
+            waitingPlayers.length >= 2
+        ) {
+
+            setTimeout(
+                startGame,
+                300
+            );
         }
 
     });
@@ -315,40 +513,52 @@ io.on("connection", socket => {
 });
 
 
-/*
-Hunter-Timer synchronisieren
-*/
+/* =========================
+   HUNTER TIMER
+========================= */
 
 setInterval(() => {
 
-    if (!gameStarted) return;
+    if (!game.running) return;
 
 
     const elapsed =
-        Date.now() - gameStartTime;
+        Date.now() -
+        game.startedAt;
 
 
     const remaining =
         Math.max(
             0,
-            HUNTER_DELAY - elapsed
+            HUNTER_WAIT -
+            elapsed
         );
 
 
-    io.emit("hunterTimer", {
-
-        remaining
-
-    });
+    io.emit(
+        "hunterTimer",
+        {
+            remaining
+        }
+    );
 
 
 }, 250);
 
 
-server.listen(PORT, "0.0.0.0", () => {
+/* =========================
+   SERVER
+========================= */
 
-    console.log(
-        `MECHA CHAMELEON Server läuft auf Port ${PORT}`
-    );
+server.listen(
+    PORT,
+    "0.0.0.0",
+    () => {
 
-});
+        console.log(
+            "MECHA CHAMELEON läuft auf Port",
+            PORT
+        );
+
+    }
+);
