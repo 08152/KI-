@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Airrack Video</title>
+<title>Video Player</title>
 <style>
-*{box-sizing:border-box}
 html,body{
     margin:0;
     width:100%;
@@ -13,44 +12,33 @@ html,body{
     background:#000;
     overflow:hidden;
 }
-#player{
-    width:100vw;
-    height:100vh;
+#open{
+    position:absolute;
+    inset:0;
+    margin:auto;
+    width:220px;
+    height:60px;
+    font-size:18px;
+    border:0;
+    border-radius:12px;
+    cursor:pointer;
 }
 </style>
 </head>
-
 <body>
 
-<div id="player"></div>
+<button id="open">▶ Video öffnen</button>
 
 <script>
-const VIDEO_ID = "0RTDOUF3If8";
+const VIDEO_URL =
+"https://www.youtube.com/watch?v=0RTDOUF3If8";
 
-const script = document.createElement("script");
-script.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(script);
+document.getElementById("open").onclick = () => {
+    const duckduckgo =
+        "https://duckduckgo.com/?q=" +
+        encodeURIComponent(VIDEO_URL);
 
-let player;
-
-window.onYouTubeIframeAPIReady = function(){
-    player = new YT.Player("player",{
-        videoId: VIDEO_ID,
-        width: "100%",
-        height: "100%",
-        playerVars:{
-            autoplay:1,
-            controls:1,
-            rel:0,
-            modestbranding:1,
-            playsinline:1
-        },
-        events:{
-            onReady:function(event){
-                event.target.playVideo();
-            }
-        }
-    });
+    window.location.href = duckduckgo;
 };
 </script>
 
