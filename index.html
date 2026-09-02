@@ -3,9 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Airrack Video</title>
+<title>My Video</title>
+
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
+
 html,body{
     margin:0;
     width:100%;
@@ -13,16 +17,23 @@ html,body{
     background:#000;
     overflow:hidden;
 }
-#player{
+
+#video{
     width:100vw;
     height:100vh;
+}
+
+#video iframe{
+    width:100%;
+    height:100%;
+    border:0;
 }
 </style>
 </head>
 
 <body>
 
-<div id="player"></div>
+<div id="video"></div>
 
 <script>
 const VIDEO_ID = "0RTDOUF3If8";
@@ -31,27 +42,27 @@ const script = document.createElement("script");
 script.src = "https://www.youtube.com/iframe_api";
 document.head.appendChild(script);
 
-let player;
+function onYouTubeIframeAPIReady(){
 
-window.onYouTubeIframeAPIReady = function(){
-    player = new YT.Player("player",{
-        videoId: VIDEO_ID,
-        width: "100%",
-        height: "100%",
+    new YT.Player("video",{
+        videoId:VIDEO_ID,
+
         playerVars:{
             autoplay:1,
             controls:1,
+            playsinline:1,
             rel:0,
-            modestbranding:1,
-            playsinline:1
+            modestbranding:1
         },
+
         events:{
             onReady:function(event){
                 event.target.playVideo();
             }
         }
     });
-};
+
+}
 </script>
 
 </body>
