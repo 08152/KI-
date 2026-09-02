@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Fishing Simulator</title>
-
 <style>
 html,body{
     margin:0;
@@ -12,2517 +11,1421 @@ html,body{
     height:100%;
     overflow:hidden;
     font-family:Arial,sans-serif;
-    background:#75c9ec;
+    background:#87cfff;
 }
-
-canvas{
-    display:block;
-}
-
-#crosshair{
-    position:fixed;
-    left:50%;
-    top:50%;
-    width:8px;
-    height:8px;
-    transform:translate(-50%,-50%);
-    border:2px solid white;
-    border-radius:50%;
-    z-index:20;
-    pointer-events:none;
-}
-
-#hud,
-#status,
-#prompt,
-#boatControls{
-    position:fixed;
-    color:white;
-    background:rgba(0,0,0,.72);
-    border-radius:10px;
-    z-index:30;
-}
-
-#hud{
-    left:15px;
-    top:15px;
-    padding:12px 16px;
-    line-height:1.55;
-}
-
-#status{
-    right:15px;
-    top:15px;
-    padding:12px 16px;
-}
-
-#prompt{
-    left:50%;
-    bottom:65px;
-    transform:translateX(-50%);
-    padding:13px 22px;
-    font-size:18px;
-    text-align:center;
-    display:none;
-}
-
-#boatControls{
-    left:50%;
-    bottom:18px;
-    transform:translateX(-50%);
-    padding:12px 22px;
-    text-align:center;
-    display:none;
-}
+canvas{display:block}
 
 #start{
     position:fixed;
     inset:0;
     z-index:100;
     display:flex;
-    justify-content:center;
     align-items:center;
-    flex-direction:column;
-    color:white;
-    background:linear-gradient(#061522dd,#02080eee);
+    justify-content:center;
+    background:rgba(0,0,0,.75);
 }
-
-#start h1{
-    font-size:50px;
-    margin:0 0 12px;
-}
-
 #start button{
+    padding:20px 45px;
+    font-size:25px;
     border:0;
-    border-radius:10px;
-    padding:15px 38px;
-    font-size:20px;
-    background:#158bd1;
-    color:white;
+    border-radius:12px;
     cursor:pointer;
+}
+#crosshair{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:12px;
+    height:12px;
+    margin:-6px;
+    z-index:10;
+    pointer-events:none;
+}
+#crosshair:before,#crosshair:after{
+    content:"";
+    position:absolute;
+    background:white;
+    box-shadow:0 0 3px black;
+}
+#crosshair:before{
+    width:12px;height:2px;left:0;top:5px;
+}
+#crosshair:after{
+    width:2px;height:12px;left:5px;top:0;
+}
+#hud{
+    position:fixed;
+    top:15px;
+    left:15px;
+    z-index:10;
+    color:white;
+    text-shadow:0 2px 4px #000;
+    font-size:17px;
+    line-height:1.6;
+    pointer-events:none;
+}
+#prompt{
+    position:fixed;
+    bottom:45px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    color:white;
+    background:rgba(0,0,0,.65);
+    padding:12px 22px;
+    border-radius:10px;
+    font-size:18px;
+    display:none;
+    pointer-events:none;
+}
+#boatControls{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    z-index:20;
+    color:white;
+    background:rgba(0,0,0,.65);
+    padding:15px;
+    border-radius:10px;
+    display:none;
+    pointer-events:none;
+}
+#fishPanel{
+    position:fixed;
+    right:20px;
+    top:20px;
+    z-index:30;
+    width:260px;
+    background:rgba(20,25,30,.94);
+    color:white;
+    padding:18px;
+    border-radius:12px;
+    display:none;
+}
+#fishPanel button{
+    width:100%;
+    margin-top:8px;
+    padding:10px;
+    border:0;
+    border-radius:7px;
+    cursor:pointer;
+}
+#fishInfo{
+    margin-bottom:10px;
 }
 </style>
 </head>
-
 <body>
 
 <div id="start">
-    <h1>🎣 FISHING SIMULATOR</h1>
-    <p>Hafen • Fischerboot • Kran • Netz</p>
-    <button id="startButton">STARTEN</button>
+    <button id="startBtn">SPIEL STARTEN</button>
 </div>
 
 <div id="crosshair"></div>
 
 <div id="hud">
-    <b>🎣 FISHING SIMULATOR</b><br>
-    WASD = Laufen<br>
-    Maus = Umschauen<br>
-    E = Interagieren<br>
-    R = Brücke drehen<br>
-    Shift = Rennen<br>
-    Space = Springen
-</div>
-
-<div id="status">
-    🔩 Brücke: <b id="bridgeStatus">am Hafen</b>
+    🐟 Fische: <span id="fishCount">0</span><br>
+    🎣 Köder: <span id="bait">10</span><br>
+    🚤 Motor: <span id="engine">Aus</span><br>
+    📍 <span id="position">0 / 0</span>
 </div>
 
 <div id="prompt"></div>
 
 <div id="boatControls">
-    🚤 <b>BOOT STEUERN</b><br>
-    W/S = Gas &nbsp; A/D = Lenken<br>
-    E = Steuerstand verlassen
+    <b>BOOTSSTEUERUNG</b><br>
+    W = Gas<br>
+    S = Rückwärts<br>
+    A / D = Lenken<br>
+    E = Steuerung verlassen
+</div>
+
+<div id="fishPanel">
+    <h3>🐟 Fisch bearbeiten</h3>
+    <div id="fishInfo"></div>
+    <button id="cutBtn">Fisch aufschneiden</button>
+    <button id="boneBtn" style="display:none">Gräten entfernen</button>
+    <button id="finishBtn" style="display:none">Fisch vorbereiten</button>
+    <button id="closeFish">Schließen</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
-
-/* =========================================================
-   ENGINE
-========================================================= */
-
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87cfff);
+scene.fog = new THREE.Fog(0x87cfff,70,260);
 
-scene.background =
-    new THREE.Color(0x83ccef);
-
-scene.fog =
-    new THREE.Fog(
-        0x83ccef,
-        45,
-        180
-    );
-
-const camera =
-    new THREE.PerspectiveCamera(
-        75,
-        innerWidth / innerHeight,
-        .1,
-        300
-    );
-
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
+const camera = new THREE.PerspectiveCamera(
+    75,
+    innerWidth/innerHeight,
+    .05,
+    500
 );
 
-renderer.setPixelRatio(
-    Math.min(devicePixelRatio,1.5)
-);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
 
-renderer.shadowMap.enabled = true;
+const controls = new THREE.PointerLockControls(camera,document.body);
 
-document.body.appendChild(
-    renderer.domElement
-);
+scene.add(new THREE.HemisphereLight(0xbfe9ff,0x527044,1.4));
 
-const controls =
-    new THREE.PointerLockControls(
-        camera,
-        document.body
-    );
-
-scene.add(
-    new THREE.HemisphereLight(
-        0xbfeeff,
-        0x39444a,
-        1.5
-    )
-);
-
-const sun =
-    new THREE.DirectionalLight(
-        0xffffff,
-        1.8
-    );
-
-sun.position.set(
-    -30,
-    50,
-    20
-);
-
-sun.castShadow = true;
-
-sun.shadow.mapSize.width = 1024;
-sun.shadow.mapSize.height = 1024;
-
+const sun = new THREE.DirectionalLight(0xffffff,1.7);
+sun.position.set(-50,80,30);
+sun.castShadow=true;
+sun.shadow.mapSize.width=2048;
+sun.shadow.mapSize.height=2048;
 scene.add(sun);
 
+/* MATERIALIEN */
 
-/* =========================================================
-   MATERIALIEN
-========================================================= */
+const groundMat = new THREE.MeshStandardMaterial({
+    color:0x6c8f48,
+    roughness:1
+});
 
-const concrete =
-    new THREE.MeshStandardMaterial({
-        color:0x555b5e,
-        roughness:.9
-    });
+const concreteMat = new THREE.MeshStandardMaterial({
+    color:0x777777,
+    roughness:.9
+});
 
-const wood =
-    new THREE.MeshStandardMaterial({
-        color:0x704321,
-        roughness:.85
-    });
+const woodMat = new THREE.MeshStandardMaterial({
+    color:0x71421f,
+    roughness:.85
+});
 
-const darkWood =
-    new THREE.MeshStandardMaterial({
-        color:0x352116,
-        roughness:.9
-    });
+const darkWood = new THREE.MeshStandardMaterial({
+    color:0x3d2415,
+    roughness:.9
+});
 
-const metal =
-    new THREE.MeshStandardMaterial({
-        color:0x747b80,
-        metalness:.85,
-        roughness:.25
-    });
+const metalMat = new THREE.MeshStandardMaterial({
+    color:0x555b61,
+    metalness:.75,
+    roughness:.3
+});
 
-const darkMetal =
-    new THREE.MeshStandardMaterial({
-        color:0x252b2f,
-        metalness:.9,
-        roughness:.25
-    });
+const waterMat = new THREE.MeshStandardMaterial({
+    color:0x167fc4,
+    transparent:true,
+    opacity:.82,
+    roughness:.15
+});
 
-const white =
-    new THREE.MeshStandardMaterial({
-        color:0xe4e4dc
-    });
+/* BODEN */
 
-const glass =
-    new THREE.MeshStandardMaterial({
-        color:0x65b4ce,
-        transparent:true,
-        opacity:.6,
-        roughness:.1
-    });
-
-const waterMaterial =
-    new THREE.MeshStandardMaterial({
-        color:0x157ca7,
-        roughness:.25
-    });
-
-const netMaterial =
-    new THREE.MeshStandardMaterial({
-        color:0x3c4b51,
-        transparent:true,
-        opacity:.72,
-        side:THREE.DoubleSide
-    });
-
-const yellowMetal =
-    new THREE.MeshStandardMaterial({
-        color:0xe0a51e,
-        metalness:.7,
-        roughness:.3
-    });
-
-
-/* =========================================================
-   HILFSFUNKTIONEN
-========================================================= */
-
-function createBox(
-    w,h,d,
-    material,
-    x,y,z,
-    parent=scene
-){
-
-    const mesh =
-        new THREE.Mesh(
-            new THREE.BoxGeometry(
-                w,h,d
-            ),
-            material
-        );
-
-    mesh.position.set(
-        x,y,z
-    );
-
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-
-    parent.add(mesh);
-
-    return mesh;
-}
-
-function createCylinder(
-    radius,
-    height,
-    material,
-    x,y,z,
-    parent=scene,
-    segments=16
-){
-
-    const mesh =
-        new THREE.Mesh(
-            new THREE.CylinderGeometry(
-                radius,
-                radius,
-                height,
-                segments
-            ),
-            material
-        );
-
-    mesh.position.set(
-        x,y,z
-    );
-
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-
-    parent.add(mesh);
-
-    return mesh;
-}
-
-function worldPosition(object){
-
-    const p =
-        new THREE.Vector3();
-
-    object.getWorldPosition(p);
-
-    return p;
-}
-
-
-/* =========================================================
-   HAFEN
-========================================================= */
-
-createBox(
-    90,
-    .5,
-    60,
-    concrete,
-    0,
-    -.25,
-    5
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(260,260),
+    groundMat
 );
+ground.rotation.x=-Math.PI/2;
+ground.position.y=-.08;
+ground.receiveShadow=true;
+scene.add(ground);
 
-const water =
-    new THREE.Mesh(
-        new THREE.PlaneGeometry(
-            180,
-            180
-        ),
-        waterMaterial
-    );
+/* HAFEN */
 
-water.rotation.x =
-    -Math.PI/2;
-
-water.position.set(
-    0,
-    -.72,
-    -55
+const harbor = new THREE.Mesh(
+    new THREE.BoxGeometry(70,.3,22),
+    concreteMat
 );
+harbor.position.set(0,-.02,0);
+harbor.receiveShadow=true;
+scene.add(harbor);
 
+/* WASSER */
+
+const water = new THREE.Mesh(
+    new THREE.PlaneGeometry(260,260),
+    waterMat
+);
+water.rotation.x=-Math.PI/2;
+water.position.set(0,-.28,-48);
 scene.add(water);
 
+/* BOOT */
 
-/* Hafenrand */
-
-createBox(
-    70,
-    .5,
-    2,
-    darkWood,
-    0,
-    .1,
-    -2
-);
-
-createBox(
-    70,
-    .5,
-    2,
-    darkWood,
-    0,
-    .1,
-    13
-);
-
-createBox(
-    2,
-    .5,
-    17,
-    darkWood,
-    -34,
-    .1,
-    5.5
-);
-
-createBox(
-    2,
-    .5,
-    17,
-    darkWood,
-    34,
-    .1,
-    5.5
-);
-
-
-/* Poller */
-
-for(let x=-30;x<=30;x+=10){
-
-    createCylinder(
-        .35,
-        1,
-        darkMetal,
-        x,
-        .55,
-        1.5
-    );
-
-    createCylinder(
-        .35,
-        1,
-        darkMetal,
-        x,
-        .55,
-        10
-    );
-}
-
-
-/* =========================================================
-   BOOT
-========================================================= */
-
-const boat =
-    new THREE.Group();
-
-boat.position.set(
-    0,
-    .2,
-    -7
-);
-
+const boat = new THREE.Group();
+boat.position.set(0,.25,-9);
 scene.add(boat);
 
-const hullMaterial =
-    new THREE.MeshStandardMaterial({
-        color:0x263944,
-        roughness:.65
-    });
-
-
-/* Rumpf */
-
-createBox(
-    10,
-    1.5,
-    22,
-    hullMaterial,
-    0,
-    .7,
-    0,
-    boat
+const boatHull = new THREE.Mesh(
+    new THREE.BoxGeometry(9,2.2,18),
+    darkWood
 );
+boatHull.position.y=.35;
+boatHull.castShadow=true;
+boatHull.receiveShadow=true;
+boat.add(boatHull);
 
-
-/* Deck */
-
-createBox(
-    9.4,
-    .3,
-    20,
-    wood,
-    0,
-    1.5,
-    0,
-    boat
+const deck = new THREE.Mesh(
+    new THREE.BoxGeometry(8.6,.35,17.2),
+    woodMat
 );
+deck.position.y=1.55;
+deck.castShadow=true;
+boat.add(deck);
 
+/* BUG */
 
-/* Bug */
-
-const bow =
-    new THREE.Mesh(
-        new THREE.ConeGeometry(
-            5,
-            7,
-            4
-        ),
-        hullMaterial
-    );
-
-bow.rotation.x =
-    Math.PI/2;
-
-bow.rotation.y =
-    Math.PI/4;
-
-bow.scale.z=1.4;
-
-bow.position.set(
-    0,
-    .75,
-    -12
+const bow = new THREE.Mesh(
+    new THREE.ConeGeometry(4.3,5,4),
+    darkWood
 );
-
-bow.castShadow=true;
-
+bow.rotation.x=Math.PI/2;
+bow.scale.z=2;
+bow.position.set(0,.4,-10);
 boat.add(bow);
 
+/* RELING */
 
-/* =========================================================
-   RELING
-========================================================= */
-
-for(
-    let z=-9;
-    z<=9;
-    z+=3
-){
-
-    createBox(
-        .15,
-        1,
-        .15,
-        metal,
-        -4.5,
-        2,
-        z,
-        boat
+function rail(x,z,w,d){
+    const r=new THREE.Mesh(
+        new THREE.BoxGeometry(w,1,d),
+        metalMat
     );
-
-    createBox(
-        .15,
-        1,
-        .15,
-        metal,
-        4.5,
-        2,
-        z,
-        boat
-    );
+    r.position.set(x,2.2,z);
+    boat.add(r);
 }
 
-createBox(
-    9,
-    .12,
-    .12,
-    metal,
-    0,
-    2.45,
-    -9.5,
-    boat
-);
+rail(-4.35,0,.22,17);
+rail(4.35,0,.22,17);
+rail(-4.35,-8,.22,1.5);
+rail(4.35,-8,.22,1.5);
 
-createBox(
-    9,
-    .12,
-    .12,
-    metal,
-    0,
-    2.45,
-    9.5,
-    boat
-);
+/* KABINE
+   Türöffnung ist jetzt wirklich frei.
+   Steuerstand sitzt deutlich weiter hinten,
+   damit Tür und Lenkrad nicht ineinander liegen.
+*/
 
-
-/* =========================================================
-   KABINE
-========================================================= */
-
-const cabin =
-    new THREE.Group();
-
-cabin.position.set(
-    0,
-    1.5,
-    3
-);
-
+const cabin=new THREE.Group();
+cabin.position.set(0,1.75,-1.8);
 boat.add(cabin);
 
+function cabinPart(x,y,z,w,h,d){
+    const m=new THREE.Mesh(
+        new THREE.BoxGeometry(w,h,d),
+        woodMat
+    );
+    m.position.set(x,y,z);
+    m.castShadow=true;
+    m.receiveShadow=true;
+    cabin.add(m);
+}
 
-/*
-   Rückwand
-*/
+/* Rückwand */
+cabinPart(0,1.5,2.35,7,.25,.3);
 
-createBox(
-    7,
-    3.5,
-    .3,
-    white,
-    0,
-    1.75,
-    2.35,
-    cabin
-);
+/* Seiten */
+cabinPart(-3.35,1.5,0,.3,3.2,4.8);
+cabinPart(3.35,1.5,0,.3,3.2,4.8);
 
-
-/*
-   Linke Wand
-*/
-
-createBox(
-    .3,
-    3.5,
-    5,
-    white,
-    -3.35,
-    1.75,
-    0,
-    cabin
-);
-
-
-/*
-   Rechte Wand
-*/
-
-createBox(
-    .3,
-    3.5,
-    5,
-    white,
-    3.35,
-    1.75,
-    0,
-    cabin
-);
-
-
-/*
-   Frontwand NICHT komplett schließen.
-   Dadurch existiert eine echte Türöffnung.
-*/
-
-createBox(
-    2.5,
-    3.5,
-    .3,
-    white,
-    2.25,
-    1.75,
-    -2.35,
-    cabin
-);
-
-createBox(
-    2.5,
-    3.5,
-    .3,
-    white,
-    -2.25,
-    1.75,
-    -2.35,
-    cabin
-);
-
+/* Frontwand mit echter Türöffnung */
+cabinPart(-2.3,1.5,-2.35,2.1,3.2,.3);
+cabinPart(2.3,1.5,-2.35,2.1,3.2,.3);
+cabinPart(0,3.0,-2.35,2.5,.55,.3);
 
 /* Dach */
 
-createBox(
-    7.8,
-    .35,
-    5.7,
-    darkWood,
-    0,
-    3.65,
-    0,
-    cabin
+const roof=new THREE.Mesh(
+    new THREE.BoxGeometry(7.2,.35,5.4),
+    darkWood
 );
-
+roof.position.set(0,3.25,0);
+roof.castShadow=true;
+cabin.add(roof);
 
 /* Fenster */
 
-createBox(
-    2.4,
-    1.3,
-    .08,
-    glass,
-    -1.7,
-    2.4,
-    -2.53,
-    cabin
+const glassMat=new THREE.MeshStandardMaterial({
+    color:0x8bd9ff,
+    transparent:true,
+    opacity:.55,
+    metalness:.2,
+    roughness:.1
+});
+
+function windowMesh(x,z,w,d){
+    const g=new THREE.Mesh(
+        new THREE.BoxGeometry(w,.95,d),
+        glassMat
+    );
+    g.position.set(x,1.9,z);
+    cabin.add(g);
+}
+
+windowMesh(-3.51,0,.05,2.5);
+windowMesh(3.51,0,.05,2.5);
+windowMesh(0,2.39,2.0,.05);
+
+/* TÜR */
+
+const doorPivot=new THREE.Group();
+doorPivot.position.set(-1.05,1.5,-2.48);
+cabin.add(doorPivot);
+
+const door=new THREE.Mesh(
+    new THREE.BoxGeometry(2.05,3,.22),
+    darkWood
 );
-
-createBox(
-    2.4,
-    1.3,
-    .08,
-    glass,
-    1.7,
-    2.4,
-    -2.53,
-    cabin
-);
-
-
-/* =========================================================
-   TÜR
-========================================================= */
-
-const cabinDoor =
-    new THREE.Group();
-
-cabinDoor.position.set(
-    -1.1,
-    1.35,
-    -2.48
-);
-
-cabin.add(cabinDoor);
-
-createBox(
-    2,
-    2.7,
-    .15,
-    darkWood,
-    1,
-    0,
-    0,
-    cabinDoor
-);
+door.position.x=1.025;
+door.castShadow=true;
+doorPivot.add(door);
 
 let doorOpen=false;
-let doorMoving=false;
+let doorAnim=false;
+
+/* STEUERSTAND
+   weit weg von der Tür.
+*/
+
+const helm=new THREE.Group();
+helm.position.set(0,1.7,1.45);
+boat.add(helm);
+
+const console=new THREE.Mesh(
+    new THREE.BoxGeometry(3.2,1.2,1),
+    metalMat
+);
+console.position.y=.7;
+console.castShadow=true;
+helm.add(console);
+
+const wheel=new THREE.Mesh(
+    new THREE.TorusGeometry(.72,.11,10,28),
+    metalMat
+);
+wheel.rotation.x=Math.PI/2;
+wheel.position.set(0,1.45,-.35);
+wheel.castShadow=true;
+helm.add(wheel);
+
+const wheelCenter=new THREE.Mesh(
+    new THREE.CylinderGeometry(.18,.18,.18,16),
+    metalMat
+);
+wheelCenter.rotation.z=Math.PI/2;
+wheel.position.y=1.45;
+helm.add(wheelCenter);
+
+const seat=new THREE.Mesh(
+    new THREE.BoxGeometry(1.7,.25,1.7),
+    darkWood
+);
+seat.position.set(0,.75,1.25);
+helm.add(seat);
+
+const seatPost=new THREE.Mesh(
+    new THREE.CylinderGeometry(.12,.12,1,12),
+    metalMat
+);
+seatPost.position.set(0,.25,1.25);
+helm.add(seatPost);
+
+/* HINTERER TISCH */
+
+const fishTable=new THREE.Group();
+fishTable.position.set(0,1.65,6.1);
+boat.add(fishTable);
+
+const tableTop=new THREE.Mesh(
+    new THREE.BoxGeometry(5,0.35,2.8),
+    woodMat
+);
+tableTop.castShadow=true;
+fishTable.add(tableTop);
+
+for(const x of [-2,2]){
+    const leg=new THREE.Mesh(
+        new THREE.BoxGeometry(.3,1.6,.3),
+        darkWood
+    );
+    leg.position.set(x,-.85,-.9);
+    fishTable.add(leg);
+
+    const leg2=leg.clone();
+    leg2.position.z=.9;
+    fishTable.add(leg2);
+}
+
+/* NETZ */
+
+const netGroup=new THREE.Group();
+netGroup.position.set(-2.8,1.95,5.5);
+boat.add(netGroup);
+
+const netRing=new THREE.Mesh(
+    new THREE.TorusGeometry(1,.12,8,20),
+    metalMat
+);
+netRing.rotation.x=Math.PI/2;
+netGroup.add(netRing);
+
+const netHandle=new THREE.Mesh(
+    new THREE.CylinderGeometry(.09,.09,3.5,10),
+    woodMat
+);
+netHandle.rotation.z=Math.PI/2;
+netHandle.position.x=1.7;
+netGroup.add(netHandle);
+
+/* KRAN */
+
+const crane=new THREE.Group();
+crane.position.set(3,1.75,6.7);
+boat.add(crane);
+
+const craneBase=new THREE.Mesh(
+    new THREE.CylinderGeometry(.7,.8,.4,16),
+    metalMat
+);
+craneBase.position.y=.2;
+crane.add(craneBase);
+
+const cranePole=new THREE.Mesh(
+    new THREE.CylinderGeometry(.2,.25,3.8,12),
+    metalMat
+);
+cranePole.position.y=2;
+crane.add(cranePole);
+
+const boom=new THREE.Mesh(
+    new THREE.BoxGeometry(.3,.3,5.5),
+    metalMat
+);
+boom.position.set(0,3.7,-2);
+boom.rotation.x=-.15;
+crane.add(boom);
+
+const rope=new THREE.Mesh(
+    new THREE.CylinderGeometry(.035,.035,3,8),
+    new THREE.MeshStandardMaterial({color:0x222222})
+);
+rope.position.set(0,2.2,-4.65);
+crane.add(rope);
+
+const craneNet=new THREE.Mesh(
+    new THREE.CircleGeometry(1.05,16),
+    new THREE.MeshStandardMaterial({
+        color:0x444444,
+        side:THREE.DoubleSide,
+        transparent:true,
+        opacity:.75
+    })
+);
+craneNet.rotation.x=-Math.PI/2;
+craneNet.position.set(0,.65,-4.65);
+crane.add(craneNet);
+
+let craneActive=false;
+let craneDirection=1;
+let craneProgress=0;
+
+/* BRÜCKE */
+
+const bridge=new THREE.Group();
+
+const bridgeMesh=new THREE.Mesh(
+    new THREE.BoxGeometry(2.4,.22,5.8),
+    woodMat
+);
+bridgeMesh.castShadow=true;
+bridge.add(bridgeMesh);
+
+const bridgeRailL=new THREE.Mesh(
+    new THREE.BoxGeometry(.12,.8,5.8),
+    metalMat
+);
+bridgeRailL.position.x=-1.15;
+bridgeRailL.position.y=.45;
+bridge.add(bridgeRailL);
+
+const bridgeRailR=bridgeRailL.clone();
+bridgeRailR.position.x=1.15;
+bridge.add(bridgeRailR);
+
+bridge.position.set(-5,.25,-2.7);
+scene.add(bridge);
+
+let bridgeState=0;
+let bridgeVelocity=new THREE.Vector3();
+let bridgeRotation=0;
+
+/* SPIELER */
+
+const PLAYER_EYE_DOCK=2.25;
+const PLAYER_EYE_BOAT=3.75;
+
+camera.position.set(0,PLAYER_EYE_DOCK,8);
+
+let velocityY=0;
+let grounded=true;
+let steering=false;
+let engineOn=false;
+let speed=0;
+
+const keys={};
+
+window.addEventListener("keydown",e=>{
+    keys[e.code]=true;
+
+    if(["KeyE","KeyR","Space"].includes(e.code)){
+        e.preventDefault();
+    }
+
+    if(e.repeat)return;
+
+    if(e.code==="KeyE"){
+        interact();
+    }
+
+    if(e.code==="KeyR" && bridgeState===1){
+        bridgeRotation+=Math.PI/8;
+    }
+});
+
+window.addEventListener("keyup",e=>{
+    keys[e.code]=false;
+});
+
+document.getElementById("startBtn").onclick=()=>{
+    document.getElementById("start").style.display="none";
+    controls.lock();
+};
+
+/* FISCHE */
+
+const fishTypes=[
+    {name:"Forelle",value:18,color:0xd6dce1},
+    {name:"Hecht",value:25,color:0x6d8f62},
+    {name:"Karpfen",value:22,color:0xc49b60},
+    {name:"Barsch",value:15,color:0x8d9b55}
+];
+
+let fishCount=0;
+let fishInventory=[];
+
+function createFish(){
+    const type=fishTypes[Math.floor(Math.random()*fishTypes.length)];
+
+    const fish=new THREE.Group();
+
+    const body=new THREE.Mesh(
+        new THREE.SphereGeometry(.38,16,10),
+        new THREE.MeshStandardMaterial({color:type.color})
+    );
+    body.scale.set(1.7,.65,.55);
+    fish.add(body);
+
+    const tail=new THREE.Mesh(
+        new THREE.ConeGeometry(.35,.8,3),
+        new THREE.MeshStandardMaterial({color:type.color})
+    );
+    tail.rotation.z=Math.PI/2;
+    tail.position.x=-.75;
+    fish.add(tail);
+
+    const eyeMat=new THREE.MeshStandardMaterial({color:0x111111});
+
+    const eye1=new THREE.Mesh(
+        new THREE.SphereGeometry(.045,8,8),
+        eyeMat
+    );
+    eye1.position.set(.5,.18,.3);
+    fish.add(eye1);
+
+    const eye2=eye1.clone();
+    eye2.position.z=-.3;
+    fish.add(eye2);
+
+    fish.position.set(
+        (Math.random()-.5)*80,
+        -.1,
+        -20-Math.random()*80
+    );
+
+    fish.userData.type=type;
+    fish.userData.caught=false;
+
+    scene.add(fish);
+    return fish;
+}
+
+const fishWorld=[];
+for(let i=0;i<24;i++){
+    fishWorld.push(createFish());
+}
+
+/* ANGELN */
+
+let fishing=false;
+let fishingTimer=0;
+
+function startFishing(){
+    if(steering)return;
+    if(document.getElementById("bait").textContent==="0")return;
+
+    fishing=true;
+    fishingTimer=2.5+Math.random()*5;
+
+    document.getElementById("bait").textContent=
+        Math.max(0,parseInt(document.getElementById("bait").textContent)-1);
+}
+
+function catchFish(){
+    fishing=false;
+
+    const fish=fishWorld[Math.floor(Math.random()*fishWorld.length)];
+
+    const type=fish.userData.type;
+
+    fish.visible=false;
+    fish.userData.caught=true;
+
+    fishInventory.push({
+        name:type.name,
+        value:type.value,
+        cut:false,
+        bones:false,
+        prepared:false
+    });
+
+    fishCount++;
+    document.getElementById("fishCount").textContent=fishCount;
+}
+
+/* FISCHTISCH */
+
+let selectedFish=-1;
+
+function openFishTable(){
+    if(fishInventory.length===0){
+        showPrompt("Du hast noch keinen Fisch.");
+        return;
+    }
+
+    if(steering)return;
+
+    selectedFish=fishInventory.findIndex(f=>!f.prepared);
+
+    if(selectedFish<0){
+        showPrompt("Alle Fische sind bereits vorbereitet.");
+        return;
+    }
+
+    updateFishPanel();
+    document.getElementById("fishPanel").style.display="block";
+}
+
+function updateFishPanel(){
+    const f=fishInventory[selectedFish];
+
+    document.getElementById("fishInfo").innerHTML=
+        "<b>"+f.name+"</b><br>"+
+        (f.cut?"✓ Aufgeschnitten":"○ Noch nicht aufgeschnitten")+"<br>"+
+        (f.bones?"✓ Gräten entfernt":"○ Gräten noch vorhanden")+"<br>"+
+        (f.prepared?"✓ Fertig":"");
+
+    document.getElementById("cutBtn").style.display=
+        f.cut?"none":"block";
+
+    document.getElementById("boneBtn").style.display=
+        f.cut&&!f.bones?"block":"none";
+
+    document.getElementById("finishBtn").style.display=
+        f.bones&&!f.prepared?"block":"none";
+}
+
+document.getElementById("cutBtn").onclick=()=>{
+    fishInventory[selectedFish].cut=true;
+    updateFishPanel();
+};
+
+document.getElementById("boneBtn").onclick=()=>{
+    fishInventory[selectedFish].bones=true;
+    updateFishPanel();
+};
+
+document.getElementById("finishBtn").onclick=()=>{
+    fishInventory[selectedFish].prepared=true;
+    updateFishPanel();
+};
+
+document.getElementById("closeFish").onclick=()=>{
+    document.getElementById("fishPanel").style.display="none";
+    selectedFish=-1;
+};
+
+/* PROMPT */
+
+function showPrompt(text){
+    const p=document.getElementById("prompt");
+    p.textContent=text;
+    p.style.display=text?"block":"none";
+}
+
+function distanceToBoat(){
+    return camera.position.distanceTo(boat.position);
+}
+
+/* SPIELER AUF BOOT */
+
+function playerBoatLocal(){
+    return boat.worldToLocal(camera.position.clone());
+}
+
+function isOnBoat(){
+    const p=playerBoatLocal();
+
+    return (
+        p.x>-4.0 &&
+        p.x<4.0 &&
+        p.z>-8.0 &&
+        p.z<8.0 &&
+        camera.position.y>2.7
+    );
+}
+
+function boatSurface(){
+    return boat.position.y+1.72;
+}
+
+/* TÜRKOLLISION */
+
+function insideCabinDoorZone(pos){
+    const local=boat.worldToLocal(pos.clone());
+
+    return (
+        Math.abs(local.x)<1.05 &&
+        local.z<-2.0 &&
+        local.z>-3.0
+    );
+}
+
+function cabinCollision(candidate){
+    if(doorOpen)return false;
+
+    const p=boat.worldToLocal(candidate.clone());
+
+    if(
+        p.x>-3.5 &&
+        p.x<3.5 &&
+        p.z>-3 &&
+        p.z<2.5 &&
+        Math.abs(p.x)>1.05
+    ){
+        return true;
+    }
+
+    return false;
+}
+
+/* BEWEGUNG */
+
+function canMoveTo(candidate){
+    /* Hafenbereich */
+    if(candidate.x<-34 || candidate.x>34)return false;
+    if(candidate.z<-10 && !isPositionOnBoat(candidate))return false;
+
+    /* Boot */
+    if(isPositionOnBoat(candidate)){
+        if(cabinCollision(candidate))return false;
+
+        const local=boat.worldToLocal(candidate.clone());
+
+        if(Math.abs(local.x)>4.05)return false;
+
+        /* hinten offen für Brücke */
+        if(local.z>7.7 && bridgeState!==3){
+            return false;
+        }
+
+        return true;
+    }
+
+    /* Brücke */
+    if(isPositionOnBridge(candidate)){
+        return true;
+    }
+
+    /* Wasser blockieren */
+    if(candidate.z<-10){
+        return false;
+    }
+
+    return true;
+}
+
+function isPositionOnBoat(pos){
+    const p=boat.worldToLocal(pos.clone());
+
+    return (
+        p.x>-4.0 &&
+        p.x<4.0 &&
+        p.z>-8.2 &&
+        p.z<8.2 &&
+        pos.y>1
+    );
+}
+
+function bridgeSurfaceY(pos){
+    const local=bridge.worldToLocal(pos.clone());
+
+    return bridge.position.y+
+        .12+
+        Math.sin(bridge.rotation.x)*local.z;
+}
+
+function isPositionOnBridge(pos){
+    if(bridgeState!==2)return false;
+
+    const local=bridge.worldToLocal(pos.clone());
+
+    return (
+        Math.abs(local.x)<1.3 &&
+        Math.abs(local.z)<3.1 &&
+        Math.abs(pos.y-bridgeSurfaceY(pos))<1.3
+    );
+}
+
+function movePlayer(dx,dz){
+    const candidate=camera.position.clone();
+
+    candidate.x+=dx;
+    candidate.z+=dz;
+
+    if(canMoveTo(candidate)){
+        camera.position.x=candidate.x;
+        camera.position.z=candidate.z;
+    }
+}
+
+/* BRÜCKE */
+
+function updateHeldBridge(){
+    if(bridgeState!==1)return;
+
+    bridge.visible=false;
+}
+
+function pickBridge(){
+    bridgeState=1;
+    bridge.visible=false;
+    showPrompt("Brücke aufgehoben – E zum Ablegen");
+}
+
+function dropBridge(){
+    const forward=new THREE.Vector3(0,0,-1)
+        .applyQuaternion(camera.quaternion);
+
+    forward.y=0;
+    forward.normalize();
+
+    bridge.visible=true;
+
+    bridge.position.copy(camera.position)
+        .add(forward.multiplyScalar(4));
+
+    bridge.position.y=.35;
+    bridge.rotation.set(0,bridgeRotation,0);
+
+    bridgeState=2;
+    bridgeVelocity.set(0,0,0);
+}
+
+function putBridgeOnBoat(){
+    bridgeState=3;
+    bridge.visible=true;
+
+    bridge.position.set(0,1.85,7.3);
+    bridge.rotation.set(0,0,0);
+
+    bridge.parent.remove(bridge);
+    boat.add(bridge);
+}
+
+/* BRÜCKENPHYSIK */
+
+function updateBridge(dt){
+    if(bridgeState!==2)return;
+
+    bridgeVelocity.y-=16*dt;
+    bridge.position.addScaledVector(bridgeVelocity,dt);
+
+    if(bridge.position.y<.14){
+        bridge.position.y=.14;
+        bridgeVelocity.y=0;
+    }
+
+    /* stabile Verbindung zwischen Hafen und Boot */
+    const gapTarget=new THREE.Vector3(0,.25,-2.6);
+
+    const dist=new THREE.Vector2(
+        bridge.position.x-gapTarget.x,
+        bridge.position.z-gapTarget.z
+    ).length();
+
+    if(dist<3.0){
+        bridge.position.lerp(
+            new THREE.Vector3(0,.95,-2.55),
+            Math.min(1,dt*8)
+        );
+
+        bridge.rotation.x=.30;
+        bridge.rotation.y=0;
+
+        bridgeVelocity.set(0,0,0);
+    }
+}
+
+/* TÜR */
 
 function toggleDoor(){
+    if(doorAnim)return;
 
-    if(doorMoving)
-        return;
+    doorAnim=true;
+    doorOpen=!doorOpen;
 
-    doorMoving=true;
-
-    const start =
-        doorOpen ? 1 : 0;
-
-    const end =
-        doorOpen ? 0 : 1;
+    const start=doorPivot.rotation.y;
+    const end=doorOpen?-Math.PI/2:0;
 
     let t=0;
 
     function animateDoor(){
+        t+=.06;
+        const k=Math.min(1,t);
 
-        t+=.08;
+        doorPivot.rotation.y=
+            start+(end-start)*(k*k*(3-2*k));
 
-        const p=
-            Math.min(t,1);
-
-        const e=
-            p<.5
-            ?2*p*p
-            :1-Math.pow(-2*p+2,2)/2;
-
-        cabinDoor.rotation.y=
-            -(start+(end-start)*e)
-            *Math.PI/2;
-
-        if(p<1){
-
-            requestAnimationFrame(
-                animateDoor
-            );
-
+        if(k<1){
+            requestAnimationFrame(animateDoor);
         }else{
-
-            doorOpen=!doorOpen;
-            doorMoving=false;
+            doorAnim=false;
         }
     }
 
     animateDoor();
 }
 
-
-/* =========================================================
-   STEUERRAD
-========================================================= */
-
-const wheel =
-    new THREE.Group();
-
-wheel.position.set(
-    0,
-    2.7,
-    .2
-);
-
-boat.add(wheel);
-
-const ring =
-    new THREE.Mesh(
-        new THREE.TorusGeometry(
-            1,
-            .13,
-            10,
-            24
-        ),
-        darkWood
-    );
-
-ring.rotation.x=
-    Math.PI/2;
-
-wheel.add(ring);
-
-for(let i=0;i<8;i++){
-
-    const a=
-        i*Math.PI/4;
-
-    const spoke=
-        createBox(
-            .12,
-            .12,
-            1.65,
-            metal,
-            Math.sin(a)*.75,
-            0,
-            Math.cos(a)*.75,
-            wheel
-        );
-
-    spoke.rotation.y=a;
-}
-
-createBox(
-    3,
-    .9,
-    1.2,
-    darkMetal,
-    0,
-    2.1,
-    .7,
-    boat
-);
-
-createBox(
-    3,
-    .4,
-    1.2,
-    darkWood,
-    0,
-    2.25,
-    1.8,
-    boat
-);
-
-
-/* =========================================================
-   HINTERER BEREICH
-========================================================= */
-
-const rear =
-    new THREE.Group();
-
-rear.position.set(
-    0,
-    0,
-    8
-);
-
-boat.add(rear);
-
-createBox(
-    8,
-    .2,
-    5,
-    wood,
-    0,
-    1.7,
-    0,
-    rear
-);
-
-
-/* =========================================================
-   NETZ
-========================================================= */
-
-const deckNet =
-    new THREE.Group();
-
-deckNet.position.set(
-    0,
-    1.88,
-    7.5
-);
-
-boat.add(deckNet);
-
-const netPlane =
-    new THREE.Mesh(
-        new THREE.PlaneGeometry(
-            5,
-            3.5,
-            12,
-            8
-        ),
-        netMaterial
-    );
-
-netPlane.rotation.x=
-    -Math.PI/2;
-
-deckNet.add(netPlane);
-
-for(
-    let x=-2.4;
-    x<=2.4;
-    x+=.4
-){
-
-    createBox(
-        .025,
-        .025,
-        3.5,
-        metal,
-        x,
-        .03,
-        0,
-        deckNet
-    );
-}
-
-for(
-    let z=-1.5;
-    z<=1.5;
-    z+=.4
-){
-
-    createBox(
-        5,
-        .025,
-        .025,
-        metal,
-        0,
-        .035,
-        z,
-        deckNet
-    );
-}
-
-
-/* =========================================================
-   KRAN
-========================================================= */
-
-const crane =
-    new THREE.Group();
-
-crane.position.set(
-    3.2,
-    1.7,
-    8
-);
-
-boat.add(crane);
-
-createBox(
-    1,
-    .5,
-    1,
-    darkMetal,
-    0,
-    0,
-    0,
-    crane
-);
-
-const craneArm =
-    new THREE.Group();
-
-craneArm.position.set(
-    0,
-    .25,
-    0
-);
-
-crane.add(craneArm);
-
-createBox(
-    .5,
-    4,
-    .5,
-    darkMetal,
-    0,
-    2,
-    0,
-    craneArm
-);
-
-const boom =
-    new THREE.Group();
-
-boom.position.set(
-    0,
-    3.8,
-    0
-);
-
-craneArm.add(boom);
-
-createBox(
-    4,
-    .4,
-    .4,
-    darkMetal,
-    1.7,
-    0,
-    0,
-    boom
-);
-
-const rope =
-    new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            .055,
-            .055,
-            4,
-            8
-        ),
-        metal
-    );
-
-rope.position.set(
-    3.5,
-    -2,
-    0
-);
-
-boom.add(rope);
-
-const hook =
-    new THREE.Group();
-
-hook.position.set(
-    3.5,
-    -4,
-    0
-);
-
-boom.add(hook);
-
-createCylinder(
-    .18,
-    .5,
-    yellowMetal,
-    0,
-    0,
-    0,
-    hook,
-    12
-);
-
-const hangingNet =
-    new THREE.Group();
-
-hangingNet.position.set(
-    0,
-    -.3,
-    0
-);
-
-hook.add(hangingNet);
-
-const hangingBasket =
-    new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            1.6,
-            .8,
-            1.5,
-            12,
-            1,
-            true
-        ),
-        netMaterial
-    );
-
-hangingNet.add(
-    hangingBasket
-);
-
-let craneLowered=false;
-let craneAnimationRunning=false;
-
-function animateCrane(){
-
-    if(craneAnimationRunning)
-        return;
-
-    craneAnimationRunning=true;
-
-    const from=
-        craneLowered ? 1 : 0;
-
-    const to=
-        craneLowered ? 0 : 1;
-
-    let t=0;
-
-    function step(){
-
-        t+=.025;
-
-        const p=
-            Math.min(t,1);
-
-        const eased=
-            p<.5
-            ?2*p*p
-            :1-Math.pow(-2*p+2,2)/2;
-
-        const value=
-            from+
-            (to-from)*eased;
-
-        boom.rotation.z=
-            -value*.45;
-
-        rope.scale.y=
-            1+value*2;
-
-        rope.position.y=
-            -2-value*2;
-
-        hook.position.y=
-            -4-value*2;
-
-        hangingNet.position.y=
-            -.3-value*1.5;
-
-        if(p<1){
-
-            requestAnimationFrame(step);
-
-        }else{
-
-            craneLowered=
-                !craneLowered;
-
-            craneAnimationRunning=false;
-        }
-    }
-
-    step();
-}
-
-
-/* =========================================================
-   BRÜCKE
-========================================================= */
-
-const bridge =
-    new THREE.Group();
-
-createBox(
-    2.4,
-    .22,
-    7,
-    darkMetal,
-    0,
-    0,
-    0,
-    bridge
-);
-
-for(
-    let z=-3;
-    z<=3;
-    z+=1
-){
-
-    createBox(
-        2.4,
-        .12,
-        .13,
-        metal,
-        0,
-        .16,
-        z,
-        bridge
-    );
-}
-
-bridge.position.set(
-    0,
-    .3,
-    -1.5
-);
-
-scene.add(bridge);
-
-
-/*
-0 = Hafen
-1 = in Hand
-2 = aufgestellt
-3 = auf Boot
-*/
-
-let bridgeState=0;
-
-let bridgeVelocity=
-    new THREE.Vector3();
-
-let bridgeRotation=0;
-
-const BRIDGE_LENGTH=7;
-const BRIDGE_WIDTH=2.4;
-
-
-/* =========================================================
-   BRÜCKEN-PHYSIK
-========================================================= */
-
-function getBridgeEnds(){
-
-    const direction=
-        new THREE.Vector3(
-            0,
-            0,
-            1
-        );
-
-    direction.applyQuaternion(
-        bridge.quaternion
-    );
-
-    return {
-        a:bridge.position.clone()
-            .addScaledVector(
-                direction,
-                -BRIDGE_LENGTH/2
-            ),
-
-        b:bridge.position.clone()
-            .addScaledVector(
-                direction,
-                BRIDGE_LENGTH/2
-            )
-    };
-}
-
-function boatLocalPosition(world){
-
-    const p=
-        world.clone()
-        .sub(boat.position);
-
-    p.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        -boat.rotation.y
-    );
-
-    return p;
-}
-
-function isOnBoatDeckPoint(p){
-
-    const q=
-        boatLocalPosition(p);
-
-    return (
-        Math.abs(q.x)<4.15 &&
-        q.z>-9.5 &&
-        q.z<9.5 &&
-        p.y>boat.position.y+1.1 &&
-        p.y<boat.position.y+4
-    );
-}
-
-function updateBridgePhysics(dt){
-
-    if(bridgeState!==2)
-        return;
-
-    bridgeVelocity.y-=14*dt;
-
-    bridge.position.addScaledVector(
-        bridgeVelocity,
-        dt
-    );
-
-    /*
-      Hafenboden
-    */
-
-    if(
-        bridge.position.y<.16
-    ){
-
-        bridge.position.y=.16;
-
-        if(
-            Math.abs(
-                bridgeVelocity.y
-            )>.3
-        ){
-
-            bridgeVelocity.y*=-.22;
-
-        }else{
-
-            bridgeVelocity.y=0;
-        }
-    }
-
-    /*
-      BOOTDECK:
-      Die Brücke wird NICHT mehr
-      durch das Boot fallen.
-    */
-
-    const ends=
-        getBridgeEnds();
-
-    let onBoatA=
-        isOnBoatDeckPoint(ends.a);
-
-    let onBoatB=
-        isOnBoatDeckPoint(ends.b);
-
-    if(
-        onBoatA ||
-        onBoatB
-    ){
-
-        const deckY=
-            boat.position.y+1.66;
-
-        /*
-          Wenn mindestens ein Ende
-          das Boot berührt, bleibt die
-          Brücke auf Deckhöhe.
-        */
-
-        if(
-            bridge.position.y<
-            deckY
-        ){
-
-            bridge.position.y=
-                deckY;
-
-            bridgeVelocity.y=0;
-        }
-    }
-
-    /*
-      Wenn die Brücke genau zwischen
-      Hafen und Boot liegt, wird sie
-      automatisch zur Rampe.
-    */
-
-    const nearBoat=
-        bridge.position.distanceTo(
-            boat.position
-        )<9;
-
-    if(nearBoat){
-
-        const q=
-            boatLocalPosition(
-                bridge.position
-            );
-
-        /*
-          Bereich hinter dem Boot
-        */
-
-        if(
-            q.z>7 &&
-            q.z<12 &&
-            Math.abs(q.x)<5
-        ){
-
-            const deckY=
-                boat.position.y+1.66;
-
-            if(
-                bridge.position.y<
-                deckY-.1
-            ){
-
-                bridge.position.y=
-                    deckY-.05;
-
-                bridgeVelocity.y=0;
-            }
-        }
-    }
-}
-
-
-/* =========================================================
-   BRÜCKE AUFNEHMEN
-========================================================= */
-
-function pickupBridge(){
-
-    bridgeState=1;
-
-    bridge.visible=false;
-
-    bridgeVelocity.set(
-        0,0,0
-    );
-
-    document.getElementById(
-        "bridgeStatus"
-    ).textContent=
-        "in der Hand";
-}
-
-
-/* =========================================================
-   BRÜCKE PLATZIEREN
-========================================================= */
-
-function dropBridge(){
-
-    const forward=
-        new THREE.Vector3();
-
-    camera.getWorldDirection(
-        forward
-    );
-
-    forward.y=0;
-
-    if(
-        forward.lengthSq()<.01
-    )
-        return;
-
-    forward.normalize();
-
-    bridge.parent=scene;
-
-    bridge.visible=true;
-
-    bridge.position.copy(
-        camera.position
-    );
-
-    bridge.position.addScaledVector(
-        forward,
-        4
-    );
-
-    bridge.position.y=
-        Math.max(
-            .8,
-            camera.position.y-.8
-        );
-
-    bridge.rotation.set(
-        0,
-        Math.atan2(
-            forward.x,
-            forward.z
-        )+bridgeRotation,
-        0
-    );
-
-    bridgeVelocity.set(
-        0,
-        -1.5,
-        0
-    );
-
-    bridgeState=2;
-
-    document.getElementById(
-        "bridgeStatus"
-    ).textContent=
-        "aufgestellt";
-}
-
-
-/* =========================================================
-   BRÜCKE AUFS BOOT
-========================================================= */
-
-function putBridgeOnBoat(){
-
-    bridgeState=3;
-
-    bridge.parent=boat;
-
-    bridge.position.set(
-        0,
-        1.88,
-        7
-    );
-
-    bridge.rotation.set(
-        0,
-        0,
-        0
-    );
-
-    bridgeVelocity.set(
-        0,
-        0,
-        0
-    );
-
-    bridge.visible=true;
-
-    document.getElementById(
-        "bridgeStatus"
-    ).textContent=
-        "auf dem Boot";
-}
-
-
-/* =========================================================
-   SPIELER
-========================================================= */
-
-camera.position.set(
-    0,
-    2.2,
-    6
-);
-
-let velocityY=0;
-let onGround=true;
-
-const keys={};
-
-let eLocked=false;
-
-addEventListener(
-    "keydown",
-    event=>{
-
-        keys[event.code]=true;
-
-        /*
-          E nur einmal pro Tastendruck
-        */
-
-        if(
-            event.code==="KeyE" &&
-            !eLocked
-        ){
-
-            eLocked=true;
-
-            interact();
-        }
-
-        if(
-            event.code==="KeyR" &&
-            bridgeState===1
-        ){
-
-            bridgeRotation+=
-                Math.PI/2;
-        }
-
-        if(
-            event.code==="Space" &&
-            onGround &&
-            !steering
-        ){
-
-            velocityY=7;
-            onGround=false;
-        }
-    }
-);
-
-addEventListener(
-    "keyup",
-    event=>{
-
-        keys[event.code]=false;
-
-        if(
-            event.code==="KeyE"
-        ){
-
-            eLocked=false;
-        }
-    }
-);
-
-
-/* =========================================================
-   STEUERSTAND
-========================================================= */
-
-let steering=false;
-let boatSpeed=0;
-let boatRotation=0;
+/* STEUERUNG */
 
 function enterBoatControl(){
-
-    if(
-        bridgeState!==3
-    )
-        return;
+    if(!isOnBoat())return;
 
     steering=true;
+    engineOn=true;
+    speed=0;
+
+    document.getElementById("boatControls").style.display="block";
+    document.getElementById("engine").textContent="An";
 
     controls.unlock();
-
-    document.getElementById(
-        "boatControls"
-    ).style.display="block";
 }
 
 function leaveBoatControl(){
-
     steering=false;
+    engineOn=false;
+    speed=0;
 
-    boatSpeed=0;
+    document.getElementById("boatControls").style.display="none";
+    document.getElementById("engine").textContent="Aus";
 
-    document.getElementById(
-        "boatControls"
-    ).style.display="none";
-
-    /*
-      Sichere Position auf dem Boot.
-    */
-
-    const exit=
-        new THREE.Vector3(
-            -3.2,
-            0,
-            1
-        );
-
-    exit.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        boat.rotation.y
-    );
-
+    /* Sicher auf dem Deck absetzen */
+    const localPos=new THREE.Vector3(-2.6,2.25,3.2);
     camera.position.copy(
-        boat.position
-    ).add(exit);
-
-    camera.position.y=
-        boat.position.y+2.65;
+        boat.localToWorld(localPos)
+    );
 
     controls.lock();
 }
 
+function updateBoat(dt){
+    if(!steering)return;
 
-/* =========================================================
-   BOOT FAHREN
-========================================================= */
-
-function driveBoat(dt){
-
-    if(!steering)
-        return;
-
-    if(keys.KeyW)
-        boatSpeed+=6*dt;
-
-    if(keys.KeyS)
-        boatSpeed-=6*dt;
-
-    boatSpeed*=.985;
-
-    boatSpeed=
-        Math.max(
-            -3,
-            Math.min(
-                14,
-                boatSpeed
-            )
-        );
-
-    if(keys.KeyA)
-        boatRotation+=
-            1.1*dt;
-
-    if(keys.KeyD)
-        boatRotation-=
-            1.1*dt;
-
-    boat.rotation.y=
-        boatRotation;
-
-    const direction=
-        new THREE.Vector3(
-            0,
-            0,
-            -1
-        );
-
-    direction.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        boat.rotation.y
-    );
-
-    boat.position.addScaledVector(
-        direction,
-        boatSpeed*dt
-    );
-
-    /*
-      Boot darf nicht auf den Hafen.
-    */
-
-    if(
-        boat.position.z>1
-    ){
-
-        boat.position.z=1;
-        boatSpeed=0;
+    if(keys.KeyW){
+        speed=Math.min(speed+4*dt,12);
     }
 
-    /*
-      Kamera dreht sich mit dem Boot.
-    */
+    if(keys.KeyS){
+        speed=Math.max(speed-5*dt,-5);
+    }
 
-    const cameraOffset=
-        new THREE.Vector3(
-            0,
-            4.5,
-            5
-        );
+    if(!keys.KeyW && !keys.KeyS){
+        speed*=Math.pow(.15,dt);
+    }
 
-    cameraOffset.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        boat.rotation.y
-    );
+    if(keys.KeyA){
+        boat.rotation.y+=1.15*dt*(.4+Math.abs(speed)/8);
+    }
 
-    camera.position.copy(
-        boat.position
-    ).add(
-        cameraOffset
-    );
+    if(keys.KeyD){
+        boat.rotation.y-=1.15*dt*(.4+Math.abs(speed)/8);
+    }
 
-    const look=
-        new THREE.Vector3(
-            0,
-            2,
-            -5
-        );
+    const forward=new THREE.Vector3(0,0,-1)
+        .applyQuaternion(boat.quaternion);
 
-    look.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        boat.rotation.y
-    );
+    boat.position.addScaledVector(forward,speed*dt);
 
-    camera.lookAt(
-        boat.position.clone()
-        .add(look)
-    );
+    /* Kamera sitzt erhöht hinter dem Steuerstand */
+    const camOffset=new THREE.Vector3(0,4.6,5.2);
+    const targetOffset=new THREE.Vector3(0,2.0,-3);
+
+    const camPos=boat.localToWorld(camOffset.clone());
+    const target=boat.localToWorld(targetOffset.clone());
+
+    camera.position.lerp(camPos,.18);
+    camera.lookAt(target);
 }
 
-
-/* =========================================================
-   SPIELER AUF BOOT / BRÜCKE
-========================================================= */
-
-function playerOnBoat(){
-
-    const q=
-        boatLocalPosition(
-            camera.position
-        );
-
-    return (
-        Math.abs(q.x)<4.0 &&
-        q.z>-9.2 &&
-        q.z<9.2 &&
-        camera.position.y>
-        boat.position.y+2
-    );
-}
-
-function playerOnBridge(){
-
-    if(bridgeState!==2)
-        return false;
-
-    const q=
-        camera.position.clone()
-        .sub(bridge.position);
-
-    q.applyEuler(
-        new THREE.Euler(
-            0,
-            -bridge.rotation.y,
-            0
-        )
-    );
-
-    return (
-        Math.abs(q.x)<
-            BRIDGE_WIDTH/2+.4 &&
-        Math.abs(q.z)<
-            BRIDGE_LENGTH/2+.4
-    );
-}
-
-
-/* =========================================================
-   BEWEGUNG
-========================================================= */
-
-function canMoveTo(p){
-
-    /*
-      Hafen
-    */
-
-    if(
-        p.x<-32 ||
-        p.x>32 ||
-        p.z>16
-    )
-        return false;
-
-    /*
-      Wasser darf nur mit Boot
-      oder Brücke betreten werden.
-    */
-
-    if(
-        p.z<-2.8 &&
-        !playerOnBridge() &&
-        !playerOnBoat()
-    ){
-
-        /*
-          Zielposition prüfen
-        */
-
-        if(
-            p.z<-2.8
-        )
-            return false;
-    }
-
-    /*
-      Auf Boot:
-      Seitenbegrenzung
-    */
-
-    const q=
-        boatLocalPosition(p);
-
-    if(
-        Math.abs(q.x)>4.05 &&
-        q.z>-9 &&
-        q.z<9
-    ){
-
-        return false;
-    }
-
-    /*
-      Kabine:
-      Türbereich bleibt frei.
-    */
-
-    if(
-        playerOnBoat()
-    ){
-
-        if(
-            q.z>0 &&
-            q.z<6 &&
-            Math.abs(q.x)<3.3
-        ){
-
-            /*
-              Steuerstand und Innenraum
-              betreten erlaubt, wenn Tür offen.
-            */
-
-            if(
-                !doorOpen &&
-                q.z<5.2 &&
-                Math.abs(q.x+1.1)>1.1
-            ){
-
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-function movePlayer(dt){
-
-    if(steering)
-        return;
-
-    const speed=
-        (
-            keys.ShiftLeft ||
-            keys.ShiftRight
-        )
-        ?8
-        :4.5;
-
-    const direction=
-        new THREE.Vector3();
-
-    if(keys.KeyW)
-        direction.z-=1;
-
-    if(keys.KeyS)
-        direction.z+=1;
-
-    if(keys.KeyA)
-        direction.x-=1;
-
-    if(keys.KeyD)
-        direction.x+=1;
-
-    if(direction.lengthSq()>0){
-
-        direction.normalize();
-
-        const forward=
-            new THREE.Vector3();
-
-        camera.getWorldDirection(
-            forward
-        );
-
-        forward.y=0;
-        forward.normalize();
-
-        const right=
-            new THREE.Vector3();
-
-        right.crossVectors(
-            forward,
-            new THREE.Vector3(0,1,0)
-        ).normalize();
-
-        const movement=
-            new THREE.Vector3();
-
-        movement.addScaledVector(
-            forward,
-            direction.z*speed*dt
-        );
-
-        movement.addScaledVector(
-            right,
-            direction.x*speed*dt
-        );
-
-        /*
-          X
-        */
-
-        const px=
-            camera.position.clone();
-
-        px.x+=movement.x;
-
-        if(
-            canMoveTo(px)
-        ){
-
-            camera.position.x=
-                px.x;
-        }
-
-        /*
-          Z
-        */
-
-        const pz=
-            camera.position.clone();
-
-        pz.z+=movement.z;
-
-        if(
-            canMoveTo(pz)
-        ){
-
-            camera.position.z=
-                pz.z;
-        }
-    }
-
-
-    /*
-      Bodenhöhe
-    */
-
-    let floor=2.2;
-
-    if(
-        playerOnBoat()
-    ){
-
-        floor=
-            boat.position.y+2.65;
-    }
-
-    if(
-        playerOnBridge()
-    ){
-
-        floor=
-            Math.max(
-                2.2,
-                bridge.position.y+1.25
-            );
-    }
-
-    /*
-      Gravitation
-    */
-
-    velocityY-=18*dt;
-
-    camera.position.y+=
-        velocityY*dt;
-
-    if(
-        camera.position.y<=floor
-    ){
-
-        camera.position.y=floor;
-
-        velocityY=0;
-
-        onGround=true;
-
-    }else{
-
-        onGround=false;
-    }
-}
-
-
-/* =========================================================
-   INTERAKTION
-========================================================= */
+/* INTERAKTION */
 
 function interact(){
 
-    const player=
-        camera.position.clone();
-
-
-    /*
-      1. STEUERUNG VERLASSEN
-      MUSS GANZ OBEN STEHEN.
+    /* WICHTIG:
+       Beim Steuern ist E IMMER zuerst "Steuerung verlassen".
     */
-
     if(steering){
-
         leaveBoatControl();
-
         return;
     }
 
-
-    /*
-      2. BRÜCKE IN HAND
-    */
-
-    if(
-        bridgeState===1
-    ){
-
-        /*
-          Wenn Spieler auf dem Boot ist,
-          wird sie direkt auf das Boot gelegt.
-        */
-
-        if(
-            playerOnBoat()
-        ){
-
-            putBridgeOnBoat();
-
-        }else{
-
-            dropBridge();
-        }
-
+    if(document.getElementById("fishPanel").style.display==="block"){
         return;
     }
 
-
-    /*
-      3. BRÜCKE AM HAFEN AUFNEHMEN
-    */
-
+    /* Brücke aufnehmen */
     if(
         bridgeState===0 &&
-        player.distanceTo(
-            bridge.position
-        )<4
+        camera.position.distanceTo(bridge.position)<3
     ){
-
-        pickupBridge();
-
+        pickBridge();
         return;
     }
 
-
-    /*
-      4. BRÜCKE AUF DEM WASSER
-      aufnehmen, wenn man auf dem
-      Boot steht und sie erreicht.
-    */
-
-    if(
-        bridgeState===2 &&
-        playerOnBoat() &&
-        player.distanceTo(
-            bridge.position
-        )<5
-    ){
-
-        pickupBridge();
-
+    /* Brücke ablegen */
+    if(bridgeState===1){
+        if(isOnBoat()){
+            putBridgeOnBoat();
+        }else{
+            dropBridge();
+        }
         return;
     }
 
+    /* Tür */
+    const doorWorld=cabin.localToWorld(
+        new THREE.Vector3(0,1.5,-2.7)
+    );
 
-    /*
-      5. TÜR
-    */
-
-    const doorPoint=
-        worldPosition(
-            cabinDoor
-        );
-
-    if(
-        player.distanceTo(
-            doorPoint
-        )<4
-    ){
-
+    if(camera.position.distanceTo(doorWorld)<2.5){
         toggleDoor();
-
         return;
     }
 
-
-    /*
-      6. LENKRAD
-    */
-
-    const wheelPoint=
-        worldPosition(
-            wheel
-        );
+    /* Steuerstand */
+    const wheelWorld=helm.localToWorld(
+        new THREE.Vector3(0,1.4,0)
+    );
 
     if(
+        camera.position.distanceTo(wheelWorld)<2.4 &&
         bridgeState===3 &&
-        player.distanceTo(
-            wheelPoint
-        )<4.5
+        isOnBoat()
     ){
-
         enterBoatControl();
-
         return;
     }
 
-
-    /*
-      7. KRAN
-    */
-
-    const cranePoint=
-        worldPosition(
-            crane
-        );
+    /* Fischtisch */
+    const tableWorld=fishTable.localToWorld(
+        new THREE.Vector3(0,1,0)
+    );
 
     if(
-        bridgeState===3 &&
-        player.distanceTo(
-            cranePoint
-        )<5
+        camera.position.distanceTo(tableWorld)<2.5
     ){
-
-        animateCrane();
-
+        openFishTable();
         return;
+    }
+
+    /* Kran */
+    const craneWorld=crane.localToWorld(
+        new THREE.Vector3(0,2,0)
+    );
+
+    if(
+        camera.position.distanceTo(craneWorld)<3
+    ){
+        if(fishing){
+            fishing=false;
+        }
+
+        craneActive=!craneActive;
+        return;
+    }
+
+    /* Angeln */
+    if(
+        camera.position.z<-10 &&
+        !isOnBoat()
+    ){
+        startFishing();
+        return;
+    }
+
+    if(
+        isOnBoat() &&
+        camera.position.distanceTo(netGroup.getWorldPosition(new THREE.Vector3()))<2
+    ){
+        showPrompt("🎣 Mit E kannst du hier angeln.");
+        startFishing();
     }
 }
 
-
-/* =========================================================
-   PROMPT
-========================================================= */
-
-function showPrompt(text){
-
-    const p=
-        document.getElementById(
-            "prompt"
-        );
-
-    p.innerHTML=text;
-
-    p.style.display="block";
-}
-
-function hidePrompt(){
-
-    document.getElementById(
-        "prompt"
-    ).style.display="none";
-}
+/* HUD */
 
 function updatePrompt(){
 
     if(steering){
-
-        hidePrompt();
-
+        showPrompt("E – Steuerung verlassen");
         return;
     }
 
-    const player=
-        camera.position;
+    if(document.getElementById("fishPanel").style.display==="block"){
+        showPrompt("");
+        return;
+    }
 
-
-    /*
-      Brücke am Hafen
-    */
+    let text="";
 
     if(
         bridgeState===0 &&
-        player.distanceTo(
-            bridge.position
-        )<4
+        camera.position.distanceTo(bridge.position)<3
     ){
-
-        showPrompt(
-            "E – Eisenbrücke aufnehmen"
-        );
-
-        return;
+        text="E – Brücke aufnehmen";
     }
-
-
-    /*
-      Brücke in Hand
-    */
-
-    if(
-        bridgeState===1
+    else if(bridgeState===1){
+        text=isOnBoat()
+            ?"E – Brücke auf Boot legen"
+            :"E – Brücke ablegen";
+    }
+    else if(
+        camera.position.distanceTo(
+            cabin.localToWorld(new THREE.Vector3(0,1.5,-2.7))
+        )<2.5
     ){
-
-        if(
-            playerOnBoat()
-        ){
-
-            showPrompt(
-                "E – Brücke aufs Boot legen<br>R – drehen"
-            );
-
-        }else{
-
-            showPrompt(
-                "E – Brücke ablegen<br>R – drehen"
-            );
-        }
-
-        return;
+        text=doorOpen?"E – Tür schließen":"E – Tür öffnen";
     }
-
-
-    /*
-      Brücke aufgestellt
-    */
-
-    if(
-        bridgeState===2 &&
-        playerOnBoat() &&
-        player.distanceTo(
-            bridge.position
-        )<5
-    ){
-
-        showPrompt(
-            "E – Brücke aufnehmen"
-        );
-
-        return;
-    }
-
-
-    /*
-      Tür
-    */
-
-    const doorPoint=
-        worldPosition(
-            cabinDoor
-        );
-
-    if(
-        player.distanceTo(
-            doorPoint
-        )<4
-    ){
-
-        showPrompt(
-            doorOpen
-            ? "E – Tür schließen"
-            : "E – Tür öffnen"
-        );
-
-        return;
-    }
-
-
-    /*
-      Lenkrad
-    */
-
-    if(
+    else if(
+        isOnBoat() &&
+        camera.position.distanceTo(
+            helm.localToWorld(new THREE.Vector3(0,1.4,0))
+        )<2.4 &&
         bridgeState===3
     ){
-
-        const wheelPoint=
-            worldPosition(
-                wheel
-            );
-
-        if(
-            player.distanceTo(
-                wheelPoint
-            )<4.5
-        ){
-
-            showPrompt(
-                "E – Steuerstand betreten"
-            );
-
-            return;
-        }
+        text="E – Steuerstand benutzen";
     }
-
-
-    /*
-      Kran
-    */
-
-    if(
-        bridgeState===3
+    else if(
+        isOnBoat() &&
+        camera.position.distanceTo(
+            fishTable.localToWorld(new THREE.Vector3(0,1,0))
+        )<2.5
     ){
-
-        const cranePoint=
-            worldPosition(
-                crane
-            );
-
-        if(
-            player.distanceTo(
-                cranePoint
-            )<5
-        ){
-
-            showPrompt(
-                craneLowered
-                ? "E – Netz hochziehen"
-                : "E – Netz ins Wasser lassen"
-            );
-
-            return;
-        }
+        text=fishInventory.length
+            ?"E – Fisch bearbeiten"
+            :"Hier kannst du später Fische bearbeiten";
+    }
+    else if(
+        camera.position.distanceTo(netGroup.getWorldPosition(new THREE.Vector3()))<2
+    ){
+        text="E – Angeln";
     }
 
-    hidePrompt();
+    showPrompt(text);
 }
 
+/* KRANANIMATION */
 
-/* =========================================================
-   START
-========================================================= */
+function updateCrane(dt){
 
-document.getElementById(
-    "startButton"
-).addEventListener(
-    "click",
-    function(){
+    if(!craneActive)return;
 
-        document.getElementById(
-            "start"
-        ).style.display="none";
+    craneProgress+=dt*.35*craneDirection;
 
-        controls.lock();
+    if(craneProgress>=1){
+        craneProgress=1;
+        craneDirection=-1;
     }
-);
 
+    if(craneProgress<=0){
+        craneProgress=0;
+        craneDirection=1;
+    }
 
-/*
-  Pointer-Lock nicht mehr dauerhaft
-  erzwingen.
-*/
+    boom.rotation.x=-.15-.8*craneProgress;
 
-controls.addEventListener(
-    "unlock",
-    function(){
+    rope.scale.y=.5+2.5*craneProgress;
+    rope.position.y=2.2-1.25*craneProgress;
 
-        if(!steering){
+    craneNet.position.y=.65-3*craneProgress;
+}
 
-            /*
-              Spieler darf danach
-              weiterhin E/WASD benutzen.
-            */
+/* FISCHEN TIMER */
 
+function updateFishing(dt){
+
+    if(!fishing)return;
+
+    fishingTimer-=dt;
+
+    if(fishingTimer<=0){
+        catchFish();
+        showPrompt("🐟 Fisch gefangen! Geh zum Tisch und bearbeite ihn.");
+    }
+}
+
+/* PLAYER FLOOR */
+
+function updatePlayerFloor(){
+
+    if(steering)return;
+
+    const onBoat=isPositionOnBoat(camera.position);
+    const onBridge=isPositionOnBridge(camera.position);
+
+    let floor=PLAYER_EYE_DOCK;
+
+    if(onBoat){
+        floor=boatSurface()+2.0;
+    }
+    else if(onBridge){
+        floor=bridgeSurfaceY(camera.position)+2.0;
+    }
+
+    const dy=floor-camera.position.y;
+
+    if(dy>0){
+        camera.position.y=THREE.MathUtils.lerp(
+            camera.position.y,
+            floor,
+            .3
+        );
+        velocityY=0;
+        grounded=true;
+    }
+    else{
+        if(keys.Space && grounded){
+            velocityY=6.5;
+            grounded=false;
+        }
+
+        velocityY-=18/60;
+
+        camera.position.y+=velocityY/60;
+
+        if(camera.position.y<floor){
+            camera.position.y=floor;
+            velocityY=0;
+            grounded=true;
         }
     }
-);
+}
 
+/* NORMALE BEWEGUNG */
 
-/* =========================================================
-   LOOP
-========================================================= */
+function updatePlayer(){
 
-let last=
-    performance.now();
+    if(steering)return;
 
-function animate(now){
+    let speedMove=keys.ShiftLeft||keys.ShiftRight?6:3.5;
 
-    requestAnimationFrame(
-        animate
-    );
+    const forward=new THREE.Vector3();
+    controls.getDirection(forward);
 
-    const dt=
-        Math.min(
-            (now-last)/1000,
-            .033
-        );
+    forward.y=0;
+    forward.normalize();
 
-    last=now;
+    const right=new THREE.Vector3()
+        .crossVectors(forward,new THREE.Vector3(0,1,0))
+        .normalize();
 
-    movePlayer(dt);
+    let dx=0,dz=0;
 
-    updateBridgePhysics(dt);
+    if(keys.KeyW){
+        dx+=forward.x*speedMove/60;
+        dz+=forward.z*speedMove/60;
+    }
 
-    driveBoat(dt);
+    if(keys.KeyS){
+        dx-=forward.x*speedMove/60;
+        dz-=forward.z*speedMove/60;
+    }
 
+    if(keys.KeyA){
+        dx-=right.x*speedMove/60;
+        dz-=right.z*speedMove/60;
+    }
+
+    if(keys.KeyD){
+        dx+=right.x*speedMove/60;
+        dz+=right.z*speedMove/60;
+    }
+
+    if(dx||dz){
+        movePlayer(dx,dz);
+    }
+
+    updatePlayerFloor();
+}
+
+/* POSITION */
+
+function updateHUD(){
+    document.getElementById("position").textContent=
+        Math.round(camera.position.x)+" / "+
+        Math.round(camera.position.z);
+}
+
+/* RENDER */
+
+const clock=new THREE.Clock();
+
+function animate(){
+    requestAnimationFrame(animate);
+
+    const dt=Math.min(clock.getDelta(),.05);
+
+    if(!steering){
+        updatePlayer();
+    }
+
+    updateBoat(dt);
+    updateBridge(dt);
+    updateCrane(dt);
+    updateFishing(dt);
     updatePrompt();
+    updateHUD();
 
-    renderer.render(
-        scene,
-        camera
-    );
+    renderer.render(scene,camera);
 }
 
-animate(
-    performance.now()
-);
+animate();
 
+/* RESIZE */
 
-/* =========================================================
-   RESIZE
-========================================================= */
-
-addEventListener(
-    "resize",
-    function(){
-
-        camera.aspect=
-            innerWidth/innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-    }
-);
-
+window.addEventListener("resize",()=>{
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+});
 </script>
 </body>
 </html>
