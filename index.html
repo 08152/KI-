@@ -3,116 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>3D World Navi</title>
+
+<title>Ghost Maps</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.css">
 
 <style>
+*{box-sizing:border-box}
+
 html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:Arial;
-    background:#8fd8ff;
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+font-family:Arial,sans-serif
 }
 
 #map{
-    position:fixed;
-    inset:0;
+position:absolute;
+inset:0
 }
 
-#ui{
-    position:fixed;
-    top:15px;
-    left:15px;
-    z-index:20;
-    display:flex;
-    gap:8px;
+.search{
+position:absolute;
+z-index:10;
+top:18px;
+left:18px;
+width:390px;
+height:56px;
+display:flex;
+background:white;
+border-radius:12px;
+box-shadow:0 2px 10px #0004;
+overflow:hidden
 }
 
-input{
-    width:380px;
-    max-width:60vw;
-    height:48px;
-    border:0;
-    border-radius:14px;
-    padding:0 17px;
-    font-size:16px;
-    outline:0;
-    box-shadow:0 4px 18px #0004;
+.search input{
+flex:1;
+border:0;
+outline:0;
+padding:0 18px;
+font-size:16px
 }
 
-button{
-    height:48px;
-    border:0;
-    border-radius:14px;
-    padding:0 18px;
-    background:#1677ff;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+.search button{
+width:60px;
+border:0;
+background:white;
+font-size:21px;
+cursor:pointer
 }
 
-#menu{
-    position:fixed;
-    top:80px;
-    left:15px;
-    width:280px;
-    max-height:75vh;
-    overflow:auto;
-    z-index:20;
-    background:#ffffffed;
-    border-radius:18px;
-    padding:15px;
-    box-shadow:0 5px 25px #0004;
+.search button:hover{
+background:#eee
 }
 
-#menu h2{
-    margin:0 0 15px;
+.logo{
+position:absolute;
+z-index:10;
+top:88px;
+left:18px;
+background:white;
+padding:10px 14px;
+border-radius:8px;
+box-shadow:0 2px 8px #0004;
+font-weight:bold
 }
 
-#menu h3{
-    font-size:14px;
-    color:#666;
-    margin:17px 0 7px;
+.controls{
+position:absolute;
+right:18px;
+bottom:80px;
+z-index:10;
+display:flex;
+flex-direction:column;
+gap:8px
 }
 
-.place{
-    background:#eef2f5;
-    border-radius:11px;
-    padding:11px;
-    margin:6px 0;
-    cursor:pointer;
+.controls button{
+width:48px;
+height:48px;
+border:0;
+border-radius:9px;
+background:white;
+box-shadow:0 2px 9px #0004;
+font-size:23px;
+cursor:pointer
 }
 
-.place:hover{
-    background:#d8eaff;
+.controls button:hover{
+background:#eee
 }
 
 #status{
-    position:fixed;
-    right:15px;
-    bottom:15px;
-    z-index:20;
-    background:#ffffffed;
-    padding:11px 15px;
-    border-radius:12px;
-    box-shadow:0 4px 18px #0004;
+position:absolute;
+z-index:50;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+padding:14px 20px;
+border-radius:10px;
+box-shadow:0 3px 15px #0004
 }
 
-#compass{
-    position:fixed;
-    right:18px;
-    top:80px;
-    z-index:20;
-    width:58px;
-    height:58px;
-    border-radius:50%;
-    background:#ffffffed;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    box-shadow:0 4px 18px #0004;
+.hidden{
+display:none
 }
 </style>
 </head>
@@ -121,1173 +118,181 @@ button{
 
 <div id="map"></div>
 
-<div id="ui">
-    <input id="search" placeholder="Straße, Stadt oder Bibliothek...">
-    <button onclick="search()">Suchen</button>
+<div class="search">
+<input id="search" placeholder="Ort suchen...">
+<button id="searchBtn">🔍</button>
 </div>
 
-<div id="menu">
-
-<h2>🌍 Weltkarte</h2>
-
-<h3>Städte</h3>
-
-<div class="place" onclick="go(10,10)">🇩🇪 Berlin</div>
-<div class="place" onclick="go(-5,45)">🇫🇷 Paris</div>
-<div class="place" onclick="go(-25,48)">🇬🇧 London</div>
-<div class="place" onclick="go(38,8)">🇵🇱 Warschau</div>
-<div class="place" onclick="go(-110,8)">🇺🇸 New York</div>
-<div class="place" onclick="go(130,20)">🇨🇳 Peking</div>
-<div class="place" onclick="go(150,20)">🇯🇵 Tokio</div>
-
-<h3>📚 Bibliotheken</h3>
-
-<div class="place" onclick="go(12,13)">
-Stadtbibliothek Berlin
+<div class="logo">
+🌍 Ghost Maps
 </div>
 
-<div class="place" onclick="go(-4,43)">
-Bibliothèque Centrale
+<div class="controls">
+<button id="location">📍</button>
+<button id="plus">+</button>
+<button id="minus">−</button>
 </div>
-
-<div class="place" onclick="go(-108,10)">
-New York Public Library
-</div>
-
-<div class="place" onclick="go(40,10)">
-Bibliothek Warschau
-</div>
-
-<div class="place" onclick="go(153,22)">
-Tokyo City Library
-</div>
-
-<h3>🛣 Straßen</h3>
-
-<div class="place" onclick="go(10,8)">
-Unter den Linden
-</div>
-
-<div class="place" onclick="go(17,8)">
-Friedrichstraße
-</div>
-
-<div class="place" onclick="go(10,-7)">
-Hauptstraße
-</div>
-
-<div class="place" onclick="go(28,0)">
-Bergstraße
-</div>
-
-<div class="place" onclick="go(-110,8)">
-Broadway
-</div>
-
-<div class="place" onclick="go(-100,10)">
-5th Avenue
-</div>
-
-<div class="place" onclick="go(105,15)">
-Nanjing Road
-</div>
-
-<div class="place" onclick="go(145,20)">
-Tokyo Avenue
-</div>
-
-</div>
-
-<div id="compass">N</div>
 
 <div id="status">
-3D-Weltkarte
+Karte wird geladen...
 </div>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/maplibre-gl@6.6.0/dist/maplibre-gl.js"></script>
 
 <script>
 
-if(typeof THREE==="undefined"){
+const status=document.getElementById("status");
 
-document.getElementById("status").innerHTML=
-"❌ Three.js konnte nicht geladen werden";
+const map=new maplibregl.Map({
+container:"map",
 
-throw new Error("Three.js nicht geladen");
+style:{
+version:8,
 
+sources:{
+osm:{
+type:"raster",
+tiles:[
+"https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+],
+tileSize:256,
+attribution:"© OpenStreetMap-Mitwirkende"
 }
+},
 
+layers:[
+{
+id:"osm",
+type:"raster",
+source:"osm"
+}
+]
+},
 
-const scene=new THREE.Scene();
-
-scene.background=
-new THREE.Color(0x91d8ff);
-
-scene.fog=
-new THREE.Fog(
-0x91d8ff,
-250,
-800
-);
-
-
-const camera=
-new THREE.PerspectiveCamera(
-55,
-innerWidth/innerHeight,
-0.1,
-2000
-);
-
-camera.position.set(
-0,
-250,
-220
-);
-
-
-const renderer=
-new THREE.WebGLRenderer({
-antialias:true
+center:[10.4515,51.1657],
+zoom:5
 });
 
-renderer.setSize(
-innerWidth,
-innerHeight
+map.addControl(
+new maplibregl.NavigationControl(),
+"bottom-right"
 );
 
-renderer.setPixelRatio(
-Math.min(devicePixelRatio,2)
-);
+map.on("load",()=>{
+status.classList.add("hidden");
+});
 
-renderer.shadowMap.enabled=true;
+map.on("error",()=>{
+status.textContent="Karte konnte nicht geladen werden";
+});
 
-document
-.getElementById("map")
-.appendChild(renderer.domElement);
+document.getElementById("plus").onclick=()=>{
+map.zoomIn();
+};
 
+document.getElementById("minus").onclick=()=>{
+map.zoomOut();
+};
 
-const controls=
-new THREE.OrbitControls(
-camera,
-renderer.domElement
-);
+document.getElementById("location").onclick=()=>{
+if(!navigator.geolocation){
+alert("Standort wird nicht unterstützt");
+return;
+}
 
-controls.enableDamping=true;
-controls.dampingFactor=.08;
-controls.maxPolarAngle=
-Math.PI/2.03;
+navigator.geolocation.getCurrentPosition(
+position=>{
+const lng=position.coords.longitude;
+const lat=position.coords.latitude;
 
-controls.minDistance=10;
-controls.maxDistance=700;
+map.flyTo({
+center:[lng,lat],
+zoom:15,
+speed:1.2
+});
 
-
-/* LICHT */
-
-scene.add(
-new THREE.HemisphereLight(
-0xffffff,
-0x567080,
-2
+new maplibregl.Marker()
+.setLngLat([lng,lat])
+.setPopup(
+new maplibregl.Popup()
+.setHTML("<b>Dein Standort</b>")
 )
-);
-
-const sun=
-new THREE.DirectionalLight(
-0xffffff,
-2
-);
-
-sun.position.set(
-150,
-300,
-100
-);
-
-sun.castShadow=true;
-
-scene.add(sun);
-
-
-/* HÖHEN */
-
-function terrain(x,z){
-
-let h=0;
-
-h+=Math.sin(x*.035)*3;
-h+=Math.cos(z*.045)*3;
-h+=Math.sin((x+z)*.025)*5;
-
-h+=
-Math.sin(x*.09+z*.04)*1.5;
-
-return Math.max(0,h);
-}
-
-
-/* WASSER */
-
-const water=
-new THREE.Mesh(
-new THREE.PlaneGeometry(
-700,
-450
-),
-new THREE.MeshPhongMaterial({
-color:0x238fd0,
-transparent:true,
-opacity:.8
-})
-);
-
-water.rotation.x=-Math.PI/2;
-water.position.y=-1;
-
-scene.add(water);
-
-
-/* LAND */
-
-function land(
-x,
-z,
-w,
-d,
-color
-){
-
-const geo=
-new THREE.PlaneGeometry(
-w,
-d,
-45,
-35
-);
-
-const p=geo.attributes.position;
-
-for(let i=0;i<p.count;i++){
-
-let lx=p.getX(i);
-let lz=p.getY(i);
-
-p.setZ(
-i,
-terrain(
-x+lx,
-z+lz
-)
-);
-
-}
-
-geo.computeVertexNormals();
-
-const mesh=
-new THREE.Mesh(
-geo,
-new THREE.MeshStandardMaterial({
-color:color,
-roughness:1
-})
-);
-
-mesh.rotation.x=-Math.PI/2;
-mesh.position.set(x,0,z);
-mesh.receiveShadow=true;
-
-scene.add(mesh);
-}
-
-
-/* KONTINENTE */
-
-land(
--110,
-10,
-190,
-140,
-0x70a653
-);
-
-land(
-5,
-10,
-170,
-120,
-0x82ae61
-);
-
-land(
-115,
-15,
-230,
-145,
-0x91ae68
-);
-
-land(
-150,
--100,
-160,
-100,
-0x75a151
-);
-
-land(
--25,
--95,
-100,
-90,
-0x7fa95b
-);
-
-
-/* STRASSEN */
-
-const roads=[];
-
-function createRoad(
-name,
-x,
-z,
-length,
-width,
-rotation
-){
-
-const group=
-new THREE.Group();
-
-
-const road=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-width,
-.5,
-length
-),
-new THREE.MeshStandardMaterial({
-color:0x42464b
-})
-);
-
-road.position.y=2;
-
-group.add(road);
-
-
-/* Seitenwege */
-
-const sideMaterial=
-new THREE.MeshStandardMaterial({
-color:0xa8a8a8
-});
-
-const a=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-1.5,
-.25,
-length
-),
-sideMaterial
-);
-
-a.position.x=
--width/2-1;
-
-a.position.y=1.65;
-
-group.add(a);
-
-
-const b=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-1.5,
-.25,
-length
-),
-sideMaterial
-);
-
-b.position.x=
-width/2+1;
-
-b.position.y=1.65;
-
-group.add(b);
-
-
-/* Mittellinie */
-
-for(
-let z2=-length/2+6;
-z2<length/2;
-z2+=12
-){
-
-const line=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-.3,
-.1,
-6
-),
-new THREE.MeshBasicMaterial({
-color:0xffd83d
-})
-);
-
-line.position.y=2.3;
-line.position.z=z2;
-
-group.add(line);
-
-}
-
-
-group.rotation.y=rotation;
-
-group.position.set(
-x,
-0,
-z
-);
-
-scene.add(group);
-
-roads.push({
-name:name,
-x:x,
-z:z
-});
-
-
-streetLabel(
-name,
-x,
-z,
-rotation
-);
-}
-
-
-/* EUROPA */
-
-createRoad(
-"Unter den Linden",
-10,
-8,
-70,
-6,
-0
-);
-
-createRoad(
-"Friedrichstraße",
-17,
-8,
-65,
-6,
-Math.PI/2
-);
-
-createRoad(
-"Hauptstraße",
-10,
--7,
-95,
-7,
-0
-);
-
-createRoad(
-"Bahnhofstraße",
--15,
-5,
-70,
-6,
-.7
-);
-
-createRoad(
-"Bergstraße",
-28,
-0,
-60,
-6,
--.4
-);
-
-createRoad(
-"Seestraße",
-5,
-32,
-75,
-6,
-.1
-);
-
-createRoad(
-"Waldstraße",
--25,
-20,
-85,
-6,
--.3
-);
-
-
-/* FRANKREICH */
-
-createRoad(
-"Rue de Rivoli",
--5,
-45,
-70,
-6,
-.15
-);
-
-createRoad(
-"Avenue de Paris",
-0,
-35,
-75,
-6,
-.8
-);
-
-
-/* POLEN */
-
-createRoad(
-"Aleje Jerozolimskie",
-38,
-5,
-75,
-6,
-.1
-);
-
-createRoad(
-"Marszałkowska",
-45,
-5,
-65,
-6,
-Math.PI/2
-);
-
-
-/* AMERIKA */
-
-createRoad(
-"Broadway",
--110,
-8,
-80,
-6,
-.2
-);
-
-createRoad(
-"5th Avenue",
--100,
-10,
-75,
-6,
-Math.PI/2
-);
-
-createRoad(
-"Main Street",
--120,
-0,
-95,
-6,
-0
-);
-
-
-/* ASIEN */
-
-createRoad(
-"Nanjing Road",
-105,
-15,
-90,
-6,
-.2
-);
-
-createRoad(
-"Central Avenue",
-120,
-5,
-85,
-6,
-Math.PI/2
-);
-
-createRoad(
-"Tokyo Avenue",
-145,
-20,
-80,
-6,
-.5
-);
-
-
-/* STRASSENNAME */
-
-function streetLabel(
-text,
-x,
-z,
-rotation
-){
-
-const canvas=
-document.createElement("canvas");
-
-canvas.width=700;
-canvas.height=100;
-
-const ctx=
-canvas.getContext("2d");
-
-ctx.fillStyle="white";
-
-ctx.fillRect(
-5,
-10,
-690,
-80
-);
-
-ctx.fillStyle="#111";
-
-ctx.font=
-"bold 35px Arial";
-
-ctx.textAlign="center";
-ctx.textBaseline="middle";
-
-ctx.fillText(
-text,
-350,
-50
-);
-
-const texture=
-new THREE.CanvasTexture(
-canvas
-);
-
-const sprite=
-new THREE.Sprite(
-new THREE.SpriteMaterial({
-map:texture,
-transparent:true,
-depthTest:false
-})
-);
-
-sprite.scale.set(
-30,
-4.3,
-1
-);
-
-sprite.position.set(
-x,
-9,
-z
-);
-
-sprite.rotation.z=-rotation;
-
-scene.add(sprite);
-}
-
-
-/* STÄDTE */
-
-const cities=[
-["Berlin",10,10],
-["Paris",-2,45],
-["London",-25,48],
-["Rom",15,-5],
-["Warschau",38,8],
-["New York",-110,8],
-["Los Angeles",-140,-5],
-["Mexiko-Stadt",-125,-35],
-["Peking",130,20],
-["Tokio",150,20],
-["Delhi",100,-5]
-];
-
-
-function createCity(
-name,
-x,
-z
-){
-
-const group=
-new THREE.Group();
-
-const building=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-5,
-12,
-5
-),
-new THREE.MeshStandardMaterial({
-color:0xbfc7ce
-})
-);
-
-building.position.y=6;
-
-group.add(building);
-
-
-const roof=
-new THREE.Mesh(
-new THREE.ConeGeometry(
-4,
-4,
-4
-),
-new THREE.MeshStandardMaterial({
-color:0x95463e
-})
-);
-
-roof.position.y=14;
-
-group.add(roof);
-
-
-group.position.set(
-x,
-terrain(x,z),
-z
-);
-
-scene.add(group);
-
-cityLabel(
-name,
-x,
-z
-);
-}
-
-
-function cityLabel(
-text,
-x,
-z
-){
-
-const canvas=
-document.createElement("canvas");
-
-canvas.width=500;
-canvas.height=100;
-
-const ctx=
-canvas.getContext("2d");
-
-ctx.fillStyle="white";
-
-ctx.fillRect(
-5,
-5,
-490,
-90
-);
-
-ctx.fillStyle="#111";
-
-ctx.font=
-"bold 34px Arial";
-
-ctx.textAlign="center";
-
-ctx.fillText(
-text,
-250,
-60
-);
-
-const texture=
-new THREE.CanvasTexture(canvas);
-
-const sprite=
-new THREE.Sprite(
-new THREE.SpriteMaterial({
-map:texture,
-transparent:true,
-depthTest:false
-})
-);
-
-sprite.scale.set(
-25,
-5,
-1
-);
-
-sprite.position.set(
-x,
-22,
-z
-);
-
-scene.add(sprite);
-}
-
-
-cities.forEach(c=>{
-createCity(
-c[0],
-c[1],
-c[2]
-);
-});
-
-
-/* BIBLIOTHEKEN */
-
-const libraries=[
-["Stadtbibliothek Berlin",12,13],
-["Bibliothèque Centrale",-4,43],
-["New York Public Library",-108,10],
-["Bibliothek Warschau",40,10],
-["Tokyo City Library",153,22]
-];
-
-
-function library(
-name,
-x,
-z
-){
-
-const group=
-new THREE.Group();
-
-
-const body=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-9,
-6,
-7
-),
-new THREE.MeshStandardMaterial({
-color:0xd8c6a3
-})
-);
-
-body.position.y=3;
-
-group.add(body);
-
-
-/* Säulen */
-
-for(
-let i=-2;
-i<=2;
-i++
-){
-
-const column=
-new THREE.Mesh(
-new THREE.CylinderGeometry(
-.3,
-.3,
-6.5,
-12
-),
-new THREE.MeshStandardMaterial({
-color:0xf1ede3
-})
-);
-
-column.position.set(
-i*1.4,
-3.2,
-3.6
-);
-
-group.add(column);
-
-}
-
-
-/* Dach */
-
-const roof=
-new THREE.Mesh(
-new THREE.BoxGeometry(
-10,
-1,
-8
-),
-new THREE.MeshStandardMaterial({
-color:0x684c39
-})
-);
-
-roof.position.y=6.5;
-
-group.add(roof);
-
-
-group.position.set(
-x,
-terrain(x,z),
-z
-);
-
-scene.add(group);
-
-cityLabel(
-"📚 "+name,
-x,
-z
-);
-}
-
-
-libraries.forEach(l=>{
-library(
-l[0],
-l[1],
-l[2]
-);
-});
-
-
-/* MARKER */
-
-let marker=null;
-
-function markerAt(x,z){
-
-if(marker)
-scene.remove(marker);
-
-marker=
-new THREE.Group();
-
-
-const pole=
-new THREE.Mesh(
-new THREE.CylinderGeometry(
-.5,
-.5,
-10,
-16
-),
-new THREE.MeshStandardMaterial({
-color:0xff2222
-})
-);
-
-pole.position.y=5;
-
-marker.add(pole);
-
-
-const ball=
-new THREE.Mesh(
-new THREE.SphereGeometry(
-2.3,
-20,
-20
-),
-new THREE.MeshStandardMaterial({
-color:0xff2222
-})
-);
-
-ball.position.y=11;
-
-marker.add(ball);
-
-
-marker.position.set(
-x,
-terrain(x,z),
-z
-);
-
-scene.add(marker);
-}
-
-
-/* NAVIGATION */
-
-function go(x,z){
-
-camera.position.set(
-x+45,
-75,
-z+45
-);
-
-controls.target.set(
-x,
-terrain(x,z),
-z
-);
-
-markerAt(x,z);
-}
-
-
-/* SUCHE */
-
-function search(){
-
-const q=
-document
-.getElementById("search")
-.value
-.toLowerCase()
-.trim();
-
-if(!q)return;
-
-
-for(
-const c of cities
-){
-
-if(
-c[0]
-.toLowerCase()
-.includes(q)
-){
-
-go(c[1],c[2]);
-return;
-
-}
-
-}
-
-
-for(
-const r of roads
-){
-
-if(
-r.name
-.toLowerCase()
-.includes(q)
-){
-
-go(r.x,r.z);
-return;
-
-}
-
-}
-
-
-for(
-const l of libraries
-){
-
-if(
-l[0]
-.toLowerCase()
-.includes(q)
-){
-
-go(l[1],l[2]);
-return;
-
-}
-
-}
-
-document.getElementById("status")
-.innerHTML="Ort nicht gefunden";
-}
-
-
-document
-.getElementById("search")
-.addEventListener(
-"keydown",
-e=>{
-if(e.key==="Enter")
-search();
-}
-);
-
-
-/* RESIZE */
-
-window.addEventListener(
-"resize",
+.addTo(map)
+.togglePopup();
+},
 ()=>{
-
-camera.aspect=
-innerWidth/innerHeight;
-
-camera.updateProjectionMatrix();
-
-renderer.setSize(
-innerWidth,
-innerHeight
-);
-
+alert("Standort konnte nicht ermittelt werden");
 }
 );
+};
 
+async function searchPlace(){
 
-/* LOOP */
+const input=document.getElementById("search");
+const query=input.value.trim();
 
-function animate(){
+if(!query)return;
 
-requestAnimationFrame(
-animate
+try{
+
+const response=await fetch(
+"https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+
+encodeURIComponent(query)
 );
 
-controls.update();
+const data=await response.json();
 
-if(marker)
-marker.rotation.y+=.015;
+if(!data.length){
+alert("Ort nicht gefunden");
+return;
+}
 
-renderer.render(
-scene,
-camera
-);
+const place=data[0];
+
+const lng=parseFloat(place.lon);
+const lat=parseFloat(place.lat);
+
+map.flyTo({
+center:[lng,lat],
+zoom:14,
+speed:1.2
+});
+
+new maplibregl.Marker()
+.setLngLat([lng,lat])
+.setPopup(
+new maplibregl.Popup()
+.setHTML(
+"<b>"+escapeHTML(place.display_name)+"</b>"
+)
+)
+.addTo(map)
+.togglePopup();
+
+}catch(error){
+alert("Suche fehlgeschlagen");
+}
 
 }
 
-animate();
+function escapeHTML(text){
+return text
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+}
 
-document.getElementById("status")
-.innerHTML=
-"🌍 3D Weltkarte aktiv";
+document.getElementById("searchBtn")
+.addEventListener("click",searchPlace);
+
+document.getElementById("search")
+.addEventListener("keydown",e=>{
+if(e.key==="Enter"){
+searchPlace();
+}
+});
 
 </script>
 
