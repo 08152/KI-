@@ -2,421 +2,68 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>MECH ARENA</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MECH HANGAR</title>
 <style>
 *{box-sizing:border-box}
-
-html,body{
-margin:0;
-width:100%;
-height:100%;
-overflow:hidden;
-font-family:Arial,sans-serif;
-background:#080b10
-}
-
-body{touch-action:none}
-
-#game{
-position:fixed;
-inset:0;
-z-index:0
-}
-
-#ui{
-position:fixed;
-inset:0;
-color:#fff;
-pointer-events:none;
-z-index:100
-}
-
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#090c12}
+#game{position:fixed;inset:0}
+#ui{position:fixed;inset:0;pointer-events:none;color:white}
 .top{
-position:absolute;
-left:0;
-right:0;
-top:0;
-height:75px;
-padding:18px 24px;
-background:linear-gradient(#070a0fee,transparent);
-display:flex;
-align-items:center
+position:absolute;top:0;left:0;right:0;height:72px;
+background:linear-gradient(#080b10dd,#080b1000);
+display:flex;align-items:center;padding:0 25px;
 }
-
-.logo{
-font-size:26px;
-font-weight:900;
-letter-spacing:3px
+.logo{font-size:25px;font-weight:900;letter-spacing:3px}
+.status{margin-left:auto;display:flex;gap:10px}
+.badge{
+background:#151b25dd;border:1px solid #3b4658;
+padding:9px 13px;border-radius:10px
 }
-
-.money{
-margin-left:auto;
-background:#151b25ee;
-border:1px solid #59677a;
-padding:10px 16px;
-border-radius:11px;
-font-size:18px;
-font-weight:900;
-box-shadow:0 4px 20px #0008;
-pointer-events:auto
-}
-
 .bottom{
-position:absolute;
-left:0;
-right:0;
-bottom:0;
-height:130px;
-padding:20px;
-display:flex;
-align-items:flex-end;
-background:linear-gradient(transparent,#070a0fee);
-pointer-events:none
+position:absolute;bottom:0;left:0;right:0;
+height:125px;background:linear-gradient(#080b1000,#080b10ee);
+display:flex;align-items:flex-end;padding:20px;
 }
-
-.info{
-background:#111821ee;
-border:1px solid #3c4858;
-padding:13px 17px;
-border-radius:14px
+.panel{
+pointer-events:auto;background:#101722ee;border:1px solid #394657;
+border-radius:14px;padding:14px 18px;
 }
-
-.info b{font-size:19px}
-
-.info small{
-display:block;
-color:#9ca9b9;
-margin-top:4px
-}
-
+.title{font-size:18px;font-weight:bold}
+.sub{font-size:13px;color:#9ba8b8;margin-top:5px}
 .buttons{
-margin-left:auto;
-display:flex;
-gap:8px;
-pointer-events:auto
+margin-left:auto;display:flex;gap:8px
 }
-
 button{
-border:0;
-border-radius:11px;
-padding:12px 17px;
-font-weight:800;
-cursor:pointer;
-pointer-events:auto;
-touch-action:manipulation
+border:0;border-radius:10px;padding:12px 17px;
+font-weight:bold;cursor:pointer;background:#e7edf5;color:#10151c
 }
-
-button:hover{
-filter:brightness(1.1)
-}
-
-#custom{
-position:absolute;
-right:20px;
-top:95px;
-width:270px;
-max-height:calc(100vh - 115px);
-overflow:auto;
-background:#101720f5;
-border:1px solid #465365;
-border-radius:16px;
-padding:15px;
-pointer-events:auto;
-display:none;
-box-shadow:0 15px 50px #0008
-}
-
-#custom h2{
-margin:0 0 12px
-}
-
-.tab{
-width:100%;
-margin:5px 0;
-background:#202a36;
-color:white;
-text-align:left
-}
-
-.option{
-background:#151d27;
-border-radius:10px;
-padding:10px;
-margin:8px 0
-}
-
-.option p{
-color:#aab5c2;
-font-size:13px
-}
-
-.option button{
-margin:3px;
-padding:8px 10px
-}
-
-.remove{
-background:#b83333;
-color:white
-}
-
-.upgrade{
-background:#4b9fff;
-color:white
-}
-
-#battle{
-position:absolute;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-width:min(92vw,540px);
-background:#101720f8;
-border:1px solid #4b596d;
-border-radius:18px;
-padding:24px;
-display:none;
-pointer-events:auto;
-box-shadow:0 20px 80px #000b
-}
-
-#battle h1{
-margin-top:0
-}
-
-.battleBtn{
-width:100%;
-background:#e7edf5;
-color:#111820;
-font-size:19px;
-margin-top:10px
-}
-
-#fightUI{
-position:absolute;
-left:0;
-right:0;
-top:0;
-bottom:0;
-display:none;
-pointer-events:none
-}
-
-#fightTop{
-position:absolute;
-top:15px;
-left:50%;
-transform:translateX(-50%);
-display:flex;
-gap:30px;
-align-items:center
-}
-
-.life{
-background:#10151dcc;
-padding:10px 16px;
-border-radius:12px;
-font-weight:bold
-}
-
-#timer{
-font-size:25px;
-font-weight:900;
-background:#10151dcc;
-padding:10px 16px;
-border-radius:12px
-}
-
-#arenaHint{
-position:absolute;
-bottom:25px;
-left:50%;
-transform:translateX(-50%);
-background:#000b;
-padding:10px 16px;
-border-radius:12px;
-white-space:nowrap
-}
-
+button:hover{filter:brightness(1.12)}
 #crosshair{
-position:absolute;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-width:20px;
-height:20px;
+position:absolute;left:50%;top:50%;width:20px;height:20px;
+transform:translate(-50%,-50%);display:none
+}
+#crosshair:before,#crosshair:after{
+content:"";position:absolute;background:white
+}
+#crosshair:before{width:20px;height:2px;top:9px}
+#crosshair:after{width:2px;height:20px;left:9px}
+.modal{
+position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+background:#111821f5;border:1px solid #465366;border-radius:18px;
+padding:25px;width:min(90vw,500px);display:none;
+pointer-events:auto;box-shadow:0 20px 80px #000b
+}
+.modal h2{margin-top:0}
+.modal button{margin-top:8px;width:100%}
+#health{
+position:absolute;left:25px;bottom:145px;width:250px;
+height:15px;background:#252d38;border-radius:10px;overflow:hidden;
 display:none
 }
-
-#crosshair:before,
-#crosshair:after{
-content:"";
-position:absolute;
-background:white;
-box-shadow:0 0 4px #000
-}
-
-#crosshair:before{
-width:20px;
-height:2px;
-top:9px
-}
-
-#crosshair:after{
-height:20px;
-width:2px;
-left:9px
-}
-
-#result{
-position:absolute;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-background:#101720fa;
-border:1px solid #58677b;
-padding:30px;
-border-radius:20px;
-text-align:center;
-display:none;
-pointer-events:auto;
-min-width:280px
-}
-
-#result h1{
-margin-top:0
-}
-
-#mobile{
-display:none;
-position:absolute;
-left:20px;
-bottom:100px;
-width:140px;
-height:140px;
-pointer-events:auto
-}
-
-.pad{
-position:absolute;
-width:45px;
-height:45px;
-padding:0;
-background:#ffffff99;
-border:1px solid white
-}
-
-#up{left:47px;top:0}
-#down{left:47px;bottom:0}
-#left{left:0;top:47px}
-#right{right:0;top:47px}
-
-#jump{
-position:absolute;
-right:20px;
-bottom:105px;
-display:none;
-pointer-events:auto;
-background:#ffffffaa
-}
-
-#clickHint{
-position:absolute;
-left:50%;
-top:82%;
-transform:translateX(-50%);
-background:#000b;
-padding:9px 14px;
-border-radius:10px;
-font-weight:bold;
-display:block;
-pointer-events:none
-}
-
-#battleMessage{
-pointer-events:none
-}
-
-@media(max-width:700px){
-
-#mobile{
-display:block
-}
-
-#jump{
-display:block
-}
-
-.bottom .buttons button:nth-child(2){
-display:none
-}
-
-#fightTop{
-gap:7px
-}
-
-.life{
-padding:8px;
-font-size:13px
-}
-
-#timer{
-font-size:20px;
-padding:8px
-}
-
-#arenaHint{
-font-size:11px;
-bottom:15px
-}
-
-.logo{
-font-size:19px
-}
-
-.money{
-font-size:14px;
-padding:9px 11px
-}
-
-.bottom{
-height:110px;
-padding:12px
-}
-
-.info{
-max-width:52vw;
-padding:9px
-}
-
-.info b{
-font-size:14px
-}
-
-.info small{
-font-size:10px
-}
-
-.buttons{
-gap:4px
-}
-
-.buttons button{
-padding:9px;
-font-size:11px
-}
-
-#custom{
-right:10px;
-top:80px;
-width:250px
-}
-}
+#healthbar{height:100%;width:100%;background:#42c66b}
 </style>
 </head>
-
 <body>
 
 <div id="game"></div>
@@ -424,2436 +71,558 @@ width:250px
 <div id="ui">
 
 <div class="top">
-
-<div class="logo">
-MECH//ARENA
+<div class="logo">MECH//HANGAR</div>
+<div class="status">
+<div class="badge">⚡ Energie <span id="energy">100</span>%</div>
+<div class="badge">🛡️ HP <span id="hp">100</span>%</div>
+</div>
 </div>
 
-<div class="money">
-💰 <span id="money">100</span> COINS
-</div>
-
-</div>
-
-
-<div id="clickHint">
-🖱️ Mech anklicken zum Heranzoomen
-</div>
-
-
-<!-- =================================================
-     ANPASSEN
-================================================== -->
-
-<div id="custom">
-
-<h2>MECH ANPASSEN</h2>
-
-<button
-class="tab"
-onclick="showSection('mech')">
-🤖 Mech
-</button>
-
-<button
-class="tab"
-onclick="showSection('left')">
-🦾 Linker Arm
-</button>
-
-<button
-class="tab"
-onclick="showSection('right')">
-🦾 Rechter Arm
-</button>
-
-<div id="section"></div>
-
-</div>
-
-
-<!-- =================================================
-     BOTTOM
-================================================== -->
+<div id="crosshair"></div>
+<div id="health"><div id="healthbar"></div></div>
 
 <div class="bottom">
-
-<div class="info">
-
-<b>MK-01 STRIKER</b>
-
-<small>
-Starter-Mech · 2 Beine · Triple-Sturmgewehr je Hand
-</small>
-
+<div class="panel">
+<div class="title" id="mechName">MK-01 STRIKER</div>
+<div class="sub">Starter-Mech · Doppel-Bein · Triple-Sturmgewehr</div>
 </div>
 
 <div class="buttons">
+<button onclick="enterMech()">▶ MECH BETRETEN</button>
+<button onclick="openLoadout()">⚙ LOADOUT</button>
+<button onclick="openHangar()">🏭 HANGAR</button>
+</div>
+</div>
 
-<button onclick="toggleCustomize()">
-⚙ Anpassen
-</button>
+<div class="modal" id="loadout">
+<h2>⚙ MECH LOADOUT</h2>
+<p>MK-01 STRIKER</p>
+<p>🦿 Beine: 2 × Standard-Bein</p>
+<p>🤖 Linke Hand: 3 × Sturmgewehr</p>
+<p>🤖 Rechte Hand: 3 × Sturmgewehr</p>
+<p>🔋 Energie: 100</p>
+<button onclick="closeModals()">Schließen</button>
+</div>
 
-<button onclick="resetView()">
-🔄 Ansicht
-</button>
-
-<button onclick="openBattle()">
-⚔ BATTLE
-</button>
-
+<div class="modal" id="hangar">
+<h2>🏭 HANGAR</h2>
+<p>Willkommen im Mech-Hangar.</p>
+<p>Dein MK-01 STRIKER steht bereit.</p>
+<button onclick="rotateMech()">🔄 Mech drehen</button>
+<button onclick="enterMech()">▶ Mech betreten</button>
+<button onclick="closeModals()">Schließen</button>
 </div>
 
 </div>
-
-
-<!-- =================================================
-     BATTLE MENU
-================================================== -->
-
-<div id="battle">
-
-<h1>
-⚔ MECH BATTLE
-</h1>
-
-<p>
-Trete online gegen einen anderen Spieler an.
-</p>
-
-<p>
-❤️ 3 Leben · ⏱ 2 Minuten · 🪙 +50 Coins bei Sieg
-</p>
-
-<button
-class="battleBtn"
-onclick="startBattle()">
-▶ MATCH SUCHEN
-</button>
-
-<button
-class="battleBtn"
-onclick="closeBattle()">
-Schließen
-</button>
-
-</div>
-
-
-<!-- =================================================
-     FIGHT UI
-================================================== -->
-
-<div id="fightUI">
-
-<div id="fightTop">
-
-<div class="life">
-DU ❤️ <span id="myLives">3</span>
-</div>
-
-<div id="timer">
-2:00
-</div>
-
-<div class="life">
-GEGNER ❤️ <span id="enemyLives">3</span>
-</div>
-
-</div>
-
-<div id="arenaHint">
-WASD · Maus · Leertaste = Springen · Linksklick = Schießen
-</div>
-
-</div>
-
-
-<div id="crosshair"></div>
-
-
-<!-- =================================================
-     RESULT
-================================================== -->
-
-<div id="result">
-
-<h1 id="resultTitle">
-SIEG!
-</h1>
-
-<p id="resultText"></p>
-
-<button onclick="leaveBattle()">
-Zurück zum Hangar
-</button>
-
-</div>
-
-
-<!-- =================================================
-     MOBILE
-================================================== -->
-
-<div id="mobile">
-
-<button class="pad" id="up">
-▲
-</button>
-
-<button class="pad" id="down">
-▼
-</button>
-
-<button class="pad" id="left">
-◀
-</button>
-
-<button class="pad" id="right">
-▶
-</button>
-
-</div>
-
-<button id="jump" onclick="jump()">
-⬆ SPRINGEN
-</button>
-
-</div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
-
 <script>
-
-/* =====================================================
-   THREE.JS
-===================================================== */
-
 const scene=new THREE.Scene();
-
-scene.background=new THREE.Color(0x080c12);
-
-scene.fog=new THREE.Fog(
-0x080c12,
-28,
-100
-);
-
+scene.background=new THREE.Color(0x070a0f);
+scene.fog=new THREE.Fog(0x070a0f,25,80);
 
 const camera=new THREE.PerspectiveCamera(
-62,
-innerWidth/innerHeight,
-.1,
-180
+60,innerWidth/innerHeight,.1,150
 );
+camera.position.set(8,5,11);
 
-camera.position.set(
-8,
-5.5,
-12
-);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.getElementById("game").appendChild(renderer.domElement);
 
+scene.add(new THREE.HemisphereLight(0x9bbcff,0x151515,1.4));
 
-const renderer=new THREE.WebGLRenderer({
-antialias:true
-});
-
-renderer.setSize(
-innerWidth,
-innerHeight
-);
-
-renderer.setPixelRatio(
-Math.min(devicePixelRatio,2)
-);
-
-document
-.getElementById("game")
-.appendChild(renderer.domElement);
-
-
-/* =====================================================
-   LICHT
-===================================================== */
-
-scene.add(
-new THREE.HemisphereLight(
-0xaacbff,
-0x151515,
-1.3
-)
-);
-
-const light=
-new THREE.DirectionalLight(
-0xffffff,
-1.7
-);
-
-light.position.set(
-10,
-20,
-10
-);
-
-scene.add(light);
-
-
-/* =====================================================
-   BODEN
-===================================================== */
+const keyLight=new THREE.DirectionalLight(0xffffff,2);
+keyLight.position.set(5,12,8);
+scene.add(keyLight);
 
 const floor=new THREE.Mesh(
-new THREE.PlaneGeometry(
-100,
-100
-),
-new THREE.MeshStandardMaterial({
-color:0x252c35,
-metalness:.35,
-roughness:.75
-})
+new THREE.PlaneGeometry(80,80),
+new THREE.MeshStandardMaterial({color:0x202832,roughness:.85})
 );
-
 floor.rotation.x=-Math.PI/2;
-
 scene.add(floor);
 
-
-for(let x=-45;x<=45;x+=5){
-
-const l=new THREE.Mesh(
-new THREE.BoxGeometry(
-.035,
-.01,
-90
-),
-new THREE.MeshBasicMaterial({
-color:0x394451
-})
+for(let i=-35;i<=35;i+=5){
+const line=new THREE.Mesh(
+new THREE.BoxGeometry(.04,.01,70),
+new THREE.MeshBasicMaterial({color:0x34404d})
 );
-
-l.position.set(
-x,
-.01,
-0
-);
-
-scene.add(l);
+line.position.set(i,.012,0);
+scene.add(line);
 }
 
-
-for(let z=-45;z<=45;z+=5){
-
-const l=new THREE.Mesh(
-new THREE.BoxGeometry(
-90,
-.01,
-.035
-),
-new THREE.MeshBasicMaterial({
-color:0x394451
-})
+for(let i=-35;i<=35;i+=5){
+const line=new THREE.Mesh(
+new THREE.BoxGeometry(70,.01,.04),
+new THREE.MeshBasicMaterial({color:0x34404d})
 );
-
-l.position.set(
-0,
-.011,
-z
-);
-
-scene.add(l);
+line.position.set(0,.013,i);
+scene.add(line);
 }
 
+/* Hangar-Wände */
 
-/* =====================================================
-   HANGAR
-===================================================== */
-
-function box(
-x,
-y,
-z,
-w,
-h,
-d,
-color
-){
-
+function box(x,y,z,w,h,d,c){
 const m=new THREE.Mesh(
-new THREE.BoxGeometry(
-w,
-h,
-d
-),
+new THREE.BoxGeometry(w,h,d),
 new THREE.MeshStandardMaterial({
-color,
-metalness:.45,
-roughness:.45
+color:c,
+roughness:.7,
+metalness:.3
 })
 );
-
-m.position.set(
-x,
-y,
-z
-);
-
+m.position.set(x,y,z);
 scene.add(m);
-
 return m;
 }
 
+box(0,8,-18,45,16,1,0x151b23);
+box(-22,8,0,1,16,38,0x121820);
+box(22,8,0,1,16,38,0x121820);
 
-box(
-0,
-9,
--25,
-55,
-18,
-1,
-0x161d26
-);
-
-box(
--27,
-9,
-0,
-1,
-18,
-52,
-0x121820
-);
-
-box(
-27,
-9,
-0,
-1,
-18,
-52,
-0x121820
-);
-
-
-for(let x=-22;x<=22;x+=5){
-
-box(
-x,
-12,
--24.3,
-2.8,
-.15,
-.2,
-0x637083
-);
-
+for(let i=-18;i<=18;i+=6){
+box(i,12,-17.3,3,.15,.2,0x5c6877);
 }
 
+/* Lichtleisten */
 
-for(let x=-20;x<=20;x+=5){
-
-const lamp=
-new THREE.PointLight(
-0x75aaff,
-1.3,
-13
-);
-
-lamp.position.set(
-x,
-11,
--5
-);
-
-scene.add(lamp);
-
+for(let i=-15;i<=15;i+=5){
+const light=new THREE.PointLight(0x78aaff,1.4,12);
+light.position.set(i,10,-5);
+scene.add(light);
 }
 
-
-/* =====================================================
+/* =========================
    MECH
-===================================================== */
+========================= */
 
 const mech=new THREE.Group();
-
-mech.position.set(
-0,
-0,
--4
-);
-
-mech.userData.isPlayerMech=true;
-
 scene.add(mech);
+mech.position.set(0,0,-1);
 
-
-function mechPart(
-x,
-y,
-z,
-w,
-h,
-d,
-color
+function part(
+x,y,z,w,h,d,color,
+metal=.5
 ){
-
 const m=new THREE.Mesh(
-new THREE.BoxGeometry(
-w,
-h,
-d
-),
+new THREE.BoxGeometry(w,h,d),
 new THREE.MeshStandardMaterial({
 color,
-metalness:.75,
-roughness:.3
+metalness:metal,
+roughness:.35
 })
 );
-
-m.position.set(
-x,
-y,
-z
-);
-
-m.userData.isMechPart=true;
-
+m.position.set(x,y,z);
 mech.add(m);
-
 return m;
 }
 
+/* Füße */
+
+part(-1.15,.35,0,1.5,.7,2,0x343d48);
+part(1.15,.35,0,1.5,.7,2,0x343d48);
 
 /* Beine */
 
-const legL=mechPart(
--1.1,
-2,
-0,
-1.05,
-3.4,
-1.2,
-0x495563
+const leftLeg=part(
+-1.15,2,0,
+1.05,3.3,1.15,
+0x4b5663
 );
 
-const legR=mechPart(
-1.1,
-2,
-0,
-1.05,
-3.4,
-1.2,
-0x495563
+const rightLeg=part(
+1.15,2,0,
+1.05,3.3,1.15,
+0x4b5663
 );
 
-mechPart(
--1.1,
-.4,
-0,
-1.5,
-.7,
-2,
-0x303944
-);
+/* Knie */
 
-mechPart(
-1.1,
-.4,
-0,
-1.5,
-.7,
-2,
-0x303944
-);
-
-mechPart(
--1.1,
-3.75,
--.05,
-1.25,
-.55,
-1.35,
-0x718091
-);
-
-mechPart(
-1.1,
-3.75,
--.05,
-1.25,
-.55,
-1.35,
-0x718091
-);
-
+part(-1.15,3.65,-.05,1.25,.55,1.3,0x778594);
+part(1.15,3.65,-.05,1.25,.55,1.3,0x778594);
 
 /* Becken */
 
-mechPart(
-0,
-4.55,
-0,
-3.6,
-1.1,
-1.8,
-0x303943
-);
-
+part(0,4.5,0,3.7,1.2,1.8,0x333d49);
 
 /* Torso */
 
-const torso=mechPart(
-0,
-6.35,
-0,
-4.1,
-3.2,
-2,
-0x414d5a
-);
+part(0,6.3,0,4.2,3.2,2,0x414c5a);
 
-mechPart(
-0,
-6.45,
--1.1,
-3.4,
-2,
-.35,
-0x596776
-);
+/* Brustpanzer */
 
+part(0,6.5,-1.05,3.5,2.1,.35,0x586675);
 
 /* Energie-Kern */
 
 const core=new THREE.Mesh(
-new THREE.CylinderGeometry(
-.55,
-.55,
-.22,
-24
-),
+new THREE.CylinderGeometry(.55,.55,.25,24),
 new THREE.MeshStandardMaterial({
-color:0x43c9ff,
+color:0x40bfff,
 emissive:0x168cff,
-emissiveIntensity:2
+emissiveIntensity:2,
+metalness:.4
 })
 );
-
 core.rotation.x=Math.PI/2;
-
-core.position.set(
-0,
-6.4,
--1.3
-);
-
+core.position.set(0,6.4,-1.28);
 mech.add(core);
-
-
-/* Hals */
-
-mechPart(
-0,
-7.85,
-0,
-1.1,
-.6,
-1,
-0x20262e
-);
-
 
 /* Kopf */
 
-mechPart(
-0,
-8.65,
-0,
-2.5,
-2,
-1.8,
-0x303944
-);
-
+part(0,8.5,0,2.5,2,1.8,0x303944);
 
 /* Visier */
 
 const visor=new THREE.Mesh(
-new THREE.BoxGeometry(
-1.9,
-.42,
-.25
-),
+new THREE.BoxGeometry(1.9,.45,.25),
 new THREE.MeshStandardMaterial({
-color:0x75e7ff,
-emissive:0x138cff,
-emissiveIntensity:1.8
+color:0x6ee7ff,
+emissive:0x168cff,
+emissiveIntensity:1.5,
+metalness:.5
 })
 );
-
-visor.position.set(
-0,
-8.8,
--.95
-);
-
+visor.position.set(0,8.7,-.95);
 mech.add(visor);
 
+/* Hals */
 
-/* =====================================================
-   ARME
-===================================================== */
+part(0,7.8,0,1.1,.6,1,0x202832);
 
-const leftArm=mechPart(
--3.15,
-6,
-0,
-1.05,
-2.6,
-1.2,
-0x3c4652
-);
+/* Schultern */
 
-const rightArm=mechPart(
-3.15,
-6,
-0,
-1.05,
-2.6,
-1.2,
-0x3c4652
-);
+part(-2.55,7.25,0,1.2,1.3,2.1,0x4e5967);
+part(2.55,7.25,0,1.2,1.3,2.1,0x4e5967);
 
-const leftHand=mechPart(
--3.15,
-4.55,
-0,
-1.15,
-.75,
-1.25,
-0x252c34
-);
+/* Arme */
 
-const rightHand=mechPart(
-3.15,
-4.55,
-0,
-1.15,
-.75,
-1.25,
-0x252c34
-);
+part(-3.25,6,0,1.05,2.5,1.15,0x3b4551);
+part(3.25,6,0,1.05,2.5,1.15,0x3b4551);
 
+/* Hände */
 
-/* =====================================================
-   TRIPLE WAFFEN
-===================================================== */
+part(-3.25,4.55,-.05,1.15,.7,1.25,0x252d36);
+part(3.25,4.55,-.05,1.15,.7,1.25,0x252d36);
 
-function createGun(side){
+/* =========================
+   3-FACH-STURMGEWEHR JE HAND
+========================= */
 
-const group=new THREE.Group();
+function createTripleGun(side){
+
+const handX=side*3.25;
 
 for(let i=-1;i<=1;i++){
 
 const gun=new THREE.Group();
 
-
 const body=new THREE.Mesh(
-new THREE.BoxGeometry(
-.42,
-.5,
-1.65
-),
+new THREE.BoxGeometry(.42,.5,1.7),
 new THREE.MeshStandardMaterial({
-color:0x14191e,
-metalness:.85,
-roughness:.22
+color:0x151a20,
+metalness:.75,
+roughness:.25
 })
 );
 
 gun.add(body);
 
-
 const barrel=new THREE.Mesh(
-new THREE.CylinderGeometry(
-.1,
-.1,
-1.8,
-10
-),
+new THREE.CylinderGeometry(.11,.11,1.8,10),
 new THREE.MeshStandardMaterial({
-color:0x697681,
+color:0x68737f,
 metalness:.9,
-roughness:.18
+roughness:.2
 })
 );
 
 barrel.rotation.x=Math.PI/2;
-
-barrel.position.z=-1.6;
-
+barrel.position.z=-1.65;
 gun.add(barrel);
 
-
 const muzzle=new THREE.Mesh(
-new THREE.CylinderGeometry(
-.15,
-.15,
-.25,
-10
-),
+new THREE.CylinderGeometry(.16,.16,.25,10),
 new THREE.MeshStandardMaterial({
-color:0x101419,
+color:0x10151a,
 metalness:.9
 })
 );
 
 muzzle.rotation.x=Math.PI/2;
-
 muzzle.position.z=-2.55;
-
 gun.add(muzzle);
 
+const light=new THREE.PointLight(
+0x55cfff,0.8,3
+);
 
-gun.position.x=i*.45;
+light.position.z=-2.6;
+gun.add(light);
 
-group.add(gun);
-
-}
-
-group.position.set(
-side*3.15,
+gun.position.set(
+handX+i*.45,
 4.55,
--.65
+-.55
 );
 
-group.rotation.y=side*.06;
+gun.rotation.y=side*.08;
 
-mech.add(group);
-
-return group;
+mech.add(gun);
+}
 }
 
+createTripleGun(-1);
+createTripleGun(1);
 
-const leftGuns=createGun(-1);
+/* Rücken */
 
-const rightGuns=createGun(1);
+part(0,6.2,1.2,2.5,2.6,.5,0x242c35);
 
-
-/* =====================================================
-   KLICKBARER MECH
-===================================================== */
-
-const raycaster=new THREE.Raycaster();
-
-const mouse=new THREE.Vector2();
-
-let mechZoomed=false;
-
-let hangarZoom=0;
-
-
-function clickMech(event){
-
-if(battleActive)return;
-
-if(
-document.getElementById("custom").style.display==="block"
-)return;
-
-
-mouse.x=
-(event.clientX/innerWidth)*2-1;
-
-mouse.y=
--(event.clientY/innerHeight)*2+1;
-
-
-raycaster.setFromCamera(
-mouse,
-camera
+for(let i=-1;i<=1;i++){
+const tank=new THREE.Mesh(
+new THREE.CylinderGeometry(.35,.35,2.1,12),
+new THREE.MeshStandardMaterial({
+color:0x303944,
+metalness:.7
+})
 );
-
-
-const hits=
-raycaster.intersectObject(
-mech,
-true
-);
-
-
-if(hits.length>0){
-
-mechZoomed=!mechZoomed;
-
-if(mechZoomed){
-
-hangarZoom=7;
-
-document.getElementById(
-"clickHint"
-).style.display="none";
-
-}else{
-
-hangarZoom=0;
-
-document.getElementById(
-"clickHint"
-).style.display="block";
-
+tank.position.set(i*.7,6.6,1.5);
+mech.add(tank);
 }
 
+/* =========================
+   MECH ANIMATION
+========================= */
+
+let mechRotation=0;
+
+function rotateMech(){
+mechRotation+=Math.PI/2;
+mech.rotation.y=mechRotation;
 }
 
-}
+let idleTime=0;
 
+/* =========================
+   FPS-MODUS
+========================= */
 
-/*
-   Nur Klicks auf den Canvas
-   werden als Mech-Klick behandelt.
-   Dadurch bleiben alle UI-Buttons klickbar.
-*/
-
-renderer.domElement.addEventListener(
-"pointerup",
-e=>{
-
-if(e.target!==renderer.domElement)
-return;
-
-clickMech(e);
-
-}
-);
-
-
-/* =====================================================
-   ZOOM MIT MAUSRAD
-===================================================== */
-
-renderer.domElement.addEventListener(
-"wheel",
-e=>{
-
-if(battleActive)
-return;
-
-hangarZoom+=e.deltaY*.01;
-
-hangarZoom=Math.max(
--3,
-Math.min(
-8,
-hangarZoom
-)
-);
-
-mechZoomed=hangarZoom>3;
-
-}
-);
-
-
-/* =====================================================
-   RESET VIEW
-===================================================== */
-
-function resetView(){
-
-hangarZoom=0;
-
-mechZoomed=false;
-
-document.getElementById(
-"clickHint"
-).style.display="block";
-
-}
-
-
-/* =====================================================
-   CUSTOMIZING
-===================================================== */
-
-let money=100;
-
-let mechUpgrade=0;
-
-let leftUpgrade=0;
-
-let rightUpgrade=0;
-
-let leftRemoved=false;
-
-let rightRemoved=false;
-
-
-function toggleCustomize(){
-
-const c=
-document.getElementById("custom");
-
-
-c.style.display=
-c.style.display==="block"
-?"none"
-:"block";
-
-
-if(c.style.display==="block")
-showSection("mech");
-
-}
-
-
-function showSection(type){
-
-const s=
-document.getElementById("section");
-
-
-if(type==="mech"){
-
-s.innerHTML=`
-
-<div class="option">
-
-<b>
-🤖 Mech-Level ${mechUpgrade+1}
-</b>
-
-<p>
-Mehr Stabilität und Energie.
-</p>
-
-<button
-class="upgrade"
-onclick="upgrade('mech')">
-
-⬆ Upgrade ·
-${50+mechUpgrade*50}
-Coins
-
-</button>
-
-</div>
-
-
-<div class="option">
-
-<b>
-Mech zurücksetzen
-</b>
-
-<p>
-Setzt die Mech-Upgrades zurück.
-</p>
-
-<button
-class="remove"
-onclick="removeUpgrade('mech')">
-
-↩ Zurücksetzen
-
-</button>
-
-</div>
-
-`;
-
-}
-
-
-if(type==="left"){
-
-s.innerHTML=`
-
-<div class="option">
-
-<b>
-🦾 Linker Arm-Level ${leftUpgrade+1}
-</b>
-
-<p>
-Verbessert die drei Waffen am linken Arm.
-</p>
-
-<button
-class="upgrade"
-onclick="upgrade('left')">
-
-⬆ Upgrade ·
-${50+leftUpgrade*50}
-Coins
-
-</button>
-
-</div>
-
-
-<div class="option">
-
-<b>
-🦾 Linken Arm
-</b>
-
-<br><br>
-
-<button
-class="remove"
-onclick="removeArm('left')">
-
-${
-leftRemoved
-?"➕ Arm hinzufügen"
-:"❌ Arm entfernen"
-}
-
-</button>
-
-</div>
-
-`;
-
-}
-
-
-if(type==="right"){
-
-s.innerHTML=`
-
-<div class="option">
-
-<b>
-🦾 Rechter Arm-Level ${rightUpgrade+1}
-</b>
-
-<p>
-Verbessert die drei Waffen am rechten Arm.
-</p>
-
-<button
-class="upgrade"
-onclick="upgrade('right')">
-
-⬆ Upgrade ·
-${50+rightUpgrade*50}
-Coins
-
-</button>
-
-</div>
-
-
-<div class="option">
-
-<b>
-🦾 Rechten Arm
-</b>
-
-<br><br>
-
-<button
-class="remove"
-onclick="removeArm('right')">
-
-${
-rightRemoved
-?"➕ Arm hinzufügen"
-:"❌ Arm entfernen"
-}
-
-</button>
-
-</div>
-
-`;
-
-}
-
-}
-
-
-/* =====================================================
-   UPGRADE
-===================================================== */
-
-function upgrade(type){
-
-const level=
-type==="mech"
-?mechUpgrade
-:type==="left"
-?leftUpgrade
-:rightUpgrade;
-
-
-const price=
-50+
-level*50;
-
-
-if(money<price){
-
-alert(
-"Nicht genug Coins."
-);
-
-return;
-
-}
-
-
-money-=price;
-
-
-if(type==="mech")
-mechUpgrade++;
-
-if(type==="left")
-leftUpgrade++;
-
-if(type==="right")
-rightUpgrade++;
-
-
-updateVisualUpgrades();
-
-updateMoney();
-
-saveGame();
-
-showSection(type);
-
-}
-
-
-/* =====================================================
-   RESET UPGRADE
-===================================================== */
-
-function removeUpgrade(type){
-
-if(type==="mech")
-mechUpgrade=0;
-
-if(type==="left")
-leftUpgrade=0;
-
-if(type==="right")
-rightUpgrade=0;
-
-
-updateVisualUpgrades();
-
-saveGame();
-
-showSection(type);
-
-}
-
-
-/* =====================================================
-   ARM ENTFERNEN
-===================================================== */
-
-function removeArm(side){
-
-if(side==="left"){
-
-leftRemoved=!leftRemoved;
-
-leftArm.visible=!leftRemoved;
-
-leftHand.visible=!leftRemoved;
-
-leftGuns.visible=!leftRemoved;
-
-}
-
-
-if(side==="right"){
-
-rightRemoved=!rightRemoved;
-
-rightArm.visible=!rightRemoved;
-
-rightHand.visible=!rightRemoved;
-
-rightGuns.visible=!rightRemoved;
-
-}
-
-
-saveGame();
-
-showSection(side);
-
-}
-
-
-/* =====================================================
-   UPGRADE OPTIK
-===================================================== */
-
-function updateVisualUpgrades(){
-
-const mechScale=
-1+
-mechUpgrade*.035;
-
-
-torso.scale.set(
-mechScale,
-mechScale,
-mechScale
-);
-
-
-leftArm.scale.setScalar(
-1+
-leftUpgrade*.08
-);
-
-leftGuns.scale.setScalar(
-1+
-leftUpgrade*.06
-);
-
-
-rightArm.scale.setScalar(
-1+
-rightUpgrade*.08
-);
-
-rightGuns.scale.setScalar(
-1+
-rightUpgrade*.06
-);
-
-
-core.material.emissiveIntensity=
-2+
-mechUpgrade*.35;
-
-}
-
-
-/* =====================================================
-   BATTLE VARIABLEN
-===================================================== */
-
-let battleActive=false;
-
-let battleTime=120;
-
-let timerInterval=null;
-
-let myLives=3;
-
-let enemyLives=3;
-
-let velocityY=0;
-
-let onGround=true;
-
+let fps=false;
 let yaw=0;
-
 let pitch=0;
 
 const keys={
-w:false,
-a:false,
-s:false,
-d:false
+w:false,a:false,s:false,d:false
 };
 
+document.addEventListener("keydown",e=>{
+const k=e.key.toLowerCase();
 
-/* =====================================================
-   BATTLE MENU
-===================================================== */
+if(k in keys)keys[k]=true;
 
-function openBattle(){
-
-document.getElementById(
-"custom"
-).style.display="none";
-
-document.getElementById(
-"battle"
-).style.display="block";
-
+if(fps&&k==="e"){
+shoot();
 }
+});
 
+document.addEventListener("keyup",e=>{
+const k=e.key.toLowerCase();
 
-function closeBattle(){
+if(k in keys)keys[k]=false;
+});
 
-document.getElementById(
-"battle"
-).style.display="none";
+function enterMech(){
 
-}
+closeModals();
 
+fps=true;
 
-/* =====================================================
-   BATTLE START
-===================================================== */
+document.getElementById("crosshair").style.display="block";
+document.getElementById("health").style.display="block";
 
-function startBattle(){
-
-closeBattle();
-
-battleActive=true;
-
-myLives=3;
-
-enemyLives=3;
-
-battleTime=120;
-
-
-document.getElementById(
-"myLives"
-).textContent="3";
-
-document.getElementById(
-"enemyLives"
-).textContent="3";
-
-document.getElementById(
-"timer"
-).textContent="2:00";
-
-
-document.getElementById(
-"fightUI"
-).style.display="block";
-
-document.getElementById(
-"crosshair"
-).style.display="block";
-
-
-document.querySelector(
-".bottom"
-).style.display="none";
-
-
-/*
-   Gegner erst beim Battle erstellen.
-*/
-
-createEnemyMech();
-
+document.querySelector(".bottom").style.display="none";
+document.querySelector(".top").style.opacity=".7";
 
 camera.position.set(
 0,
-5,
-18
+7.2,
+7
 );
 
-yaw=Math.PI;
-
+yaw=0;
 pitch=0;
-
 
 renderer.domElement.requestPointerLock?.();
 
-
-clearInterval(timerInterval);
-
-
-timerInterval=setInterval(
-()=>{
-
-battleTime--;
-
-document.getElementById(
-"timer"
-).textContent=
-Math.floor(
-battleTime/60
-)+":"+
-String(
-battleTime%60
-).padStart(
-2,
-"0"
-);
-
-
-if(battleTime<=0){
-
-endBattle(
-false,
-"Zeit abgelaufen."
-);
-
+showMessage("WASD · Maus · E = Feuer");
 }
 
-},
-1000
-);
+document.addEventListener("mousemove",e=>{
 
-}
+if(!fps)return;
 
+if(document.pointerLockElement!==renderer.domElement)return;
 
-/* =====================================================
-   BATTLE VERLASSEN
-===================================================== */
+yaw-=e.movementX*.0025;
+pitch-=e.movementY*.0025;
 
-function leaveBattle(){
+pitch=Math.max(-1.3,Math.min(1.3,pitch));
+});
 
-document.getElementById(
-"result"
-).style.display="none";
+function exitFPS(){
 
-
-battleActive=false;
-
-clearInterval(timerInterval);
+fps=false;
 
 document.exitPointerLock?.();
 
+document.getElementById("crosshair").style.display="none";
+document.getElementById("health").style.display="none";
 
-document.getElementById(
-"fightUI"
-).style.display="none";
+document.querySelector(".bottom").style.display="flex";
 
-document.getElementById(
-"crosshair"
-).style.display="none";
-
-
-document.querySelector(
-".bottom"
-).style.display="flex";
-
-
-if(enemyMech){
-
-scene.remove(enemyMech);
-
-enemyMech=null;
-
+camera.position.set(8,5,11);
+camera.lookAt(0,5,-1);
 }
 
+function updateFPS(){
 
-camera.position.set(
-8,
-5.5,
-12
+if(!fps)return;
+
+const speed=.16;
+
+const forward=new THREE.Vector3(
+-Math.sin(yaw),0,-Math.cos(yaw)
 );
 
-camera.lookAt(
-0,
-5,
--4
+const right=new THREE.Vector3(
+Math.cos(yaw),0,-Math.sin(yaw)
 );
 
+if(keys.w)camera.position.addScaledVector(forward,speed);
+if(keys.s)camera.position.addScaledVector(forward,-speed);
+if(keys.a)camera.position.addScaledVector(right,-speed);
+if(keys.d)camera.position.addScaledVector(right,speed);
+
+camera.position.y=7.2;
+
+camera.position.x=Math.max(-20,Math.min(20,camera.position.x));
+camera.position.z=Math.max(-15,Math.min(17,camera.position.z));
+
+camera.rotation.order="YXZ";
+camera.rotation.y=yaw;
+camera.rotation.x=pitch;
 }
 
-
-/* =====================================================
-   BATTLE ENDE
-===================================================== */
-
-function endBattle(win,text){
-
-if(!battleActive)
-return;
-
-
-battleActive=false;
-
-clearInterval(timerInterval);
-
-document.exitPointerLock?.();
-
-
-document.getElementById(
-"fightUI"
-).style.display="none";
-
-document.getElementById(
-"crosshair"
-).style.display="none";
-
-
-document.getElementById(
-"resultTitle"
-).textContent=
-win
-?"🏆 SIEG!"
-:"❌ NIEDERLAGE";
-
-
-document.getElementById(
-"resultText"
-).textContent=
-win
-?text+" +50 Coins!"
-:text;
-
-
-document.getElementById(
-"result"
-).style.display="block";
-
-
-document.querySelector(
-".bottom"
-).style.display="none";
-
-
-if(win){
-
-money+=50;
-
-updateMoney();
-
-saveGame();
-
-}
-
-
-if(enemyMech){
-
-scene.remove(enemyMech);
-
-enemyMech=null;
-
-}
-
-}
-
-
-/* =====================================================
-   ENEMY DAMAGE
-===================================================== */
-
-function damageEnemy(){
-
-if(!battleActive)
-return;
-
-
-enemyLives--;
-
-
-document.getElementById(
-"enemyLives"
-).textContent=
-enemyLives;
-
-
-if(enemyLives<=0){
-
-endBattle(
-true,
-"Der Gegner wurde besiegt."
-);
-
-return;
-
-}
-
-
-showBattleMessage(
-"Treffer! Gegner hat noch "+
-enemyLives+
-" Leben."
-);
-
-}
-
-
-/* =====================================================
-   SPIELER TOD
-===================================================== */
-
-let deathAnimation=0;
-
-
-function playerDeath(){
-
-if(!battleActive)
-return;
-
-
-myLives--;
-
-
-document.getElementById(
-"myLives"
-).textContent=
-myLives;
-
-
-deathAnimation=1;
-
-
-if(myLives<=0){
-
-setTimeout(
-()=>{
-
-endBattle(
-false,
-"Dein Mech wurde besiegt."
-);
-
-},
-900
-);
-
-return;
-
-}
-
-
-setTimeout(
-()=>{
-
-camera.position.set(
-(Math.random()-.5)*12,
-5,
-12+Math.random()*5
-);
-
-velocityY=0;
-
-showBattleMessage(
-"💥 Respawn! Noch "+
-myLives+
-" Leben."
-);
-
-deathAnimation=0;
-
-},
-900
-);
-
-}
-
-
-/* =====================================================
-   WASD
-===================================================== */
-
-document.addEventListener(
-"keydown",
-e=>{
-
-const k=
-e.key.toLowerCase();
-
-
-if(k in keys)
-keys[k]=true;
-
-
-if(k===" "){
-
-jump();
-
-e.preventDefault();
-
-}
-
-});
-
-
-document.addEventListener(
-"keyup",
-e=>{
-
-const k=
-e.key.toLowerCase();
-
-
-if(k in keys)
-keys[k]=false;
-
-});
-
-
-/* =====================================================
-   MAUS
-===================================================== */
-
-document.addEventListener(
-"mousemove",
-e=>{
-
-if(!battleActive)
-return;
-
-if(
-document.pointerLockElement!==renderer.domElement
-)
-return;
-
-
-yaw-=
-e.movementX*.0025;
-
-pitch-=
-e.movementY*.0025;
-
-
-pitch=Math.max(
--1.25,
-Math.min(
-1.25,
-pitch
-)
-);
-
-});
-
-
-/* =====================================================
+/* =========================
    SCHIESSEN
-===================================================== */
-
-renderer.domElement.addEventListener(
-"mousedown",
-e=>{
-
-if(!battleActive)
-return;
-
-if(e.button===0)
-shoot();
-
-});
-
-
-function jump(){
-
-if(!battleActive)
-return;
-
-
-if(onGround){
-
-velocityY=.28;
-
-onGround=false;
-
-}
-
-}
-
-
-/* =====================================================
-   SCHUSS
-===================================================== */
-
-let shooting=false;
-
+========================= */
 
 function shoot(){
 
-if(!battleActive||shooting)
-return;
+const origin=camera.position.clone();
 
+const direction=new THREE.Vector3(
+0,0,-1
+).applyQuaternion(camera.quaternion);
 
-shooting=true;
+const end=origin.clone()
+.addScaledVector(direction,45);
 
+const points=[origin,end];
 
-leftGuns.position.z=-.25;
-
-rightGuns.position.z=-.25;
-
-
-const origin=
-camera.position.clone();
-
-
-const direction=
-new THREE.Vector3(
-0,
-0,
--1
-).applyQuaternion(
-camera.quaternion
-);
-
-
-const end=
-origin.clone()
-.addScaledVector(
-direction,
-55
-);
-
-
-const tracer=
-new THREE.Line(
-new THREE.BufferGeometry()
-.setFromPoints([
-origin,
-end
-]),
+const tracer=new THREE.Line(
+new THREE.BufferGeometry().setFromPoints(points),
 new THREE.LineBasicMaterial({
 color:0xffd45a
 })
 );
 
-
 scene.add(tracer);
 
-
-setTimeout(
-()=>{
+setTimeout(()=>{
 scene.remove(tracer);
-},
-70
-);
+},80);
 
-
-if(Math.random()<.25){
-
-setTimeout(
-()=>{
-damageEnemy();
-},
-80
-);
-
-}
-
-
-setTimeout(
-()=>{
-
-shooting=false;
-
-leftGuns.position.z=0;
-
-rightGuns.position.z=0;
-
-},
-130
-);
-
-}
-
-
-/* =====================================================
-   SERVER
-===================================================== */
-
-let socket=null;
-
-
-function connectServer(){
-
-if(typeof io==="undefined")
-return;
-
-
-try{
-
-socket=io();
-
-
-socket.on(
-"connect",
-()=>{
-
-showBattleMessage(
-"🟢 Mit Server verbunden."
-);
-
-});
-
-
-socket.on(
-"enemyShot",
-()=>{
-
-playerDeath();
-
-});
-
-
-socket.on(
-"enemyHit",
-()=>{
-
-damageEnemy();
-
-});
-
-
-socket.on(
-"enemyPosition",
-data=>{
-
-if(enemyMech){
-
-enemyMech.position.x=data.x;
-
-enemyMech.position.z=data.z;
-
-}
-
-});
-
-
-}catch(e){}
-
-}
-
-
-/* =====================================================
-   GEGNER
-===================================================== */
-
-let enemyMech=null;
-
-
-function createEnemyMech(){
-
-if(enemyMech)
-return;
-
-
-enemyMech=
-mech.clone(true);
-
-
-enemyMech.position.set(
-0,
-0,
--15
-);
-
-
-enemyMech.userData.isEnemy=true;
-
-
-enemyMech.traverse(
-o=>{
-
-if(o.material){
-
-o.material=
-o.material.clone();
-
-if(o.material.color){
-
-o.material.color.set(
-0xc04444
-);
-
-}
-
-}
-
-});
-
-
-scene.add(enemyMech);
-
-}
-
-
-/* =====================================================
-   BATTLE BEWEGUNG
-===================================================== */
-
-function updateBattle(){
-
-if(!battleActive)
-return;
-
-
-const speed=.13;
-
-
-const forward=
-new THREE.Vector3(
--Math.sin(yaw),
-0,
--Math.cos(yaw)
-);
-
-
-const right=
-new THREE.Vector3(
-Math.cos(yaw),
-0,
--Math.sin(yaw)
-);
-
-
-if(keys.w)
-camera.position.addScaledVector(
-forward,
-speed
-);
-
-
-if(keys.s)
-camera.position.addScaledVector(
-forward,
--speed
-);
-
-
-if(keys.a)
-camera.position.addScaledVector(
-right,
--speed
-);
-
-
-if(keys.d)
-camera.position.addScaledVector(
-right,
-speed
-);
-
-
-velocityY-=.012;
-
-camera.position.y+=velocityY;
-
-
-if(camera.position.y<=5){
-
-camera.position.y=5;
-
-velocityY=0;
-
-onGround=true;
-
-}
-
-
-camera.position.x=
+document.getElementById("energy").textContent=
 Math.max(
--23,
-Math.min(
-23,
-camera.position.x
-)
+0,
+Number(document.getElementById("energy").textContent)-1
 );
-
-
-camera.position.z=
-Math.max(
--23,
-Math.min(
-23,
-camera.position.z
-)
-);
-
-
-camera.rotation.order="YXZ";
-
-camera.rotation.y=yaw;
-
-camera.rotation.x=pitch;
-
-
-/* Demo Gegnerbewegung */
-
-if(enemyMech){
-
-enemyMech.position.x=
-Math.sin(
-Date.now()*.0005
-)*8;
-
-enemyMech.position.z=
--15+
-Math.cos(
-Date.now()*.0007
-)*4;
-
-enemyMech.rotation.y=
-Math.sin(
-Date.now()*.0005
-)*.4;
-
 }
 
+/* =========================
+   MODALS
+========================= */
+
+function openLoadout(){
+
+document.exitPointerLock?.();
+
+document.getElementById("loadout")
+.style.display="block";
 }
 
+function openHangar(){
 
-/* =====================================================
-   ANIMATION
-===================================================== */
+document.exitPointerLock?.();
 
-let animationTime=0;
+document.getElementById("hangar")
+.style.display="block";
+}
 
+function closeModals(){
 
-function animateMech(){
+document.querySelectorAll(".modal")
+.forEach(m=>m.style.display="none");
+}
 
-animationTime+=.08;
+function showMessage(t){
 
+let old=document.getElementById("tempMessage");
 
-if(!battleActive){
+if(old)old.remove();
+
+const m=document.createElement("div");
+
+m.id="tempMessage";
+m.textContent=t;
+
+m.style.position="fixed";
+m.style.left="50%";
+m.style.top="85%";
+m.style.transform="translateX(-50%)";
+m.style.background="#000c";
+m.style.color="white";
+m.style.padding="12px 18px";
+m.style.borderRadius="12px";
+m.style.zIndex="300";
+m.style.fontWeight="bold";
+
+document.body.appendChild(m);
+
+setTimeout(()=>m.remove(),2500);
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function animate(){
+
+requestAnimationFrame(animate);
+
+idleTime+=.025;
+
+if(!fps){
 
 mech.position.y=
-Math.sin(
-animationTime*.5
-)*.025;
+Math.sin(idleTime)*.025;
 
-mech.rotation.z*=.85;
-
-return;
-
-}
-
-
-const moving=
-keys.w||
-keys.a||
-keys.s||
-keys.d;
-
-
-if(moving){
-
-const walk=
-Math.sin(
-animationTime*2.5
-)*.28;
-
-
-legL.rotation.x=walk;
-
-legR.rotation.x=-walk;
-
-leftArm.rotation.x=
--walk*.3;
-
-rightArm.rotation.x=
-walk*.3;
-
-}else{
-
-legL.rotation.x*=.85;
-
-legR.rotation.x*=.85;
-
-leftArm.rotation.x*=.85;
-
-rightArm.rotation.x*=.85;
-
-}
-
-
-if(!onGround){
-
-legL.rotation.x=-.35;
-
-legR.rotation.x=.35;
-
-}
-
-
-if(shooting){
-
-leftArm.rotation.x=-.18;
-
-rightArm.rotation.x=-.18;
-
-}
-
-
-if(deathAnimation){
-
-mech.rotation.z=
-Math.min(
-Math.PI/2,
-deathAnimation*1.6
-);
-
-deathAnimation+=.025;
-
-}else{
-
-mech.rotation.z*=.85;
-
-}
-
-}
-
-
-/* =====================================================
-   MONEY
-===================================================== */
-
-function updateMoney(){
-
-document.getElementById(
-"money"
-).textContent=
-money;
-
-}
-
-
-/* =====================================================
-   BATTLE MESSAGE
-===================================================== */
-
-function showBattleMessage(text){
-
-let e=
-document.getElementById(
-"battleMessage"
-);
-
-
-if(e)
-e.remove();
-
-
-e=document.createElement("div");
-
-e.id="battleMessage";
-
-e.textContent=text;
-
-e.style.position="absolute";
-
-e.style.left="50%";
-
-e.style.top="75%";
-
-e.style.transform=
-"translateX(-50%)";
-
-e.style.background="#000c";
-
-e.style.padding=
-"11px 17px";
-
-e.style.borderRadius="12px";
-
-e.style.fontWeight="bold";
-
-e.style.zIndex="500";
-
-document.body.appendChild(e);
-
-
-setTimeout(
-()=>{
-
-if(e.parentNode)
-e.remove();
-
-},
-1800
-);
-
-}
-
-
-/* =====================================================
-   SAVE
-===================================================== */
-
-function saveGame(){
-
-localStorage.setItem(
-"mech_game_save",
-JSON.stringify({
-
-money,
-
-mechUpgrade,
-
-leftUpgrade,
-
-rightUpgrade,
-
-leftRemoved,
-
-rightRemoved
-
-})
-);
-
-}
-
-
-function loadGame(){
-
-try{
-
-const d=
-JSON.parse(
-localStorage.getItem(
-"mech_game_save"
-)
-);
-
-
-if(!d)
-return;
-
-
-money=
-d.money??100;
-
-mechUpgrade=
-d.mechUpgrade??0;
-
-leftUpgrade=
-d.leftUpgrade??0;
-
-rightUpgrade=
-d.rightUpgrade??0;
-
-leftRemoved=
-d.leftRemoved??false;
-
-rightRemoved=
-d.rightRemoved??false;
-
-}catch(e){}
-
-}
-
-
-/* =====================================================
-   HANGAR KAMERA
-===================================================== */
-
-function updateHangarCamera(){
-
-if(battleActive)
-return;
-
-
-const distance=
-12-hangarZoom;
-
-
-camera.position.x=
-distance*.65;
-
-camera.position.y=5.5;
-
-camera.position.z=
-distance;
-
+mech.rotation.y+=.0015;
 
 camera.lookAt(
 mech.position.x,
@@ -2861,36 +630,17 @@ mech.position.x,
 mech.position.z
 );
 
-
-if(
-!mechZoomed &&
-document.getElementById(
-"custom"
-).style.display!=="block"
-){
-
-document.getElementById(
-"clickHint"
-).style.display="block";
-
 }else{
 
-document.getElementById(
-"clickHint"
-).style.display="none";
-
+updateFPS();
 }
 
+core.rotation.z+=.03;
+
+renderer.render(scene,camera);
 }
 
-
-/* =====================================================
-   RESIZE
-===================================================== */
-
-window.addEventListener(
-"resize",
-()=>{
+window.addEventListener("resize",()=>{
 
 camera.aspect=
 innerWidth/innerHeight;
@@ -2901,110 +651,9 @@ renderer.setSize(
 innerWidth,
 innerHeight
 );
-
 });
 
-
-/* =====================================================
-   MOBILE
-===================================================== */
-
-function hold(id,key){
-
-const b=
-document.getElementById(id);
-
-
-b.addEventListener(
-"pointerdown",
-e=>{
-
-e.preventDefault();
-
-keys[key]=true;
-
-}
-);
-
-
-b.addEventListener(
-"pointerup",
-()=>{
-keys[key]=false;
-}
-);
-
-
-b.addEventListener(
-"pointercancel",
-()=>{
-keys[key]=false;
-}
-);
-
-
-b.addEventListener(
-"pointerleave",
-()=>{
-keys[key]=false;
-}
-);
-
-}
-
-
-hold("up","w");
-
-hold("down","s");
-
-hold("left","a");
-
-hold("right","d");
-
-
-/* =====================================================
-   START
-===================================================== */
-
-loadGame();
-
-updateMoney();
-
-updateVisualUpgrades();
-
-
-leftArm.visible=
-!leftRemoved;
-
-leftHand.visible=
-!leftRemoved;
-
-leftGuns.visible=
-!leftRemoved;
-
-
-rightArm.visible=
-!rightRemoved;
-
-rightHand.visible=
-!rightRemoved;
-
-rightGuns.visible=
-!rightRemoved;
-
-
 animate();
-
-
-/* =====================================================
-   AUTOSAVE
-===================================================== */
-
-setInterval(
-saveGame,
-30000
-);
-
 </script>
 
 </body>
