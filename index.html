@@ -4,403 +4,1152 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>MECH ARENA</title>
+
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#080b10}
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+font-family:Arial,sans-serif;
+background:#080b10
+}
+
 body{touch-action:none}
-#game{position:fixed;inset:0}
-#ui{position:fixed;inset:0;color:#fff;pointer-events:none}
+
+#game{
+position:fixed;
+inset:0;
+z-index:0
+}
+
+#ui{
+position:fixed;
+inset:0;
+color:#fff;
+pointer-events:none;
+z-index:100
+}
+
 .top{
-position:absolute;left:0;right:0;top:0;height:75px;
+position:absolute;
+left:0;
+right:0;
+top:0;
+height:75px;
 padding:18px 24px;
 background:linear-gradient(#070a0fee,transparent);
-display:flex;align-items:center
+display:flex;
+align-items:center
 }
-.logo{font-size:26px;font-weight:900;letter-spacing:3px}
+
+.logo{
+font-size:26px;
+font-weight:900;
+letter-spacing:3px
+}
+
 .money{
-margin-left:auto;background:#151b25dd;border:1px solid #445164;
-padding:10px 15px;border-radius:11px
+margin-left:auto;
+background:#151b25ee;
+border:1px solid #59677a;
+padding:10px 16px;
+border-radius:11px;
+font-size:18px;
+font-weight:900;
+box-shadow:0 4px 20px #0008;
+pointer-events:auto
 }
+
 .bottom{
-position:absolute;left:0;right:0;bottom:0;
-height:130px;padding:20px;
-display:flex;align-items:flex-end;
-background:linear-gradient(transparent,#070a0fee)
+position:absolute;
+left:0;
+right:0;
+bottom:0;
+height:130px;
+padding:20px;
+display:flex;
+align-items:flex-end;
+background:linear-gradient(transparent,#070a0fee);
+pointer-events:none
 }
+
 .info{
-background:#111821ee;border:1px solid #3c4858;
-padding:13px 17px;border-radius:14px
+background:#111821ee;
+border:1px solid #3c4858;
+padding:13px 17px;
+border-radius:14px
 }
+
 .info b{font-size:19px}
-.info small{display:block;color:#9ca9b9;margin-top:4px}
-.buttons{margin-left:auto;display:flex;gap:8px}
+
+.info small{
+display:block;
+color:#9ca9b9;
+margin-top:4px
+}
+
+.buttons{
+margin-left:auto;
+display:flex;
+gap:8px;
+pointer-events:auto
+}
+
 button{
-border:0;border-radius:11px;padding:12px 17px;
-font-weight:800;cursor:pointer
+border:0;
+border-radius:11px;
+padding:12px 17px;
+font-weight:800;
+cursor:pointer;
+pointer-events:auto;
+touch-action:manipulation
 }
-button:hover{filter:brightness(1.1)}
+
+button:hover{
+filter:brightness(1.1)
+}
+
 #custom{
-position:absolute;right:20px;top:95px;width:270px;
-background:#101720f5;border:1px solid #465365;
-border-radius:16px;padding:15px;pointer-events:auto;
-display:none;box-shadow:0 15px 50px #0008
+position:absolute;
+right:20px;
+top:95px;
+width:270px;
+max-height:calc(100vh - 115px);
+overflow:auto;
+background:#101720f5;
+border:1px solid #465365;
+border-radius:16px;
+padding:15px;
+pointer-events:auto;
+display:none;
+box-shadow:0 15px 50px #0008
 }
-#custom h2{margin:0 0 12px}
+
+#custom h2{
+margin:0 0 12px
+}
+
 .tab{
-width:100%;margin:5px 0;background:#202a36;color:white;
+width:100%;
+margin:5px 0;
+background:#202a36;
+color:white;
 text-align:left
 }
+
 .option{
-background:#151d27;border-radius:10px;padding:10px;margin:8px 0
+background:#151d27;
+border-radius:10px;
+padding:10px;
+margin:8px 0
 }
-.option button{margin:3px;padding:8px 10px}
-.remove{background:#b83333;color:white}
-.upgrade{background:#4b9fff;color:white}
+
+.option p{
+color:#aab5c2;
+font-size:13px
+}
+
+.option button{
+margin:3px;
+padding:8px 10px
+}
+
+.remove{
+background:#b83333;
+color:white
+}
+
+.upgrade{
+background:#4b9fff;
+color:white
+}
+
 #battle{
-position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-width:min(92vw,540px);background:#101720f8;
-border:1px solid #4b596d;border-radius:18px;padding:24px;
-display:none;pointer-events:auto;box-shadow:0 20px 80px #000b
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+width:min(92vw,540px);
+background:#101720f8;
+border:1px solid #4b596d;
+border-radius:18px;
+padding:24px;
+display:none;
+pointer-events:auto;
+box-shadow:0 20px 80px #000b
 }
-#battle h1{margin-top:0}
+
+#battle h1{
+margin-top:0
+}
+
 .battleBtn{
-width:100%;background:#e7edf5;color:#111820;
-font-size:19px;margin-top:10px
+width:100%;
+background:#e7edf5;
+color:#111820;
+font-size:19px;
+margin-top:10px
 }
+
 #fightUI{
-position:absolute;left:0;right:0;top:0;bottom:0;
-display:none;pointer-events:none
+position:absolute;
+left:0;
+right:0;
+top:0;
+bottom:0;
+display:none;
+pointer-events:none
 }
+
 #fightTop{
-position:absolute;top:15px;left:50%;transform:translateX(-50%);
-display:flex;gap:30px;align-items:center
+position:absolute;
+top:15px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+gap:30px;
+align-items:center
 }
+
 .life{
-background:#10151dcc;padding:10px 16px;border-radius:12px;
+background:#10151dcc;
+padding:10px 16px;
+border-radius:12px;
 font-weight:bold
 }
+
 #timer{
-font-size:25px;font-weight:900;
-background:#10151dcc;padding:10px 16px;border-radius:12px
+font-size:25px;
+font-weight:900;
+background:#10151dcc;
+padding:10px 16px;
+border-radius:12px
 }
+
 #arenaHint{
-position:absolute;bottom:25px;left:50%;transform:translateX(-50%);
-background:#000b;padding:10px 16px;border-radius:12px
+position:absolute;
+bottom:25px;
+left:50%;
+transform:translateX(-50%);
+background:#000b;
+padding:10px 16px;
+border-radius:12px;
+white-space:nowrap
 }
+
 #crosshair{
-position:absolute;left:50%;top:50%;
+position:absolute;
+left:50%;
+top:50%;
 transform:translate(-50%,-50%);
-width:20px;height:20px;display:none
+width:20px;
+height:20px;
+display:none
 }
-#crosshair:before,#crosshair:after{
-content:"";position:absolute;background:white;box-shadow:0 0 4px #000
+
+#crosshair:before,
+#crosshair:after{
+content:"";
+position:absolute;
+background:white;
+box-shadow:0 0 4px #000
 }
-#crosshair:before{width:20px;height:2px;top:9px}
-#crosshair:after{height:20px;width:2px;left:9px}
+
+#crosshair:before{
+width:20px;
+height:2px;
+top:9px
+}
+
+#crosshair:after{
+height:20px;
+width:2px;
+left:9px
+}
+
 #result{
-position:absolute;left:50%;top:50%;
+position:absolute;
+left:50%;
+top:50%;
 transform:translate(-50%,-50%);
-background:#101720fa;border:1px solid #58677b;
-padding:30px;border-radius:20px;text-align:center;
-display:none;pointer-events:auto;min-width:280px
+background:#101720fa;
+border:1px solid #58677b;
+padding:30px;
+border-radius:20px;
+text-align:center;
+display:none;
+pointer-events:auto;
+min-width:280px
 }
-#result h1{margin-top:0}
+
+#result h1{
+margin-top:0
+}
+
 #mobile{
-display:none;position:absolute;left:20px;bottom:100px;
-width:140px;height:140px;pointer-events:auto
+display:none;
+position:absolute;
+left:20px;
+bottom:100px;
+width:140px;
+height:140px;
+pointer-events:auto
 }
+
 .pad{
-position:absolute;width:45px;height:45px;padding:0;
-background:#ffffff99;border:1px solid white
+position:absolute;
+width:45px;
+height:45px;
+padding:0;
+background:#ffffff99;
+border:1px solid white
 }
+
 #up{left:47px;top:0}
 #down{left:47px;bottom:0}
 #left{left:0;top:47px}
 #right{right:0;top:47px}
+
 #jump{
-position:absolute;right:20px;bottom:105px;
-display:none;pointer-events:auto;
+position:absolute;
+right:20px;
+bottom:105px;
+display:none;
+pointer-events:auto;
 background:#ffffffaa
 }
+
+#clickHint{
+position:absolute;
+left:50%;
+top:82%;
+transform:translateX(-50%);
+background:#000b;
+padding:9px 14px;
+border-radius:10px;
+font-weight:bold;
+display:block;
+pointer-events:none
+}
+
+#battleMessage{
+pointer-events:none
+}
+
 @media(max-width:700px){
-#mobile{display:block}
-#jump{display:block}
-.bottom .buttons button:nth-child(2),
-.bottom .buttons button:nth-child(3){display:none}
+
+#mobile{
+display:block
+}
+
+#jump{
+display:block
+}
+
+.bottom .buttons button:nth-child(2){
+display:none
+}
+
+#fightTop{
+gap:7px
+}
+
+.life{
+padding:8px;
+font-size:13px
+}
+
+#timer{
+font-size:20px;
+padding:8px
+}
+
+#arenaHint{
+font-size:11px;
+bottom:15px
+}
+
+.logo{
+font-size:19px
+}
+
+.money{
+font-size:14px;
+padding:9px 11px
+}
+
+.bottom{
+height:110px;
+padding:12px
+}
+
+.info{
+max-width:52vw;
+padding:9px
+}
+
+.info b{
+font-size:14px
+}
+
+.info small{
+font-size:10px
+}
+
+.buttons{
+gap:4px
+}
+
+.buttons button{
+padding:9px;
+font-size:11px
+}
+
+#custom{
+right:10px;
+top:80px;
+width:250px
+}
 }
 </style>
 </head>
+
 <body>
 
 <div id="game"></div>
 
 <div id="ui">
+
 <div class="top">
-<div class="logo">MECH//ARENA</div>
-<div class="money">💰 <span id="money">100</span> €</div>
+
+<div class="logo">
+MECH//ARENA
 </div>
+
+<div class="money">
+💰 <span id="money">100</span> COINS
+</div>
+
+</div>
+
+
+<div id="clickHint">
+🖱️ Mech anklicken zum Heranzoomen
+</div>
+
+
+<!-- =================================================
+     ANPASSEN
+================================================== -->
 
 <div id="custom">
+
 <h2>MECH ANPASSEN</h2>
 
-<button class="tab" onclick="showSection('mech')">🤖 Mech</button>
-<button class="tab" onclick="showSection('left')">🦾 Linker Arm</button>
-<button class="tab" onclick="showSection('right')">🦾 Rechter Arm</button>
+<button
+class="tab"
+onclick="showSection('mech')">
+🤖 Mech
+</button>
+
+<button
+class="tab"
+onclick="showSection('left')">
+🦾 Linker Arm
+</button>
+
+<button
+class="tab"
+onclick="showSection('right')">
+🦾 Rechter Arm
+</button>
 
 <div id="section"></div>
+
 </div>
+
+
+<!-- =================================================
+     BOTTOM
+================================================== -->
 
 <div class="bottom">
+
 <div class="info">
+
 <b>MK-01 STRIKER</b>
-<small>Starter-Mech · 2 Beine · Triple-Sturmgewehr je Hand</small>
+
+<small>
+Starter-Mech · 2 Beine · Triple-Sturmgewehr je Hand
+</small>
+
 </div>
+
 <div class="buttons">
-<button onclick="toggleCustomize()">⚙ Anpassen</button>
-<button onclick="resetView()">🔄 Ansicht</button>
-<button onclick="openBattle()">⚔ BATTLE</button>
+
+<button onclick="toggleCustomize()">
+⚙ Anpassen
+</button>
+
+<button onclick="resetView()">
+🔄 Ansicht
+</button>
+
+<button onclick="openBattle()">
+⚔ BATTLE
+</button>
+
 </div>
+
 </div>
+
+
+<!-- =================================================
+     BATTLE MENU
+================================================== -->
 
 <div id="battle">
-<h1>⚔ MECH BATTLE</h1>
-<p>Trete online gegen einen anderen Spieler an.</p>
-<p>❤️ 3 Leben · ⏱ 2 Minuten · 🪙 +50 € bei Sieg</p>
-<button class="battleBtn" onclick="startBattle()">▶ MATCH SUCHEN</button>
-<button class="battleBtn" onclick="closeBattle()">Schließen</button>
+
+<h1>
+⚔ MECH BATTLE
+</h1>
+
+<p>
+Trete online gegen einen anderen Spieler an.
+</p>
+
+<p>
+❤️ 3 Leben · ⏱ 2 Minuten · 🪙 +50 Coins bei Sieg
+</p>
+
+<button
+class="battleBtn"
+onclick="startBattle()">
+▶ MATCH SUCHEN
+</button>
+
+<button
+class="battleBtn"
+onclick="closeBattle()">
+Schließen
+</button>
+
 </div>
 
+
+<!-- =================================================
+     FIGHT UI
+================================================== -->
+
 <div id="fightUI">
+
 <div id="fightTop">
-<div class="life">DU ❤️ <span id="myLives">3</span></div>
-<div id="timer">2:00</div>
-<div class="life">GEGNER ❤️ <span id="enemyLives">3</span></div>
+
+<div class="life">
+DU ❤️ <span id="myLives">3</span>
 </div>
-<div id="arenaHint">WASD · Maus · Leertaste = Springen · Linksklick = Schießen</div>
+
+<div id="timer">
+2:00
 </div>
+
+<div class="life">
+GEGNER ❤️ <span id="enemyLives">3</span>
+</div>
+
+</div>
+
+<div id="arenaHint">
+WASD · Maus · Leertaste = Springen · Linksklick = Schießen
+</div>
+
+</div>
+
 
 <div id="crosshair"></div>
 
+
+<!-- =================================================
+     RESULT
+================================================== -->
+
 <div id="result">
-<h1 id="resultTitle">SIEG!</h1>
+
+<h1 id="resultTitle">
+SIEG!
+</h1>
+
 <p id="resultText"></p>
-<button onclick="leaveBattle()">Zurück zum Hangar</button>
+
+<button onclick="leaveBattle()">
+Zurück zum Hangar
+</button>
+
 </div>
+
+
+<!-- =================================================
+     MOBILE
+================================================== -->
 
 <div id="mobile">
-<button class="pad" id="up">▲</button>
-<button class="pad" id="down">▼</button>
-<button class="pad" id="left">◀</button>
-<button class="pad" id="right">▶</button>
+
+<button class="pad" id="up">
+▲
+</button>
+
+<button class="pad" id="down">
+▼
+</button>
+
+<button class="pad" id="left">
+◀
+</button>
+
+<button class="pad" id="right">
+▶
+</button>
+
 </div>
 
-<button id="jump" onclick="jump()">⬆ SPRINGEN</button>
+<button id="jump" onclick="jump()">
+⬆ SPRINGEN
+</button>
+
 </div>
+
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
+
 <script>
+
 /* =====================================================
-   GRUNDLAGEN
+   THREE.JS
 ===================================================== */
 
 const scene=new THREE.Scene();
+
 scene.background=new THREE.Color(0x080c12);
-scene.fog=new THREE.Fog(0x080c12,28,100);
+
+scene.fog=new THREE.Fog(
+0x080c12,
+28,
+100
+);
+
 
 const camera=new THREE.PerspectiveCamera(
-62,innerWidth/innerHeight,.1,180
+62,
+innerWidth/innerHeight,
+.1,
+180
 );
-camera.position.set(8,5,12);
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-document.getElementById("game").appendChild(renderer.domElement);
+camera.position.set(
+8,
+5.5,
+12
+);
 
-scene.add(new THREE.HemisphereLight(0xaacbff,0x151515,1.3));
 
-const light=new THREE.DirectionalLight(0xffffff,1.7);
-light.position.set(10,20,10);
+const renderer=new THREE.WebGLRenderer({
+antialias:true
+});
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+renderer.setPixelRatio(
+Math.min(devicePixelRatio,2)
+);
+
+document
+.getElementById("game")
+.appendChild(renderer.domElement);
+
+
+/* =====================================================
+   LICHT
+===================================================== */
+
+scene.add(
+new THREE.HemisphereLight(
+0xaacbff,
+0x151515,
+1.3
+)
+);
+
+const light=
+new THREE.DirectionalLight(
+0xffffff,
+1.7
+);
+
+light.position.set(
+10,
+20,
+10
+);
+
 scene.add(light);
 
+
+/* =====================================================
+   BODEN
+===================================================== */
+
 const floor=new THREE.Mesh(
-new THREE.PlaneGeometry(100,100),
+new THREE.PlaneGeometry(
+100,
+100
+),
 new THREE.MeshStandardMaterial({
 color:0x252c35,
 metalness:.35,
 roughness:.75
 })
 );
+
 floor.rotation.x=-Math.PI/2;
+
 scene.add(floor);
 
+
 for(let x=-45;x<=45;x+=5){
+
 const l=new THREE.Mesh(
-new THREE.BoxGeometry(.035,.01,90),
-new THREE.MeshBasicMaterial({color:0x394451})
+new THREE.BoxGeometry(
+.035,
+.01,
+90
+),
+new THREE.MeshBasicMaterial({
+color:0x394451
+})
 );
-l.position.set(x,.01,0);
+
+l.position.set(
+x,
+.01,
+0
+);
+
 scene.add(l);
 }
 
+
 for(let z=-45;z<=45;z+=5){
+
 const l=new THREE.Mesh(
-new THREE.BoxGeometry(90,.01,.035),
-new THREE.MeshBasicMaterial({color:0x394451})
+new THREE.BoxGeometry(
+90,
+.01,
+.035
+),
+new THREE.MeshBasicMaterial({
+color:0x394451
+})
 );
-l.position.set(0,.011,z);
+
+l.position.set(
+0,
+.011,
+z
+);
+
 scene.add(l);
 }
+
 
 /* =====================================================
    HANGAR
 ===================================================== */
 
-function box(x,y,z,w,h,d,color){
+function box(
+x,
+y,
+z,
+w,
+h,
+d,
+color
+){
+
 const m=new THREE.Mesh(
-new THREE.BoxGeometry(w,h,d),
+new THREE.BoxGeometry(
+w,
+h,
+d
+),
 new THREE.MeshStandardMaterial({
 color,
 metalness:.45,
 roughness:.45
 })
 );
-m.position.set(x,y,z);
+
+m.position.set(
+x,
+y,
+z
+);
+
 scene.add(m);
+
 return m;
 }
 
-box(0,9,-25,55,18,1,0x161d26);
-box(-27,9,0,1,18,52,0x121820);
-box(27,9,0,1,18,52,0x121820);
+
+box(
+0,
+9,
+-25,
+55,
+18,
+1,
+0x161d26
+);
+
+box(
+-27,
+9,
+0,
+1,
+18,
+52,
+0x121820
+);
+
+box(
+27,
+9,
+0,
+1,
+18,
+52,
+0x121820
+);
+
 
 for(let x=-22;x<=22;x+=5){
-const bar=box(x,12,-24.3,2.8,.15,.2,0x637083);
+
+box(
+x,
+12,
+-24.3,
+2.8,
+.15,
+.2,
+0x637083
+);
+
 }
 
+
 for(let x=-20;x<=20;x+=5){
-const lamp=new THREE.PointLight(0x75aaff,1.3,13);
-lamp.position.set(x,11,-5);
+
+const lamp=
+new THREE.PointLight(
+0x75aaff,
+1.3,
+13
+);
+
+lamp.position.set(
+x,
+11,
+-5
+);
+
 scene.add(lamp);
+
 }
+
 
 /* =====================================================
    MECH
 ===================================================== */
 
 const mech=new THREE.Group();
-mech.position.set(0,0,-4);
+
+mech.position.set(
+0,
+0,
+-4
+);
+
+mech.userData.isPlayerMech=true;
+
 scene.add(mech);
 
-function mechPart(x,y,z,w,h,d,color){
+
+function mechPart(
+x,
+y,
+z,
+w,
+h,
+d,
+color
+){
+
 const m=new THREE.Mesh(
-new THREE.BoxGeometry(w,h,d),
+new THREE.BoxGeometry(
+w,
+h,
+d
+),
 new THREE.MeshStandardMaterial({
 color,
 metalness:.75,
 roughness:.3
 })
 );
-m.position.set(x,y,z);
+
+m.position.set(
+x,
+y,
+z
+);
+
+m.userData.isMechPart=true;
+
 mech.add(m);
+
 return m;
 }
+
 
 /* Beine */
 
 const legL=mechPart(
--1.1,2,0,
-1.05,3.4,1.2,
+-1.1,
+2,
+0,
+1.05,
+3.4,
+1.2,
 0x495563
 );
 
 const legR=mechPart(
-1.1,2,0,
-1.05,3.4,1.2,
+1.1,
+2,
+0,
+1.05,
+3.4,
+1.2,
 0x495563
 );
 
-mechPart(-1.1,.4,0,1.5,.7,2,0x303944);
-mechPart(1.1,.4,0,1.5,.7,2,0x303944);
+mechPart(
+-1.1,
+.4,
+0,
+1.5,
+.7,
+2,
+0x303944
+);
 
-mechPart(-1.1,3.75,-.05,1.25,.55,1.35,0x718091);
-mechPart(1.1,3.75,-.05,1.25,.55,1.35,0x718091);
+mechPart(
+1.1,
+.4,
+0,
+1.5,
+.7,
+2,
+0x303944
+);
+
+mechPart(
+-1.1,
+3.75,
+-.05,
+1.25,
+.55,
+1.35,
+0x718091
+);
+
+mechPart(
+1.1,
+3.75,
+-.05,
+1.25,
+.55,
+1.35,
+0x718091
+);
+
 
 /* Becken */
 
-mechPart(0,4.55,0,3.6,1.1,1.8,0x303943);
+mechPart(
+0,
+4.55,
+0,
+3.6,
+1.1,
+1.8,
+0x303943
+);
+
 
 /* Torso */
 
 const torso=mechPart(
-0,6.35,0,
-4.1,3.2,2,
+0,
+6.35,
+0,
+4.1,
+3.2,
+2,
 0x414d5a
 );
 
-mechPart(0,6.45,-1.1,3.4,2,.35,0x596776);
+mechPart(
+0,
+6.45,
+-1.1,
+3.4,
+2,
+.35,
+0x596776
+);
+
 
 /* Energie-Kern */
 
 const core=new THREE.Mesh(
-new THREE.CylinderGeometry(.55,.55,.22,24),
+new THREE.CylinderGeometry(
+.55,
+.55,
+.22,
+24
+),
 new THREE.MeshStandardMaterial({
 color:0x43c9ff,
 emissive:0x168cff,
 emissiveIntensity:2
 })
 );
+
 core.rotation.x=Math.PI/2;
-core.position.set(0,6.4,-1.3);
+
+core.position.set(
+0,
+6.4,
+-1.3
+);
+
 mech.add(core);
 
-/* Hals + Kopf */
 
-mechPart(0,7.85,0,1.1,.6,1,0x20262e);
-mechPart(0,8.65,0,2.5,2,1.8,0x303944);
+/* Hals */
+
+mechPart(
+0,
+7.85,
+0,
+1.1,
+.6,
+1,
+0x20262e
+);
+
+
+/* Kopf */
+
+mechPart(
+0,
+8.65,
+0,
+2.5,
+2,
+1.8,
+0x303944
+);
+
+
+/* Visier */
 
 const visor=new THREE.Mesh(
-new THREE.BoxGeometry(1.9,.42,.25),
+new THREE.BoxGeometry(
+1.9,
+.42,
+.25
+),
 new THREE.MeshStandardMaterial({
 color:0x75e7ff,
 emissive:0x138cff,
 emissiveIntensity:1.8
 })
 );
-visor.position.set(0,8.8,-.95);
+
+visor.position.set(
+0,
+8.8,
+-.95
+);
+
 mech.add(visor);
 
-/* Arme */
+
+/* =====================================================
+   ARME
+===================================================== */
 
 const leftArm=mechPart(
--3.15,6,0,
-1.05,2.6,1.2,
+-3.15,
+6,
+0,
+1.05,
+2.6,
+1.2,
 0x3c4652
 );
 
 const rightArm=mechPart(
-3.15,6,0,
-1.05,2.6,1.2,
+3.15,
+6,
+0,
+1.05,
+2.6,
+1.2,
 0x3c4652
 );
 
 const leftHand=mechPart(
--3.15,4.55,0,
-1.15,.75,1.25,
+-3.15,
+4.55,
+0,
+1.15,
+.75,
+1.25,
 0x252c34
 );
 
 const rightHand=mechPart(
-3.15,4.55,0,
-1.15,.75,1.25,
+3.15,
+4.55,
+0,
+1.15,
+.75,
+1.25,
 0x252c34
 );
 
-/* Keine rotierenden Teile */
 
 /* =====================================================
-   TRIPLE GUNS
+   TRIPLE WAFFEN
 ===================================================== */
 
 function createGun(side){
@@ -411,8 +1160,13 @@ for(let i=-1;i<=1;i++){
 
 const gun=new THREE.Group();
 
+
 const body=new THREE.Mesh(
-new THREE.BoxGeometry(.42,.5,1.65),
+new THREE.BoxGeometry(
+.42,
+.5,
+1.65
+),
 new THREE.MeshStandardMaterial({
 color:0x14191e,
 metalness:.85,
@@ -422,8 +1176,14 @@ roughness:.22
 
 gun.add(body);
 
+
 const barrel=new THREE.Mesh(
-new THREE.CylinderGeometry(.1,.1,1.8,10),
+new THREE.CylinderGeometry(
+.1,
+.1,
+1.8,
+10
+),
 new THREE.MeshStandardMaterial({
 color:0x697681,
 metalness:.9,
@@ -432,11 +1192,19 @@ roughness:.18
 );
 
 barrel.rotation.x=Math.PI/2;
+
 barrel.position.z=-1.6;
+
 gun.add(barrel);
 
+
 const muzzle=new THREE.Mesh(
-new THREE.CylinderGeometry(.15,.15,.25,10),
+new THREE.CylinderGeometry(
+.15,
+.15,
+.25,
+10
+),
 new THREE.MeshStandardMaterial({
 color:0x101419,
 metalness:.9
@@ -444,11 +1212,16 @@ metalness:.9
 );
 
 muzzle.rotation.x=Math.PI/2;
+
 muzzle.position.z=-2.55;
+
 gun.add(muzzle);
 
+
 gun.position.x=i*.45;
+
 group.add(gun);
+
 }
 
 group.position.set(
@@ -464,176 +1237,571 @@ mech.add(group);
 return group;
 }
 
+
 const leftGuns=createGun(-1);
+
 const rightGuns=createGun(1);
 
+
 /* =====================================================
-   HANGAR KAMERA
+   KLICKBARER MECH
 ===================================================== */
 
+const raycaster=new THREE.Raycaster();
+
+const mouse=new THREE.Vector2();
+
+let mechZoomed=false;
+
 let hangarZoom=0;
-let hangarYaw=0;
 
-function resetView(){
-hangarZoom=0;
-hangarYaw=0;
-}
 
-renderer.domElement.addEventListener("wheel",e=>{
-if(!battleActive){
-hangarZoom+=e.deltaY*.01;
-hangarZoom=Math.max(-3,Math.min(8,hangarZoom));
-}
-});
+function clickMech(event){
 
-renderer.domElement.addEventListener("click",e=>{
 if(battleActive)return;
 
 if(
-e.clientX>innerWidth*.25 &&
-e.clientX<innerWidth*.75 &&
-e.clientY>innerHeight*.15 &&
-e.clientY<innerHeight*.9
-){
-hangarZoom-=.7;
-hangarZoom=Math.max(-3,Math.min(8,hangarZoom));
+document.getElementById("custom").style.display==="block"
+)return;
+
+
+mouse.x=
+(event.clientX/innerWidth)*2-1;
+
+mouse.y=
+-(event.clientY/innerHeight)*2+1;
+
+
+raycaster.setFromCamera(
+mouse,
+camera
+);
+
+
+const hits=
+raycaster.intersectObject(
+mech,
+true
+);
+
+
+if(hits.length>0){
+
+mechZoomed=!mechZoomed;
+
+if(mechZoomed){
+
+hangarZoom=7;
+
+document.getElementById(
+"clickHint"
+).style.display="none";
+
+}else{
+
+hangarZoom=0;
+
+document.getElementById(
+"clickHint"
+).style.display="block";
+
 }
-});
+
+}
+
+}
+
+
+/*
+   Nur Klicks auf den Canvas
+   werden als Mech-Klick behandelt.
+   Dadurch bleiben alle UI-Buttons klickbar.
+*/
+
+renderer.domElement.addEventListener(
+"pointerup",
+e=>{
+
+if(e.target!==renderer.domElement)
+return;
+
+clickMech(e);
+
+}
+);
+
+
+/* =====================================================
+   ZOOM MIT MAUSRAD
+===================================================== */
+
+renderer.domElement.addEventListener(
+"wheel",
+e=>{
+
+if(battleActive)
+return;
+
+hangarZoom+=e.deltaY*.01;
+
+hangarZoom=Math.max(
+-3,
+Math.min(
+8,
+hangarZoom
+)
+);
+
+mechZoomed=hangarZoom>3;
+
+}
+);
+
+
+/* =====================================================
+   RESET VIEW
+===================================================== */
+
+function resetView(){
+
+hangarZoom=0;
+
+mechZoomed=false;
+
+document.getElementById(
+"clickHint"
+).style.display="block";
+
+}
+
 
 /* =====================================================
    CUSTOMIZING
 ===================================================== */
 
+let money=100;
+
 let mechUpgrade=0;
+
 let leftUpgrade=0;
+
 let rightUpgrade=0;
+
+let leftRemoved=false;
+
+let rightRemoved=false;
+
 
 function toggleCustomize(){
 
-const c=document.getElementById("custom");
+const c=
+document.getElementById("custom");
+
 
 c.style.display=
-c.style.display==="block"?"none":"block";
+c.style.display==="block"
+?"none"
+:"block";
+
 
 if(c.style.display==="block")
 showSection("mech");
+
 }
+
 
 function showSection(type){
 
-const s=document.getElementById("section");
+const s=
+document.getElementById("section");
+
 
 if(type==="mech"){
 
 s.innerHTML=`
+
 <div class="option">
-<b>🤖 Mech-Level ${mechUpgrade+1}</b>
-<p>Mehr Stabilität und Energie.</p>
-<button class="upgrade" onclick="upgrade('mech')">
-⬆ Upgrade · ${50+mechUpgrade*50} €
+
+<b>
+🤖 Mech-Level ${mechUpgrade+1}
+</b>
+
+<p>
+Mehr Stabilität und Energie.
+</p>
+
+<button
+class="upgrade"
+onclick="upgrade('mech')">
+
+⬆ Upgrade ·
+${50+mechUpgrade*50}
+Coins
+
 </button>
+
 </div>
+
+
 <div class="option">
-<b>Mech entfernen</b>
-<p>Setzt den aktuellen Mech zurück.</p>
-<button class="remove" onclick="removeUpgrade('mech')">↩ Zurücksetzen</button>
-</div>`;
+
+<b>
+Mech zurücksetzen
+</b>
+
+<p>
+Setzt die Mech-Upgrades zurück.
+</p>
+
+<button
+class="remove"
+onclick="removeUpgrade('mech')">
+
+↩ Zurücksetzen
+
+</button>
+
+</div>
+
+`;
+
 }
+
 
 if(type==="left"){
 
 s.innerHTML=`
+
 <div class="option">
-<b>🦾 Linker Arm-Level ${leftUpgrade+1}</b>
-<p>Verbessert die drei Waffen an der linken Hand.</p>
-<button class="upgrade" onclick="upgrade('left')">
-⬆ Upgrade · ${50+leftUpgrade*50} €
+
+<b>
+🦾 Linker Arm-Level ${leftUpgrade+1}
+</b>
+
+<p>
+Verbessert die drei Waffen am linken Arm.
+</p>
+
+<button
+class="upgrade"
+onclick="upgrade('left')">
+
+⬆ Upgrade ·
+${50+leftUpgrade*50}
+Coins
+
 </button>
+
 </div>
+
+
 <div class="option">
-<b>Linken Arm entfernen</b>
-<button class="remove" onclick="removeUpgrade('left')">Entfernen</button>
-</div>`;
+
+<b>
+🦾 Linken Arm
+</b>
+
+<br><br>
+
+<button
+class="remove"
+onclick="removeArm('left')">
+
+${
+leftRemoved
+?"➕ Arm hinzufügen"
+:"❌ Arm entfernen"
 }
+
+</button>
+
+</div>
+
+`;
+
+}
+
 
 if(type==="right"){
 
 s.innerHTML=`
+
 <div class="option">
-<b>🦾 Rechter Arm-Level ${rightUpgrade+1}</b>
-<p>Verbessert die drei Waffen an der rechten Hand.</p>
-<button class="upgrade" onclick="upgrade('right')">
-⬆ Upgrade · ${50+rightUpgrade*50} €
+
+<b>
+🦾 Rechter Arm-Level ${rightUpgrade+1}
+</b>
+
+<p>
+Verbessert die drei Waffen am rechten Arm.
+</p>
+
+<button
+class="upgrade"
+onclick="upgrade('right')">
+
+⬆ Upgrade ·
+${50+rightUpgrade*50}
+Coins
+
 </button>
+
 </div>
+
+
 <div class="option">
-<b>Rechten Arm entfernen</b>
-<button class="remove" onclick="removeUpgrade('right')">Entfernen</button>
-</div>`;
+
+<b>
+🦾 Rechten Arm
+</b>
+
+<br><br>
+
+<button
+class="remove"
+onclick="removeArm('right')">
+
+${
+rightRemoved
+?"➕ Arm hinzufügen"
+:"❌ Arm entfernen"
 }
+
+</button>
+
+</div>
+
+`;
+
 }
+
+}
+
+
+/* =====================================================
+   UPGRADE
+===================================================== */
 
 function upgrade(type){
 
+const level=
+type==="mech"
+?mechUpgrade
+:type==="left"
+?leftUpgrade
+:rightUpgrade;
+
+
 const price=
 50+
-(type==="mech"?mechUpgrade:
-type==="left"?leftUpgrade:rightUpgrade)*50;
+level*50;
+
 
 if(money<price){
-alert("Nicht genug Münzen.");
+
+alert(
+"Nicht genug Coins."
+);
+
 return;
+
 }
+
 
 money-=price;
 
-if(type==="mech")mechUpgrade++;
-if(type==="left")leftUpgrade++;
-if(type==="right")rightUpgrade++;
+
+if(type==="mech")
+mechUpgrade++;
+
+if(type==="left")
+leftUpgrade++;
+
+if(type==="right")
+rightUpgrade++;
+
+
+updateVisualUpgrades();
 
 updateMoney();
+
+saveGame();
+
 showSection(type);
+
 }
+
+
+/* =====================================================
+   RESET UPGRADE
+===================================================== */
 
 function removeUpgrade(type){
 
-if(type==="mech")mechUpgrade=0;
-if(type==="left")leftUpgrade=0;
-if(type==="right")rightUpgrade=0;
+if(type==="mech")
+mechUpgrade=0;
+
+if(type==="left")
+leftUpgrade=0;
+
+if(type==="right")
+rightUpgrade=0;
+
+
+updateVisualUpgrades();
+
+saveGame();
 
 showSection(type);
+
 }
 
+
 /* =====================================================
-   BATTLE
+   ARM ENTFERNEN
+===================================================== */
+
+function removeArm(side){
+
+if(side==="left"){
+
+leftRemoved=!leftRemoved;
+
+leftArm.visible=!leftRemoved;
+
+leftHand.visible=!leftRemoved;
+
+leftGuns.visible=!leftRemoved;
+
+}
+
+
+if(side==="right"){
+
+rightRemoved=!rightRemoved;
+
+rightArm.visible=!rightRemoved;
+
+rightHand.visible=!rightRemoved;
+
+rightGuns.visible=!rightRemoved;
+
+}
+
+
+saveGame();
+
+showSection(side);
+
+}
+
+
+/* =====================================================
+   UPGRADE OPTIK
+===================================================== */
+
+function updateVisualUpgrades(){
+
+const mechScale=
+1+
+mechUpgrade*.035;
+
+
+torso.scale.set(
+mechScale,
+mechScale,
+mechScale
+);
+
+
+leftArm.scale.setScalar(
+1+
+leftUpgrade*.08
+);
+
+leftGuns.scale.setScalar(
+1+
+leftUpgrade*.06
+);
+
+
+rightArm.scale.setScalar(
+1+
+rightUpgrade*.08
+);
+
+rightGuns.scale.setScalar(
+1+
+rightUpgrade*.06
+);
+
+
+core.material.emissiveIntensity=
+2+
+mechUpgrade*.35;
+
+}
+
+
+/* =====================================================
+   BATTLE VARIABLEN
 ===================================================== */
 
 let battleActive=false;
+
 let battleTime=120;
+
 let timerInterval=null;
 
 let myLives=3;
+
 let enemyLives=3;
 
 let velocityY=0;
+
 let onGround=true;
 
 let yaw=0;
+
 let pitch=0;
 
 const keys={
-w:false,a:false,s:false,d:false
+w:false,
+a:false,
+s:false,
+d:false
 };
+
+
+/* =====================================================
+   BATTLE MENU
+===================================================== */
 
 function openBattle(){
 
-document.getElementById("custom").style.display="none";
-document.getElementById("battle").style.display="block";
+document.getElementById(
+"custom"
+).style.display="none";
+
+document.getElementById(
+"battle"
+).style.display="block";
+
 }
 
+
 function closeBattle(){
-document.getElementById("battle").style.display="none";
+
+document.getElementById(
+"battle"
+).style.display="none";
+
 }
+
+
+/* =====================================================
+   BATTLE START
+===================================================== */
 
 function startBattle(){
 
@@ -642,38 +1810,108 @@ closeBattle();
 battleActive=true;
 
 myLives=3;
+
 enemyLives=3;
+
 battleTime=120;
 
-document.getElementById("fightUI").style.display="block";
-document.getElementById("crosshair").style.display="block";
 
-document.querySelector(".bottom").style.display="none";
+document.getElementById(
+"myLives"
+).textContent="3";
 
-camera.position.set(0,5,18);
+document.getElementById(
+"enemyLives"
+).textContent="3";
+
+document.getElementById(
+"timer"
+).textContent="2:00";
+
+
+document.getElementById(
+"fightUI"
+).style.display="block";
+
+document.getElementById(
+"crosshair"
+).style.display="block";
+
+
+document.querySelector(
+".bottom"
+).style.display="none";
+
+
+/*
+   Gegner erst beim Battle erstellen.
+*/
+
+createEnemyMech();
+
+
+camera.position.set(
+0,
+5,
+18
+);
+
 yaw=Math.PI;
+
 pitch=0;
+
 
 renderer.domElement.requestPointerLock?.();
 
-timerInterval=setInterval(()=>{
+
+clearInterval(timerInterval);
+
+
+timerInterval=setInterval(
+()=>{
 
 battleTime--;
 
-document.getElementById("timer").textContent=
-Math.floor(battleTime/60)+":"+
-String(battleTime%60).padStart(2,"0");
+document.getElementById(
+"timer"
+).textContent=
+Math.floor(
+battleTime/60
+)+":"+
+String(
+battleTime%60
+).padStart(
+2,
+"0"
+);
+
 
 if(battleTime<=0){
-endBattle(false,"Zeit abgelaufen.");
+
+endBattle(
+false,
+"Zeit abgelaufen."
+);
+
 }
 
-},1000);
+},
+1000
+);
+
 }
+
+
+/* =====================================================
+   BATTLE VERLASSEN
+===================================================== */
 
 function leaveBattle(){
 
-document.getElementById("result").style.display="none";
+document.getElementById(
+"result"
+).style.display="none";
+
 
 battleActive=false;
 
@@ -681,53 +1919,137 @@ clearInterval(timerInterval);
 
 document.exitPointerLock?.();
 
-document.getElementById("fightUI").style.display="none";
-document.getElementById("crosshair").style.display="none";
 
-document.querySelector(".bottom").style.display="flex";
+document.getElementById(
+"fightUI"
+).style.display="none";
 
-camera.position.set(8,5,12);
-camera.lookAt(0,5,-4);
+document.getElementById(
+"crosshair"
+).style.display="none";
+
+
+document.querySelector(
+".bottom"
+).style.display="flex";
+
+
+if(enemyMech){
+
+scene.remove(enemyMech);
+
+enemyMech=null;
+
 }
+
+
+camera.position.set(
+8,
+5.5,
+12
+);
+
+camera.lookAt(
+0,
+5,
+-4
+);
+
+}
+
+
+/* =====================================================
+   BATTLE ENDE
+===================================================== */
 
 function endBattle(win,text){
 
-if(!battleActive)return;
+if(!battleActive)
+return;
+
 
 battleActive=false;
+
 clearInterval(timerInterval);
 
 document.exitPointerLock?.();
 
-document.getElementById("fightUI").style.display="none";
-document.getElementById("crosshair").style.display="none";
 
-document.getElementById("resultTitle").textContent=
-win?"🏆 SIEG!":"❌ NIEDERLAGE";
+document.getElementById(
+"fightUI"
+).style.display="none";
 
-document.getElementById("resultText").textContent=
-win?
-text+" +50 Münzen!":
-text;
+document.getElementById(
+"crosshair"
+).style.display="none";
 
-document.getElementById("result").style.display="block";
 
-document.querySelector(".bottom").style.display="none";
+document.getElementById(
+"resultTitle"
+).textContent=
+win
+?"🏆 SIEG!"
+:"❌ NIEDERLAGE";
+
+
+document.getElementById(
+"resultText"
+).textContent=
+win
+?text+" +50 Coins!"
+:text;
+
+
+document.getElementById(
+"result"
+).style.display="block";
+
+
+document.querySelector(
+".bottom"
+).style.display="none";
+
 
 if(win){
+
 money+=50;
+
 updateMoney();
+
+saveGame();
+
 }
+
+
+if(enemyMech){
+
+scene.remove(enemyMech);
+
+enemyMech=null;
+
 }
+
+}
+
+
+/* =====================================================
+   ENEMY DAMAGE
+===================================================== */
 
 function damageEnemy(){
 
-if(!battleActive)return;
+if(!battleActive)
+return;
+
 
 enemyLives--;
 
-document.getElementById("enemyLives")
-.textContent=enemyLives;
+
+document.getElementById(
+"enemyLives"
+).textContent=
+enemyLives;
+
 
 if(enemyLives<=0){
 
@@ -737,32 +2059,65 @@ true,
 );
 
 return;
+
 }
 
+
 showBattleMessage(
-"Treffer! Gegner hat noch "+enemyLives+" Leben."
+"Treffer! Gegner hat noch "+
+enemyLives+
+" Leben."
 );
+
 }
+
+
+/* =====================================================
+   SPIELER TOD
+===================================================== */
+
+let deathAnimation=0;
+
 
 function playerDeath(){
 
-if(!battleActive)return;
+if(!battleActive)
+return;
+
 
 myLives--;
 
-document.getElementById("myLives").textContent=myLives;
+
+document.getElementById(
+"myLives"
+).textContent=
+myLives;
+
+
+deathAnimation=1;
+
 
 if(myLives<=0){
+
+setTimeout(
+()=>{
 
 endBattle(
 false,
 "Dein Mech wurde besiegt."
 );
 
+},
+900
+);
+
 return;
+
 }
 
-/* Respawn */
+
+setTimeout(
+()=>{
 
 camera.position.set(
 (Math.random()-.5)*12,
@@ -773,343 +2128,642 @@ camera.position.set(
 velocityY=0;
 
 showBattleMessage(
-"💥 Respawn! Noch "+myLives+" Leben."
+"💥 Respawn! Noch "+
+myLives+
+" Leben."
 );
+
+deathAnimation=0;
+
+},
+900
+);
+
 }
+
 
 /* =====================================================
-   FPS STEUERUNG
+   WASD
 ===================================================== */
 
-document.addEventListener("keydown",e=>{
+document.addEventListener(
+"keydown",
+e=>{
 
-const k=e.key.toLowerCase();
+const k=
+e.key.toLowerCase();
 
-if(k in keys)keys[k]=true;
+
+if(k in keys)
+keys[k]=true;
+
 
 if(k===" "){
+
 jump();
+
 e.preventDefault();
+
 }
+
 });
 
-document.addEventListener("keyup",e=>{
 
-const k=e.key.toLowerCase();
+document.addEventListener(
+"keyup",
+e=>{
 
-if(k in keys)keys[k]=false;
+const k=
+e.key.toLowerCase();
+
+
+if(k in keys)
+keys[k]=false;
+
 });
 
-document.addEventListener("mousemove",e=>{
 
-if(!battleActive)return;
-if(document.pointerLockElement!==renderer.domElement)return;
+/* =====================================================
+   MAUS
+===================================================== */
 
-yaw-=e.movementX*.0025;
-pitch-=e.movementY*.0025;
+document.addEventListener(
+"mousemove",
+e=>{
 
-pitch=Math.max(-1.25,Math.min(1.25,pitch));
+if(!battleActive)
+return;
+
+if(
+document.pointerLockElement!==renderer.domElement
+)
+return;
+
+
+yaw-=
+e.movementX*.0025;
+
+pitch-=
+e.movementY*.0025;
+
+
+pitch=Math.max(
+-1.25,
+Math.min(
+1.25,
+pitch
+)
+);
+
 });
 
-renderer.domElement.addEventListener("mousedown",e=>{
 
-if(!battleActive)return;
+/* =====================================================
+   SCHIESSEN
+===================================================== */
 
-if(e.button===0){
+renderer.domElement.addEventListener(
+"mousedown",
+e=>{
+
+if(!battleActive)
+return;
+
+if(e.button===0)
 shoot();
-}
+
 });
+
 
 function jump(){
 
-if(!battleActive)return;
+if(!battleActive)
+return;
+
 
 if(onGround){
 
 velocityY=.28;
+
 onGround=false;
-}
+
 }
 
+}
+
+
 /* =====================================================
-   SCHUSS-ANIMATION
+   SCHUSS
 ===================================================== */
 
 let shooting=false;
-let shootTimer=0;
+
 
 function shoot(){
 
-if(!battleActive||shooting)return;
+if(!battleActive||shooting)
+return;
+
 
 shooting=true;
-shootTimer=0;
+
 
 leftGuns.position.z=-.25;
+
 rightGuns.position.z=-.25;
 
-const origin=camera.position.clone();
 
-const direction=new THREE.Vector3(
-0,0,-1
-).applyQuaternion(camera.quaternion);
+const origin=
+camera.position.clone();
 
-const end=origin.clone()
-.addScaledVector(direction,55);
 
-const tracer=new THREE.Line(
-new THREE.BufferGeometry().setFromPoints([
-origin,end
+const direction=
+new THREE.Vector3(
+0,
+0,
+-1
+).applyQuaternion(
+camera.quaternion
+);
+
+
+const end=
+origin.clone()
+.addScaledVector(
+direction,
+55
+);
+
+
+const tracer=
+new THREE.Line(
+new THREE.BufferGeometry()
+.setFromPoints([
+origin,
+end
 ]),
 new THREE.LineBasicMaterial({
 color:0xffd45a
 })
 );
 
+
 scene.add(tracer);
 
-setTimeout(()=>{
+
+setTimeout(
+()=>{
 scene.remove(tracer);
-},70);
+},
+70
+);
 
-/*
-   Demo-Gegnerprüfung.
-   Für echte Online-Kämpfe wird dies vom Server
-   ausgewertet.
-*/
+
 if(Math.random()<.25){
-setTimeout(()=>damageEnemy(),80);
+
+setTimeout(
+()=>{
+damageEnemy();
+},
+80
+);
+
 }
 
-setTimeout(()=>{
+
+setTimeout(
+()=>{
+
 shooting=false;
+
 leftGuns.position.z=0;
+
 rightGuns.position.z=0;
-},130);
+
+},
+130
+);
+
 }
+
 
 /* =====================================================
-   ONLINE-SERVER KOMMUNIKATION
+   SERVER
 ===================================================== */
 
 let socket=null;
 
-/*
-Wenn server.js läuft, wird automatisch versucht,
-eine Socket.IO-Verbindung herzustellen.
-
-Beispiel:
-http://localhost:3000
-*/
 
 function connectServer(){
 
-if(typeof io==="undefined")return;
+if(typeof io==="undefined")
+return;
+
 
 try{
 
 socket=io();
 
-socket.on("connect",()=>{
-showBattleMessage("🟢 Mit Server verbunden.");
+
+socket.on(
+"connect",
+()=>{
+
+showBattleMessage(
+"🟢 Mit Server verbunden."
+);
+
 });
 
-socket.on("enemyShot",()=>{
+
+socket.on(
+"enemyShot",
+()=>{
+
 playerDeath();
+
 });
 
-socket.on("enemyHit",()=>{
+
+socket.on(
+"enemyHit",
+()=>{
+
 damageEnemy();
+
 });
 
-socket.on("enemyPosition",data=>{
+
+socket.on(
+"enemyPosition",
+data=>{
+
 if(enemyMech){
+
 enemyMech.position.x=data.x;
+
 enemyMech.position.z=data.z;
+
 }
+
 });
+
 
 }catch(e){}
+
 }
 
+
 /* =====================================================
-   SERVER-GEGNER
+   GEGNER
 ===================================================== */
 
 let enemyMech=null;
 
+
 function createEnemyMech(){
 
-enemyMech=mech.clone(true);
+if(enemyMech)
+return;
 
-enemyMech.position.set(0,0,-15);
 
-enemyMech.traverse(o=>{
+enemyMech=
+mech.clone(true);
+
+
+enemyMech.position.set(
+0,
+0,
+-15
+);
+
+
+enemyMech.userData.isEnemy=true;
+
+
+enemyMech.traverse(
+o=>{
 
 if(o.material){
-o.material=o.material.clone();
 
-if(o.material.color)
-o.material.color.set(0xc04444);
+o.material=
+o.material.clone();
+
+if(o.material.color){
+
+o.material.color.set(
+0xc04444
+);
+
+}
+
 }
 
 });
 
+
 scene.add(enemyMech);
+
 }
 
+
 /* =====================================================
-   BEWEGUNG
+   BATTLE BEWEGUNG
 ===================================================== */
 
 function updateBattle(){
 
-if(!battleActive)return;
+if(!battleActive)
+return;
+
 
 const speed=.13;
 
-const forward=new THREE.Vector3(
--Math.sin(yaw),0,-Math.cos(yaw)
+
+const forward=
+new THREE.Vector3(
+-Math.sin(yaw),
+0,
+-Math.cos(yaw)
 );
 
-const right=new THREE.Vector3(
-Math.cos(yaw),0,-Math.sin(yaw)
+
+const right=
+new THREE.Vector3(
+Math.cos(yaw),
+0,
+-Math.sin(yaw)
 );
 
-if(keys.w)camera.position.addScaledVector(forward,speed);
-if(keys.s)camera.position.addScaledVector(forward,-speed);
-if(keys.a)camera.position.addScaledVector(right,-speed);
-if(keys.d)camera.position.addScaledVector(right,speed);
+
+if(keys.w)
+camera.position.addScaledVector(
+forward,
+speed
+);
+
+
+if(keys.s)
+camera.position.addScaledVector(
+forward,
+-speed
+);
+
+
+if(keys.a)
+camera.position.addScaledVector(
+right,
+-speed
+);
+
+
+if(keys.d)
+camera.position.addScaledVector(
+right,
+speed
+);
+
 
 velocityY-=.012;
+
 camera.position.y+=velocityY;
+
 
 if(camera.position.y<=5){
 
 camera.position.y=5;
+
 velocityY=0;
+
 onGround=true;
+
 }
 
+
 camera.position.x=
-Math.max(-23,Math.min(23,camera.position.x));
+Math.max(
+-23,
+Math.min(
+23,
+camera.position.x
+)
+);
+
 
 camera.position.z=
-Math.max(-23,Math.min(23,camera.position.z));
+Math.max(
+-23,
+Math.min(
+23,
+camera.position.z
+)
+);
+
 
 camera.rotation.order="YXZ";
+
 camera.rotation.y=yaw;
+
 camera.rotation.x=pitch;
 
-/* Gegner-Demo-KI */
+
+/* Demo Gegnerbewegung */
 
 if(enemyMech){
 
 enemyMech.position.x=
-Math.sin(Date.now()*.0005)*8;
+Math.sin(
+Date.now()*.0005
+)*8;
 
 enemyMech.position.z=
--15+Math.cos(Date.now()*.0007)*4;
+-15+
+Math.cos(
+Date.now()*.0007
+)*4;
 
 enemyMech.rotation.y=
-Math.sin(Date.now()*.0005)*.4;
-}
+Math.sin(
+Date.now()*.0005
+)*.4;
+
 }
 
+}
+
+
 /* =====================================================
-   ANIMATIONEN
+   ANIMATION
 ===================================================== */
 
 let animationTime=0;
+
 
 function animateMech(){
 
 animationTime+=.08;
 
-/* Idle */
 
 if(!battleActive){
 
 mech.position.y=
-Math.sin(animationTime*.5)*.025;
+Math.sin(
+animationTime*.5
+)*.025;
+
+mech.rotation.z*=.85;
 
 return;
+
 }
 
-/* Gehen */
 
 const moving=
-keys.w||keys.a||keys.s||keys.d;
+keys.w||
+keys.a||
+keys.s||
+keys.d;
+
 
 if(moving){
 
-const walk=Math.sin(animationTime*2.5)*.28;
+const walk=
+Math.sin(
+animationTime*2.5
+)*.28;
+
 
 legL.rotation.x=walk;
+
 legR.rotation.x=-walk;
 
-leftArm.rotation.x=-walk*.3;
-rightArm.rotation.x=walk*.3;
+leftArm.rotation.x=
+-walk*.3;
+
+rightArm.rotation.x=
+walk*.3;
 
 }else{
 
 legL.rotation.x*=.85;
+
 legR.rotation.x*=.85;
+
 leftArm.rotation.x*=.85;
+
 rightArm.rotation.x*=.85;
+
 }
 
-/* Springen */
 
 if(!onGround){
 
 legL.rotation.x=-.35;
+
 legR.rotation.x=.35;
+
 }
 
-/* Schuss */
 
 if(shooting){
 
 leftArm.rotation.x=-.18;
+
 rightArm.rotation.x=-.18;
+
 }
 
-/* Tod / Respawn wird über Lives abgewickelt */
+
+if(deathAnimation){
+
+mech.rotation.z=
+Math.min(
+Math.PI/2,
+deathAnimation*1.6
+);
+
+deathAnimation+=.025;
+
+}else{
+
+mech.rotation.z*=.85;
+
 }
+
+}
+
 
 /* =====================================================
-   UI
+   MONEY
 ===================================================== */
 
 function updateMoney(){
-document.getElementById("money").textContent=money;
+
+document.getElementById(
+"money"
+).textContent=
+money;
+
 }
+
+
+/* =====================================================
+   BATTLE MESSAGE
+===================================================== */
 
 function showBattleMessage(text){
 
-let e=document.getElementById("battleMessage");
+let e=
+document.getElementById(
+"battleMessage"
+);
 
-if(e)e.remove();
+
+if(e)
+e.remove();
+
 
 e=document.createElement("div");
+
 e.id="battleMessage";
+
 e.textContent=text;
 
 e.style.position="absolute";
+
 e.style.left="50%";
+
 e.style.top="75%";
-e.style.transform="translateX(-50%)";
+
+e.style.transform=
+"translateX(-50%)";
+
 e.style.background="#000c";
-e.style.padding="11px 17px";
+
+e.style.padding=
+"11px 17px";
+
 e.style.borderRadius="12px";
+
 e.style.fontWeight="bold";
-e.style.zIndex="50";
+
+e.style.zIndex="500";
 
 document.body.appendChild(e);
 
-setTimeout(()=>e.remove(),1800);
+
+setTimeout(
+()=>{
+
+if(e.parentNode)
+e.remove();
+
+},
+1800
+);
+
 }
+
 
 /* =====================================================
    SAVE
@@ -1120,86 +2774,136 @@ function saveGame(){
 localStorage.setItem(
 "mech_game_save",
 JSON.stringify({
+
 money,
+
 mechUpgrade,
+
 leftUpgrade,
-rightUpgrade
+
+rightUpgrade,
+
+leftRemoved,
+
+rightRemoved
+
 })
 );
+
 }
+
 
 function loadGame(){
 
 try{
 
-const d=JSON.parse(
-localStorage.getItem("mech_game_save")
+const d=
+JSON.parse(
+localStorage.getItem(
+"mech_game_save"
+)
 );
 
-if(!d)return;
 
-money=d.money??100;
-mechUpgrade=d.mechUpgrade??0;
-leftUpgrade=d.leftUpgrade??0;
-rightUpgrade=d.rightUpgrade??0;
+if(!d)
+return;
+
+
+money=
+d.money??100;
+
+mechUpgrade=
+d.mechUpgrade??0;
+
+leftUpgrade=
+d.leftUpgrade??0;
+
+rightUpgrade=
+d.rightUpgrade??0;
+
+leftRemoved=
+d.leftRemoved??false;
+
+rightRemoved=
+d.rightRemoved??false;
 
 }catch(e){}
+
 }
 
+
 /* =====================================================
-   RENDER LOOP
+   HANGAR KAMERA
 ===================================================== */
 
 function updateHangarCamera(){
 
-if(battleActive)return;
+if(battleActive)
+return;
 
-const distance=12-hangarZoom;
 
-camera.position.x=distance*.65;
+const distance=
+12-hangarZoom;
+
+
+camera.position.x=
+distance*.65;
+
 camera.position.y=5.5;
-camera.position.z=distance;
+
+camera.position.z=
+distance;
+
 
 camera.lookAt(
 mech.position.x,
 5,
 mech.position.z
 );
-}
 
-function animate(){
 
-requestAnimationFrame(animate);
+if(
+!mechZoomed &&
+document.getElementById(
+"custom"
+).style.display!=="block"
+){
 
-if(battleActive){
-
-updateBattle();
-animateMech();
+document.getElementById(
+"clickHint"
+).style.display="block";
 
 }else{
 
-updateHangarCamera();
-animateMech();
+document.getElementById(
+"clickHint"
+).style.display="none";
+
 }
 
-renderer.render(scene,camera);
 }
 
-window.addEventListener("resize",()=>{
 
-camera.aspect=innerWidth/innerHeight;
+/* =====================================================
+   RESIZE
+===================================================== */
+
+window.addEventListener(
+"resize",
+()=>{
+
+camera.aspect=
+innerWidth/innerHeight;
+
 camera.updateProjectionMatrix();
 
 renderer.setSize(
 innerWidth,
 innerHeight
 );
+
 });
 
-loadGame();
-updateMoney();
-createEnemyMech();
-animate();
 
 /* =====================================================
    MOBILE
@@ -1207,32 +2911,100 @@ animate();
 
 function hold(id,key){
 
-const b=document.getElementById(id);
+const b=
+document.getElementById(id);
 
-b.addEventListener("pointerdown",e=>{
+
+b.addEventListener(
+"pointerdown",
+e=>{
+
 e.preventDefault();
+
 keys[key]=true;
-});
 
-b.addEventListener("pointerup",()=>{
-keys[key]=false;
-});
+}
+);
 
-b.addEventListener("pointercancel",()=>{
-keys[key]=false;
-});
 
-b.addEventListener("pointerleave",()=>{
+b.addEventListener(
+"pointerup",
+()=>{
 keys[key]=false;
-});
+}
+);
+
+
+b.addEventListener(
+"pointercancel",
+()=>{
+keys[key]=false;
+}
+);
+
+
+b.addEventListener(
+"pointerleave",
+()=>{
+keys[key]=false;
+}
+);
+
 }
 
+
 hold("up","w");
+
 hold("down","s");
+
 hold("left","a");
+
 hold("right","d");
 
-setInterval(saveGame,30000);
+
+/* =====================================================
+   START
+===================================================== */
+
+loadGame();
+
+updateMoney();
+
+updateVisualUpgrades();
+
+
+leftArm.visible=
+!leftRemoved;
+
+leftHand.visible=
+!leftRemoved;
+
+leftGuns.visible=
+!leftRemoved;
+
+
+rightArm.visible=
+!rightRemoved;
+
+rightHand.visible=
+!rightRemoved;
+
+rightGuns.visible=
+!rightRemoved;
+
+
+animate();
+
+
+/* =====================================================
+   AUTOSAVE
+===================================================== */
+
+setInterval(
+saveGame,
+30000
+);
+
 </script>
 
 </body>
