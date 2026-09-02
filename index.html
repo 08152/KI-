@@ -3,1429 +3,766 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fishing Simulator</title>
-<style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:Arial,sans-serif;
-    background:#87cfff;
-}
-canvas{display:block}
+<title>WORLD NAVI 3D</title>
 
-#start{
-    position:fixed;
-    inset:0;
-    z-index:100;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,.75);
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#9edcff}
+#map{position:fixed;inset:0}
+
+#top{
+position:fixed;
+top:15px;
+left:15px;
+right:15px;
+z-index:10;
+display:flex;
+gap:10px;
 }
-#start button{
-    padding:20px 45px;
-    font-size:25px;
-    border:0;
-    border-radius:12px;
-    cursor:pointer;
+
+#search{
+flex:1;
+max-width:550px;
+height:52px;
+border:0;
+border-radius:15px;
+padding:0 20px;
+font-size:17px;
+box-shadow:0 4px 18px #0003;
+outline:none;
 }
-#crosshair{
-    position:fixed;
-    left:50%;
-    top:50%;
-    width:12px;
-    height:12px;
-    margin:-6px;
-    z-index:10;
-    pointer-events:none;
+
+button{
+height:52px;
+padding:0 20px;
+border:0;
+border-radius:15px;
+background:#1677ff;
+color:white;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 4px 18px #0003;
 }
-#crosshair:before,#crosshair:after{
-    content:"";
-    position:absolute;
-    background:white;
-    box-shadow:0 0 3px black;
+
+#panel{
+position:fixed;
+left:15px;
+top:82px;
+width:310px;
+max-height:75vh;
+overflow:auto;
+z-index:9;
+background:#ffffffed;
+backdrop-filter:blur(12px);
+border-radius:18px;
+padding:15px;
+box-shadow:0 8px 30px #0003;
 }
-#crosshair:before{
-    width:12px;height:2px;left:0;top:5px;
+
+h2{margin:4px 0 12px;font-size:20px}
+h3{margin:18px 0 8px;font-size:15px}
+
+.place{
+padding:12px;
+margin:7px 0;
+background:#f1f5f9;
+border-radius:12px;
+cursor:pointer;
 }
-#crosshair:after{
-    width:2px;height:12px;left:5px;top:0;
+
+.place:hover{background:#dbeafe}
+
+#info{
+position:fixed;
+right:15px;
+bottom:15px;
+z-index:10;
+background:#ffffffed;
+padding:12px 16px;
+border-radius:14px;
+box-shadow:0 5px 20px #0003;
+font-size:13px;
 }
-#hud{
-    position:fixed;
-    top:15px;
-    left:15px;
-    z-index:10;
-    color:white;
-    text-shadow:0 2px 4px #000;
-    font-size:17px;
-    line-height:1.6;
-    pointer-events:none;
+
+#compass{
+position:fixed;
+right:20px;
+top:90px;
+width:60px;
+height:60px;
+z-index:10;
+border-radius:50%;
+background:#ffffffdd;
+box-shadow:0 5px 20px #0003;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+font-size:22px;
 }
-#prompt{
-    position:fixed;
-    bottom:45px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:20;
-    color:white;
-    background:rgba(0,0,0,.65);
-    padding:12px 22px;
-    border-radius:10px;
-    font-size:18px;
-    display:none;
-    pointer-events:none;
-}
-#boatControls{
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    z-index:20;
-    color:white;
-    background:rgba(0,0,0,.65);
-    padding:15px;
-    border-radius:10px;
-    display:none;
-    pointer-events:none;
-}
-#fishPanel{
-    position:fixed;
-    right:20px;
-    top:20px;
-    z-index:30;
-    width:260px;
-    background:rgba(20,25,30,.94);
-    color:white;
-    padding:18px;
-    border-radius:12px;
-    display:none;
-}
-#fishPanel button{
-    width:100%;
-    margin-top:8px;
-    padding:10px;
-    border:0;
-    border-radius:7px;
-    cursor:pointer;
-}
-#fishInfo{
-    margin-bottom:10px;
+
+#loading{
+position:fixed;
+inset:0;
+z-index:100;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#9edcff;
+font-size:25px;
+font-weight:bold;
 }
 </style>
 </head>
+
 <body>
 
-<div id="start">
-    <button id="startBtn">SPIEL STARTEN</button>
+<div id="loading">Weltkarte wird geladen...</div>
+<div id="map"></div>
+
+<div id="top">
+<input id="search" placeholder="Ort, Straße oder Stadt suchen...">
+<button onclick="searchLocation()">Suchen</button>
 </div>
 
-<div id="crosshair"></div>
+<div id="panel">
+<h2>🌍 Weltkarte</h2>
 
-<div id="hud">
-    🐟 Fische: <span id="fishCount">0</span><br>
-    🎣 Köder: <span id="bait">10</span><br>
-    🚤 Motor: <span id="engine">Aus</span><br>
-    📍 <span id="position">0 / 0</span>
+<h3>Europa</h3>
+<div class="place" onclick="flyTo(10,0,20)">🇩🇪 Deutschland</div>
+<div class="place" onclick="flyTo(2,0,35)">🇫🇷 Frankreich</div>
+<div class="place" onclick="flyTo(25,0,20)">🇵🇱 Polen</div>
+<div class="place" onclick="flyTo(15,0,5)">🇮🇹 Italien</div>
+<div class="place" onclick="flyTo(-3,0,40)">🇬🇧 Großbritannien</div>
+
+<h3>Nordamerika</h3>
+<div class="place" onclick="flyTo(-100,0,10)">🇺🇸 USA</div>
+<div class="place" onclick="flyTo(-110,0,35)">🇨🇦 Kanada</div>
+<div class="place" onclick="flyTo(-102,0,-15)">🇲🇽 Mexiko</div>
+
+<h3>Asien</h3>
+<div class="place" onclick="flyTo(105,0,25)">🇨🇳 China</div>
+<div class="place" onclick="flyTo(138,0,20)">🇯🇵 Japan</div>
+<div class="place" onclick="flyTo(78,0,5)">🇮🇳 Indien</div>
+
+<h3>Sehenswürdigkeiten</h3>
+<div class="place" onclick="flyTo(10.75,0,28.5)">Brandenburger Tor</div>
+<div class="place" onclick="flyTo(2.35,0,46.7)">Eiffelturm</div>
+<div class="place" onclick="flyTo(-74,0,40.7)">New York</div>
+<div class="place" onclick="flyTo(139.7,0,35.7)">Tokio</div>
 </div>
 
-<div id="prompt"></div>
+<div id="compass">N</div>
 
-<div id="boatControls">
-    <b>BOOTSSTEUERUNG</b><br>
-    W = Gas<br>
-    S = Rückwärts<br>
-    A / D = Lenken<br>
-    E = Steuerung verlassen
+<div id="info">
+Weltkarte · 3D
 </div>
 
-<div id="fishPanel">
-    <h3>🐟 Fisch bearbeiten</h3>
-    <div id="fishInfo"></div>
-    <button id="cutBtn">Fisch aufschneiden</button>
-    <button id="boneBtn" style="display:none">Gräten entfernen</button>
-    <button id="finishBtn" style="display:none">Fisch vorbereiten</button>
-    <button id="closeFish">Schließen</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87cfff);
-scene.fog = new THREE.Fog(0x87cfff,70,260);
+
+scene.background = new THREE.Color(0x9edcff);
+scene.fog = new THREE.Fog(0x9edcff,180,650);
 
 const camera = new THREE.PerspectiveCamera(
-    75,
-    innerWidth/innerHeight,
-    .05,
-    500
+55,
+innerWidth/innerHeight,
+0.1,
+2000
 );
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
+camera.position.set(0,260,220);
+
+const renderer = new THREE.WebGLRenderer({
+antialias:true
+});
+
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
+document.getElementById("map").appendChild(renderer.domElement);
 
-const controls = new THREE.PointerLockControls(camera,document.body);
+const controls = new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.08;
+controls.maxPolarAngle=Math.PI/2.05;
+controls.minDistance=15;
+controls.maxDistance=650;
 
-scene.add(new THREE.HemisphereLight(0xbfe9ff,0x527044,1.4));
+scene.add(new THREE.HemisphereLight(0xffffff,0x668899,2));
 
-const sun = new THREE.DirectionalLight(0xffffff,1.7);
-sun.position.set(-50,80,30);
+const sun = new THREE.DirectionalLight(0xffffff,2.2);
+sun.position.set(100,300,100);
 sun.castShadow=true;
-sun.shadow.mapSize.width=2048;
-sun.shadow.mapSize.height=2048;
 scene.add(sun);
 
-/* MATERIALIEN */
 
-const groundMat = new THREE.MeshStandardMaterial({
-    color:0x6c8f48,
-    roughness:1
-});
+/* =========================
+   WELTKARTE
+========================= */
 
-const concreteMat = new THREE.MeshStandardMaterial({
-    color:0x777777,
-    roughness:.9
-});
+const WORLD_W=620;
+const WORLD_H=320;
 
-const woodMat = new THREE.MeshStandardMaterial({
-    color:0x71421f,
-    roughness:.85
-});
+function height(x,z){
 
-const darkWood = new THREE.MeshStandardMaterial({
-    color:0x3d2415,
-    roughness:.9
-});
+    const a=Math.sin(x*.035)*3;
+    const b=Math.cos(z*.045)*3;
+    const c=Math.sin((x+z)*.025)*4;
 
-const metalMat = new THREE.MeshStandardMaterial({
-    color:0x555b61,
-    metalness:.75,
-    roughness:.3
-});
+    const europe=
+        Math.exp(-((x-10)**2+(z-10)**2)/2500)*15;
 
-const waterMat = new THREE.MeshStandardMaterial({
-    color:0x167fc4,
-    transparent:true,
-    opacity:.82,
-    roughness:.15
-});
+    const asia=
+        Math.exp(-((x-130)**2+(z-5)**2)/6000)*12;
 
-/* BODEN */
+    const america=
+        Math.exp(-((x+110)**2+(z-5)**2)/7000)*10;
 
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(260,260),
-    groundMat
+    return Math.max(0,a+b+c+europe+asia+america);
+}
+
+
+/* Meer */
+
+const waterGeo=new THREE.PlaneGeometry(
+WORLD_W,
+WORLD_H,
+1,
+1
 );
-ground.rotation.x=-Math.PI/2;
-ground.position.y=-.08;
-ground.receiveShadow=true;
-scene.add(ground);
 
-/* HAFEN */
+const waterMat=new THREE.MeshPhongMaterial({
+color:0x319bd8,
+transparent:true,
+opacity:.78
+});
 
-const harbor = new THREE.Mesh(
-    new THREE.BoxGeometry(70,.3,22),
-    concreteMat
-);
-harbor.position.set(0,-.02,0);
-harbor.receiveShadow=true;
-scene.add(harbor);
-
-/* WASSER */
-
-const water = new THREE.Mesh(
-    new THREE.PlaneGeometry(260,260),
-    waterMat
-);
+const water=new THREE.Mesh(waterGeo,waterMat);
 water.rotation.x=-Math.PI/2;
-water.position.set(0,-.28,-48);
+water.position.y=-1;
 scene.add(water);
 
-/* BOOT */
 
-const boat = new THREE.Group();
-boat.position.set(0,.25,-9);
-scene.add(boat);
+/* Kontinente */
 
-const boatHull = new THREE.Mesh(
-    new THREE.BoxGeometry(9,2.2,18),
-    darkWood
-);
-boatHull.position.y=.35;
-boatHull.castShadow=true;
-boatHull.receiveShadow=true;
-boat.add(boatHull);
+function createLand(x,z,w,d,color){
 
-const deck = new THREE.Mesh(
-    new THREE.BoxGeometry(8.6,.35,17.2),
-    woodMat
-);
-deck.position.y=1.55;
-deck.castShadow=true;
-boat.add(deck);
+    const geo=new THREE.PlaneGeometry(w,d,35,25);
+    const pos=geo.attributes.position;
 
-/* BUG */
+    for(let i=0;i<pos.count;i++){
 
-const bow = new THREE.Mesh(
-    new THREE.ConeGeometry(4.3,5,4),
-    darkWood
-);
-bow.rotation.x=Math.PI/2;
-bow.scale.z=2;
-bow.position.set(0,.4,-10);
-boat.add(bow);
+        const lx=pos.getX(i);
+        const lz=pos.getY(i);
 
-/* RELING */
-
-function rail(x,z,w,d){
-    const r=new THREE.Mesh(
-        new THREE.BoxGeometry(w,1,d),
-        metalMat
-    );
-    r.position.set(x,2.2,z);
-    boat.add(r);
-}
-
-rail(-4.35,0,.22,17);
-rail(4.35,0,.22,17);
-rail(-4.35,-8,.22,1.5);
-rail(4.35,-8,.22,1.5);
-
-/* KABINE
-   Türöffnung ist jetzt wirklich frei.
-   Steuerstand sitzt deutlich weiter hinten,
-   damit Tür und Lenkrad nicht ineinander liegen.
-*/
-
-const cabin=new THREE.Group();
-cabin.position.set(0,1.75,-1.8);
-boat.add(cabin);
-
-function cabinPart(x,y,z,w,h,d){
-    const m=new THREE.Mesh(
-        new THREE.BoxGeometry(w,h,d),
-        woodMat
-    );
-    m.position.set(x,y,z);
-    m.castShadow=true;
-    m.receiveShadow=true;
-    cabin.add(m);
-}
-
-/* Rückwand */
-cabinPart(0,1.5,2.35,7,.25,.3);
-
-/* Seiten */
-cabinPart(-3.35,1.5,0,.3,3.2,4.8);
-cabinPart(3.35,1.5,0,.3,3.2,4.8);
-
-/* Frontwand mit echter Türöffnung */
-cabinPart(-2.3,1.5,-2.35,2.1,3.2,.3);
-cabinPart(2.3,1.5,-2.35,2.1,3.2,.3);
-cabinPart(0,3.0,-2.35,2.5,.55,.3);
-
-/* Dach */
-
-const roof=new THREE.Mesh(
-    new THREE.BoxGeometry(7.2,.35,5.4),
-    darkWood
-);
-roof.position.set(0,3.25,0);
-roof.castShadow=true;
-cabin.add(roof);
-
-/* Fenster */
-
-const glassMat=new THREE.MeshStandardMaterial({
-    color:0x8bd9ff,
-    transparent:true,
-    opacity:.55,
-    metalness:.2,
-    roughness:.1
-});
-
-function windowMesh(x,z,w,d){
-    const g=new THREE.Mesh(
-        new THREE.BoxGeometry(w,.95,d),
-        glassMat
-    );
-    g.position.set(x,1.9,z);
-    cabin.add(g);
-}
-
-windowMesh(-3.51,0,.05,2.5);
-windowMesh(3.51,0,.05,2.5);
-windowMesh(0,2.39,2.0,.05);
-
-/* TÜR */
-
-const doorPivot=new THREE.Group();
-doorPivot.position.set(-1.05,1.5,-2.48);
-cabin.add(doorPivot);
-
-const door=new THREE.Mesh(
-    new THREE.BoxGeometry(2.05,3,.22),
-    darkWood
-);
-door.position.x=1.025;
-door.castShadow=true;
-doorPivot.add(door);
-
-let doorOpen=false;
-let doorAnim=false;
-
-/* STEUERSTAND
-   weit weg von der Tür.
-*/
-
-const helm=new THREE.Group();
-helm.position.set(0,1.7,1.45);
-boat.add(helm);
-
-const console=new THREE.Mesh(
-    new THREE.BoxGeometry(3.2,1.2,1),
-    metalMat
-);
-console.position.y=.7;
-console.castShadow=true;
-helm.add(console);
-
-const wheel=new THREE.Mesh(
-    new THREE.TorusGeometry(.72,.11,10,28),
-    metalMat
-);
-wheel.rotation.x=Math.PI/2;
-wheel.position.set(0,1.45,-.35);
-wheel.castShadow=true;
-helm.add(wheel);
-
-const wheelCenter=new THREE.Mesh(
-    new THREE.CylinderGeometry(.18,.18,.18,16),
-    metalMat
-);
-wheelCenter.rotation.z=Math.PI/2;
-wheel.position.y=1.45;
-helm.add(wheelCenter);
-
-const seat=new THREE.Mesh(
-    new THREE.BoxGeometry(1.7,.25,1.7),
-    darkWood
-);
-seat.position.set(0,.75,1.25);
-helm.add(seat);
-
-const seatPost=new THREE.Mesh(
-    new THREE.CylinderGeometry(.12,.12,1,12),
-    metalMat
-);
-seatPost.position.set(0,.25,1.25);
-helm.add(seatPost);
-
-/* HINTERER TISCH */
-
-const fishTable=new THREE.Group();
-fishTable.position.set(0,1.65,6.1);
-boat.add(fishTable);
-
-const tableTop=new THREE.Mesh(
-    new THREE.BoxGeometry(5,0.35,2.8),
-    woodMat
-);
-tableTop.castShadow=true;
-fishTable.add(tableTop);
-
-for(const x of [-2,2]){
-    const leg=new THREE.Mesh(
-        new THREE.BoxGeometry(.3,1.6,.3),
-        darkWood
-    );
-    leg.position.set(x,-.85,-.9);
-    fishTable.add(leg);
-
-    const leg2=leg.clone();
-    leg2.position.z=.9;
-    fishTable.add(leg2);
-}
-
-/* NETZ */
-
-const netGroup=new THREE.Group();
-netGroup.position.set(-2.8,1.95,5.5);
-boat.add(netGroup);
-
-const netRing=new THREE.Mesh(
-    new THREE.TorusGeometry(1,.12,8,20),
-    metalMat
-);
-netRing.rotation.x=Math.PI/2;
-netGroup.add(netRing);
-
-const netHandle=new THREE.Mesh(
-    new THREE.CylinderGeometry(.09,.09,3.5,10),
-    woodMat
-);
-netHandle.rotation.z=Math.PI/2;
-netHandle.position.x=1.7;
-netGroup.add(netHandle);
-
-/* KRAN */
-
-const crane=new THREE.Group();
-crane.position.set(3,1.75,6.7);
-boat.add(crane);
-
-const craneBase=new THREE.Mesh(
-    new THREE.CylinderGeometry(.7,.8,.4,16),
-    metalMat
-);
-craneBase.position.y=.2;
-crane.add(craneBase);
-
-const cranePole=new THREE.Mesh(
-    new THREE.CylinderGeometry(.2,.25,3.8,12),
-    metalMat
-);
-cranePole.position.y=2;
-crane.add(cranePole);
-
-const boom=new THREE.Mesh(
-    new THREE.BoxGeometry(.3,.3,5.5),
-    metalMat
-);
-boom.position.set(0,3.7,-2);
-boom.rotation.x=-.15;
-crane.add(boom);
-
-const rope=new THREE.Mesh(
-    new THREE.CylinderGeometry(.035,.035,3,8),
-    new THREE.MeshStandardMaterial({color:0x222222})
-);
-rope.position.set(0,2.2,-4.65);
-crane.add(rope);
-
-const craneNet=new THREE.Mesh(
-    new THREE.CircleGeometry(1.05,16),
-    new THREE.MeshStandardMaterial({
-        color:0x444444,
-        side:THREE.DoubleSide,
-        transparent:true,
-        opacity:.75
-    })
-);
-craneNet.rotation.x=-Math.PI/2;
-craneNet.position.set(0,.65,-4.65);
-crane.add(craneNet);
-
-let craneActive=false;
-let craneDirection=1;
-let craneProgress=0;
-
-/* BRÜCKE */
-
-const bridge=new THREE.Group();
-
-const bridgeMesh=new THREE.Mesh(
-    new THREE.BoxGeometry(2.4,.22,5.8),
-    woodMat
-);
-bridgeMesh.castShadow=true;
-bridge.add(bridgeMesh);
-
-const bridgeRailL=new THREE.Mesh(
-    new THREE.BoxGeometry(.12,.8,5.8),
-    metalMat
-);
-bridgeRailL.position.x=-1.15;
-bridgeRailL.position.y=.45;
-bridge.add(bridgeRailL);
-
-const bridgeRailR=bridgeRailL.clone();
-bridgeRailR.position.x=1.15;
-bridge.add(bridgeRailR);
-
-bridge.position.set(-5,.25,-2.7);
-scene.add(bridge);
-
-let bridgeState=0;
-let bridgeVelocity=new THREE.Vector3();
-let bridgeRotation=0;
-
-/* SPIELER */
-
-const PLAYER_EYE_DOCK=2.25;
-const PLAYER_EYE_BOAT=3.75;
-
-camera.position.set(0,PLAYER_EYE_DOCK,8);
-
-let velocityY=0;
-let grounded=true;
-let steering=false;
-let engineOn=false;
-let speed=0;
-
-const keys={};
-
-window.addEventListener("keydown",e=>{
-    keys[e.code]=true;
-
-    if(["KeyE","KeyR","Space"].includes(e.code)){
-        e.preventDefault();
+        pos.setZ(
+            i,
+            height(x+lx,z+lz)
+        );
     }
 
-    if(e.repeat)return;
+    geo.computeVertexNormals();
 
-    if(e.code==="KeyE"){
-        interact();
-    }
-
-    if(e.code==="KeyR" && bridgeState===1){
-        bridgeRotation+=Math.PI/8;
-    }
-});
-
-window.addEventListener("keyup",e=>{
-    keys[e.code]=false;
-});
-
-document.getElementById("startBtn").onclick=()=>{
-    document.getElementById("start").style.display="none";
-    controls.lock();
-};
-
-/* FISCHE */
-
-const fishTypes=[
-    {name:"Forelle",value:18,color:0xd6dce1},
-    {name:"Hecht",value:25,color:0x6d8f62},
-    {name:"Karpfen",value:22,color:0xc49b60},
-    {name:"Barsch",value:15,color:0x8d9b55}
-];
-
-let fishCount=0;
-let fishInventory=[];
-
-function createFish(){
-    const type=fishTypes[Math.floor(Math.random()*fishTypes.length)];
-
-    const fish=new THREE.Group();
-
-    const body=new THREE.Mesh(
-        new THREE.SphereGeometry(.38,16,10),
-        new THREE.MeshStandardMaterial({color:type.color})
-    );
-    body.scale.set(1.7,.65,.55);
-    fish.add(body);
-
-    const tail=new THREE.Mesh(
-        new THREE.ConeGeometry(.35,.8,3),
-        new THREE.MeshStandardMaterial({color:type.color})
-    );
-    tail.rotation.z=Math.PI/2;
-    tail.position.x=-.75;
-    fish.add(tail);
-
-    const eyeMat=new THREE.MeshStandardMaterial({color:0x111111});
-
-    const eye1=new THREE.Mesh(
-        new THREE.SphereGeometry(.045,8,8),
-        eyeMat
-    );
-    eye1.position.set(.5,.18,.3);
-    fish.add(eye1);
-
-    const eye2=eye1.clone();
-    eye2.position.z=-.3;
-    fish.add(eye2);
-
-    fish.position.set(
-        (Math.random()-.5)*80,
-        -.1,
-        -20-Math.random()*80
-    );
-
-    fish.userData.type=type;
-    fish.userData.caught=false;
-
-    scene.add(fish);
-    return fish;
-}
-
-const fishWorld=[];
-for(let i=0;i<24;i++){
-    fishWorld.push(createFish());
-}
-
-/* ANGELN */
-
-let fishing=false;
-let fishingTimer=0;
-
-function startFishing(){
-    if(steering)return;
-    if(document.getElementById("bait").textContent==="0")return;
-
-    fishing=true;
-    fishingTimer=2.5+Math.random()*5;
-
-    document.getElementById("bait").textContent=
-        Math.max(0,parseInt(document.getElementById("bait").textContent)-1);
-}
-
-function catchFish(){
-    fishing=false;
-
-    const fish=fishWorld[Math.floor(Math.random()*fishWorld.length)];
-
-    const type=fish.userData.type;
-
-    fish.visible=false;
-    fish.userData.caught=true;
-
-    fishInventory.push({
-        name:type.name,
-        value:type.value,
-        cut:false,
-        bones:false,
-        prepared:false
+    const mat=new THREE.MeshStandardMaterial({
+        color,
+        roughness:1
     });
 
-    fishCount++;
-    document.getElementById("fishCount").textContent=fishCount;
+    const mesh=new THREE.Mesh(geo,mat);
+
+    mesh.rotation.x=-Math.PI/2;
+    mesh.position.set(x,0,z);
+
+    mesh.receiveShadow=true;
+
+    scene.add(mesh);
 }
 
-/* FISCHTISCH */
 
-let selectedFish=-1;
+/* große Landflächen */
 
-function openFishTable(){
-    if(fishInventory.length===0){
-        showPrompt("Du hast noch keinen Fisch.");
-        return;
-    }
+createLand(-105,10,180,125,0x78a957);
+createLand(5,10,155,110,0x86ad62);
+createLand(105,15,210,135,0x91ae68);
+createLand(155,-100,150,100,0x78a957);
+createLand(-25,-95,90,90,0x83a95c);
 
-    if(steering)return;
 
-    selectedFish=fishInventory.findIndex(f=>!f.prepared);
+/* =========================
+   STRASSEN
+========================= */
 
-    if(selectedFish<0){
-        showPrompt("Alle Fische sind bereits vorbereitet.");
-        return;
-    }
+const roads=[];
 
-    updateFishPanel();
-    document.getElementById("fishPanel").style.display="block";
-}
+function road(name,x,z,length,width,rotation=0){
 
-function updateFishPanel(){
-    const f=fishInventory[selectedFish];
+    const group=new THREE.Group();
 
-    document.getElementById("fishInfo").innerHTML=
-        "<b>"+f.name+"</b><br>"+
-        (f.cut?"✓ Aufgeschnitten":"○ Noch nicht aufgeschnitten")+"<br>"+
-        (f.bones?"✓ Gräten entfernt":"○ Gräten noch vorhanden")+"<br>"+
-        (f.prepared?"✓ Fertig":"");
+    const segments=30;
 
-    document.getElementById("cutBtn").style.display=
-        f.cut?"none":"block";
+    for(let i=0;i<segments;i++){
 
-    document.getElementById("boneBtn").style.display=
-        f.cut&&!f.bones?"block":"none";
+        const t=(i/(segments-1))-.5;
 
-    document.getElementById("finishBtn").style.display=
-        f.bones&&!f.prepared?"block":"none";
-}
+        const px=t*length;
 
-document.getElementById("cutBtn").onclick=()=>{
-    fishInventory[selectedFish].cut=true;
-    updateFishPanel();
-};
+        const localZ=px;
 
-document.getElementById("boneBtn").onclick=()=>{
-    fishInventory[selectedFish].bones=true;
-    updateFishPanel();
-};
-
-document.getElementById("finishBtn").onclick=()=>{
-    fishInventory[selectedFish].prepared=true;
-    updateFishPanel();
-};
-
-document.getElementById("closeFish").onclick=()=>{
-    document.getElementById("fishPanel").style.display="none";
-    selectedFish=-1;
-};
-
-/* PROMPT */
-
-function showPrompt(text){
-    const p=document.getElementById("prompt");
-    p.textContent=text;
-    p.style.display=text?"block":"none";
-}
-
-function distanceToBoat(){
-    return camera.position.distanceTo(boat.position);
-}
-
-/* SPIELER AUF BOOT */
-
-function playerBoatLocal(){
-    return boat.worldToLocal(camera.position.clone());
-}
-
-function isOnBoat(){
-    const p=playerBoatLocal();
-
-    return (
-        p.x>-4.0 &&
-        p.x<4.0 &&
-        p.z>-8.0 &&
-        p.z<8.0 &&
-        camera.position.y>2.7
-    );
-}
-
-function boatSurface(){
-    return boat.position.y+1.72;
-}
-
-/* TÜRKOLLISION */
-
-function insideCabinDoorZone(pos){
-    const local=boat.worldToLocal(pos.clone());
-
-    return (
-        Math.abs(local.x)<1.05 &&
-        local.z<-2.0 &&
-        local.z>-3.0
-    );
-}
-
-function cabinCollision(candidate){
-    if(doorOpen)return false;
-
-    const p=boat.worldToLocal(candidate.clone());
-
-    if(
-        p.x>-3.5 &&
-        p.x<3.5 &&
-        p.z>-3 &&
-        p.z<2.5 &&
-        Math.abs(p.x)>1.05
-    ){
-        return true;
-    }
-
-    return false;
-}
-
-/* BEWEGUNG */
-
-function canMoveTo(candidate){
-    /* Hafenbereich */
-    if(candidate.x<-34 || candidate.x>34)return false;
-    if(candidate.z<-10 && !isPositionOnBoat(candidate))return false;
-
-    /* Boot */
-    if(isPositionOnBoat(candidate)){
-        if(cabinCollision(candidate))return false;
-
-        const local=boat.worldToLocal(candidate.clone());
-
-        if(Math.abs(local.x)>4.05)return false;
-
-        /* hinten offen für Brücke */
-        if(local.z>7.7 && bridgeState!==3){
-            return false;
-        }
-
-        return true;
-    }
-
-    /* Brücke */
-    if(isPositionOnBridge(candidate)){
-        return true;
-    }
-
-    /* Wasser blockieren */
-    if(candidate.z<-10){
-        return false;
-    }
-
-    return true;
-}
-
-function isPositionOnBoat(pos){
-    const p=boat.worldToLocal(pos.clone());
-
-    return (
-        p.x>-4.0 &&
-        p.x<4.0 &&
-        p.z>-8.2 &&
-        p.z<8.2 &&
-        pos.y>1
-    );
-}
-
-function bridgeSurfaceY(pos){
-    const local=bridge.worldToLocal(pos.clone());
-
-    return bridge.position.y+
-        .12+
-        Math.sin(bridge.rotation.x)*local.z;
-}
-
-function isPositionOnBridge(pos){
-    if(bridgeState!==2)return false;
-
-    const local=bridge.worldToLocal(pos.clone());
-
-    return (
-        Math.abs(local.x)<1.3 &&
-        Math.abs(local.z)<3.1 &&
-        Math.abs(pos.y-bridgeSurfaceY(pos))<1.3
-    );
-}
-
-function movePlayer(dx,dz){
-    const candidate=camera.position.clone();
-
-    candidate.x+=dx;
-    candidate.z+=dz;
-
-    if(canMoveTo(candidate)){
-        camera.position.x=candidate.x;
-        camera.position.z=candidate.z;
-    }
-}
-
-/* BRÜCKE */
-
-function updateHeldBridge(){
-    if(bridgeState!==1)return;
-
-    bridge.visible=false;
-}
-
-function pickBridge(){
-    bridgeState=1;
-    bridge.visible=false;
-    showPrompt("Brücke aufgehoben – E zum Ablegen");
-}
-
-function dropBridge(){
-    const forward=new THREE.Vector3(0,0,-1)
-        .applyQuaternion(camera.quaternion);
-
-    forward.y=0;
-    forward.normalize();
-
-    bridge.visible=true;
-
-    bridge.position.copy(camera.position)
-        .add(forward.multiplyScalar(4));
-
-    bridge.position.y=.35;
-    bridge.rotation.set(0,bridgeRotation,0);
-
-    bridgeState=2;
-    bridgeVelocity.set(0,0,0);
-}
-
-function putBridgeOnBoat(){
-    bridgeState=3;
-    bridge.visible=true;
-
-    bridge.position.set(0,1.85,7.3);
-    bridge.rotation.set(0,0,0);
-
-    bridge.parent.remove(bridge);
-    boat.add(bridge);
-}
-
-/* BRÜCKENPHYSIK */
-
-function updateBridge(dt){
-    if(bridgeState!==2)return;
-
-    bridgeVelocity.y-=16*dt;
-    bridge.position.addScaledVector(bridgeVelocity,dt);
-
-    if(bridge.position.y<.14){
-        bridge.position.y=.14;
-        bridgeVelocity.y=0;
-    }
-
-    /* stabile Verbindung zwischen Hafen und Boot */
-    const gapTarget=new THREE.Vector3(0,.25,-2.6);
-
-    const dist=new THREE.Vector2(
-        bridge.position.x-gapTarget.x,
-        bridge.position.z-gapTarget.z
-    ).length();
-
-    if(dist<3.0){
-        bridge.position.lerp(
-            new THREE.Vector3(0,.95,-2.55),
-            Math.min(1,dt*8)
+        const geo=new THREE.BoxGeometry(
+            width,
+            .35,
+            length/segments+1
         );
 
-        bridge.rotation.x=.30;
-        bridge.rotation.y=0;
-
-        bridgeVelocity.set(0,0,0);
-    }
-}
-
-/* TÜR */
-
-function toggleDoor(){
-    if(doorAnim)return;
-
-    doorAnim=true;
-    doorOpen=!doorOpen;
-
-    const start=doorPivot.rotation.y;
-    const end=doorOpen?-Math.PI/2:0;
-
-    let t=0;
-
-    function animateDoor(){
-        t+=.06;
-        const k=Math.min(1,t);
-
-        doorPivot.rotation.y=
-            start+(end-start)*(k*k*(3-2*k));
-
-        if(k<1){
-            requestAnimationFrame(animateDoor);
-        }else{
-            doorAnim=false;
-        }
-    }
-
-    animateDoor();
-}
-
-/* STEUERUNG */
-
-function enterBoatControl(){
-    if(!isOnBoat())return;
-
-    steering=true;
-    engineOn=true;
-    speed=0;
-
-    document.getElementById("boatControls").style.display="block";
-    document.getElementById("engine").textContent="An";
-
-    controls.unlock();
-}
-
-function leaveBoatControl(){
-    steering=false;
-    engineOn=false;
-    speed=0;
-
-    document.getElementById("boatControls").style.display="none";
-    document.getElementById("engine").textContent="Aus";
-
-    /* Sicher auf dem Deck absetzen */
-    const localPos=new THREE.Vector3(-2.6,2.25,3.2);
-    camera.position.copy(
-        boat.localToWorld(localPos)
-    );
-
-    controls.lock();
-}
-
-function updateBoat(dt){
-    if(!steering)return;
-
-    if(keys.KeyW){
-        speed=Math.min(speed+4*dt,12);
-    }
-
-    if(keys.KeyS){
-        speed=Math.max(speed-5*dt,-5);
-    }
-
-    if(!keys.KeyW && !keys.KeyS){
-        speed*=Math.pow(.15,dt);
-    }
-
-    if(keys.KeyA){
-        boat.rotation.y+=1.15*dt*(.4+Math.abs(speed)/8);
-    }
-
-    if(keys.KeyD){
-        boat.rotation.y-=1.15*dt*(.4+Math.abs(speed)/8);
-    }
-
-    const forward=new THREE.Vector3(0,0,-1)
-        .applyQuaternion(boat.quaternion);
-
-    boat.position.addScaledVector(forward,speed*dt);
-
-    /* Kamera sitzt erhöht hinter dem Steuerstand */
-    const camOffset=new THREE.Vector3(0,4.6,5.2);
-    const targetOffset=new THREE.Vector3(0,2.0,-3);
-
-    const camPos=boat.localToWorld(camOffset.clone());
-    const target=boat.localToWorld(targetOffset.clone());
-
-    camera.position.lerp(camPos,.18);
-    camera.lookAt(target);
-}
-
-/* INTERAKTION */
-
-function interact(){
-
-    /* WICHTIG:
-       Beim Steuern ist E IMMER zuerst "Steuerung verlassen".
-    */
-    if(steering){
-        leaveBoatControl();
-        return;
-    }
-
-    if(document.getElementById("fishPanel").style.display==="block"){
-        return;
-    }
-
-    /* Brücke aufnehmen */
-    if(
-        bridgeState===0 &&
-        camera.position.distanceTo(bridge.position)<3
-    ){
-        pickBridge();
-        return;
-    }
-
-    /* Brücke ablegen */
-    if(bridgeState===1){
-        if(isOnBoat()){
-            putBridgeOnBoat();
-        }else{
-            dropBridge();
-        }
-        return;
-    }
-
-    /* Tür */
-    const doorWorld=cabin.localToWorld(
-        new THREE.Vector3(0,1.5,-2.7)
-    );
-
-    if(camera.position.distanceTo(doorWorld)<2.5){
-        toggleDoor();
-        return;
-    }
-
-    /* Steuerstand */
-    const wheelWorld=helm.localToWorld(
-        new THREE.Vector3(0,1.4,0)
-    );
-
-    if(
-        camera.position.distanceTo(wheelWorld)<2.4 &&
-        bridgeState===3 &&
-        isOnBoat()
-    ){
-        enterBoatControl();
-        return;
-    }
-
-    /* Fischtisch */
-    const tableWorld=fishTable.localToWorld(
-        new THREE.Vector3(0,1,0)
-    );
-
-    if(
-        camera.position.distanceTo(tableWorld)<2.5
-    ){
-        openFishTable();
-        return;
-    }
-
-    /* Kran */
-    const craneWorld=crane.localToWorld(
-        new THREE.Vector3(0,2,0)
-    );
-
-    if(
-        camera.position.distanceTo(craneWorld)<3
-    ){
-        if(fishing){
-            fishing=false;
-        }
-
-        craneActive=!craneActive;
-        return;
-    }
-
-    /* Angeln */
-    if(
-        camera.position.z<-10 &&
-        !isOnBoat()
-    ){
-        startFishing();
-        return;
-    }
-
-    if(
-        isOnBoat() &&
-        camera.position.distanceTo(netGroup.getWorldPosition(new THREE.Vector3()))<2
-    ){
-        showPrompt("🎣 Mit E kannst du hier angeln.");
-        startFishing();
-    }
-}
-
-/* HUD */
-
-function updatePrompt(){
-
-    if(steering){
-        showPrompt("E – Steuerung verlassen");
-        return;
-    }
-
-    if(document.getElementById("fishPanel").style.display==="block"){
-        showPrompt("");
-        return;
-    }
-
-    let text="";
-
-    if(
-        bridgeState===0 &&
-        camera.position.distanceTo(bridge.position)<3
-    ){
-        text="E – Brücke aufnehmen";
-    }
-    else if(bridgeState===1){
-        text=isOnBoat()
-            ?"E – Brücke auf Boot legen"
-            :"E – Brücke ablegen";
-    }
-    else if(
-        camera.position.distanceTo(
-            cabin.localToWorld(new THREE.Vector3(0,1.5,-2.7))
-        )<2.5
-    ){
-        text=doorOpen?"E – Tür schließen":"E – Tür öffnen";
-    }
-    else if(
-        isOnBoat() &&
-        camera.position.distanceTo(
-            helm.localToWorld(new THREE.Vector3(0,1.4,0))
-        )<2.4 &&
-        bridgeState===3
-    ){
-        text="E – Steuerstand benutzen";
-    }
-    else if(
-        isOnBoat() &&
-        camera.position.distanceTo(
-            fishTable.localToWorld(new THREE.Vector3(0,1,0))
-        )<2.5
-    ){
-        text=fishInventory.length
-            ?"E – Fisch bearbeiten"
-            :"Hier kannst du später Fische bearbeiten";
-    }
-    else if(
-        camera.position.distanceTo(netGroup.getWorldPosition(new THREE.Vector3()))<2
-    ){
-        text="E – Angeln";
-    }
-
-    showPrompt(text);
-}
-
-/* KRANANIMATION */
-
-function updateCrane(dt){
-
-    if(!craneActive)return;
-
-    craneProgress+=dt*.35*craneDirection;
-
-    if(craneProgress>=1){
-        craneProgress=1;
-        craneDirection=-1;
-    }
-
-    if(craneProgress<=0){
-        craneProgress=0;
-        craneDirection=1;
-    }
-
-    boom.rotation.x=-.15-.8*craneProgress;
-
-    rope.scale.y=.5+2.5*craneProgress;
-    rope.position.y=2.2-1.25*craneProgress;
-
-    craneNet.position.y=.65-3*craneProgress;
-}
-
-/* FISCHEN TIMER */
-
-function updateFishing(dt){
-
-    if(!fishing)return;
-
-    fishingTimer-=dt;
-
-    if(fishingTimer<=0){
-        catchFish();
-        showPrompt("🐟 Fisch gefangen! Geh zum Tisch und bearbeite ihn.");
-    }
-}
-
-/* PLAYER FLOOR */
-
-function updatePlayerFloor(){
-
-    if(steering)return;
-
-    const onBoat=isPositionOnBoat(camera.position);
-    const onBridge=isPositionOnBridge(camera.position);
-
-    let floor=PLAYER_EYE_DOCK;
-
-    if(onBoat){
-        floor=boatSurface()+2.0;
-    }
-    else if(onBridge){
-        floor=bridgeSurfaceY(camera.position)+2.0;
-    }
-
-    const dy=floor-camera.position.y;
-
-    if(dy>0){
-        camera.position.y=THREE.MathUtils.lerp(
-            camera.position.y,
-            floor,
-            .3
+        const mat=new THREE.MeshStandardMaterial({
+            color:0x45484c
+        });
+
+        const r=new THREE.Mesh(geo,mat);
+
+        r.position.set(
+            Math.sin(rotation)*localZ,
+            1.5,
+            Math.cos(rotation)*localZ
         );
-        velocityY=0;
-        grounded=true;
+
+        r.rotation.y=rotation;
+
+        r.castShadow=true;
+        r.receiveShadow=true;
+
+        group.add(r);
     }
-    else{
-        if(keys.Space && grounded){
-            velocityY=6.5;
-            grounded=false;
+
+    group.position.set(x,0,z);
+
+    scene.add(group);
+
+    roads.push({
+        name,
+        x,
+        z,
+        length,
+        width,
+        rotation
+    });
+
+    createStreetLabel(
+        name,
+        x,
+        z,
+        rotation
+    );
+}
+
+
+/* Europa */
+
+road("Unter den Linden",10,8,65,5,.0);
+road("Friedrichstraße",17,8,60,5,Math.PI/2);
+road("Kantstraße",5,20,55,5,.15);
+road("Hauptstraße",10,-5,90,6,0);
+road("Bahnhofstraße",-15,5,65,5,.7);
+road("Bergstraße",28,0,55,5,-.4);
+road("Seestraße",5,32,70,5,.1);
+road("Waldstraße",-25,20,80,5,-.3);
+
+
+/* Frankreich */
+
+road("Rue de Rivoli", -5,45,65,5,.15);
+road("Avenue de Paris",0,35,70,5,.8);
+
+
+/* Polen */
+
+road("Aleje Jerozolimskie",38,5,70,5,.1);
+road("Marszałkowska",45,5,60,5,Math.PI/2);
+
+
+/* USA */
+
+road("Broadway",-110,8,75,5,.2);
+road("5th Avenue",-100,10,70,5,Math.PI/2);
+road("Main Street",-120,0,90,5,0);
+
+
+/* Asien */
+
+road("Nanjing Road",105,15,85,5,.2);
+road("Central Avenue",120,5,80,5,Math.PI/2);
+road("Tokyo Avenue",145,20,75,5,.5);
+
+
+/* =========================
+   STRASSENNAMEN
+========================= */
+
+function createStreetLabel(text,x,z,rotation){
+
+    const canvas=document.createElement("canvas");
+    canvas.width=700;
+    canvas.height=120;
+
+    const ctx=canvas.getContext("2d");
+
+    ctx.clearRect(0,0,700,120);
+
+    ctx.fillStyle="rgba(255,255,255,.9)";
+    ctx.roundRect(10,20,680,80,20);
+    ctx.fill();
+
+    ctx.fillStyle="#222";
+    ctx.font="bold 38px Arial";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(text,350,60);
+
+    const texture=new THREE.CanvasTexture(canvas);
+
+    const material=new THREE.SpriteMaterial({
+        map:texture,
+        transparent:true,
+        depthTest:false
+    });
+
+    const sprite=new THREE.Sprite(material);
+
+    sprite.scale.set(30,5.2,1);
+
+    sprite.position.set(x,7,z);
+
+    sprite.rotation.z=-rotation;
+
+    scene.add(sprite);
+}
+
+
+/* =========================
+   STÄDTE
+========================= */
+
+const cities=[
+["Berlin",10,10],
+["Paris",-2,45],
+["London",-25,48],
+["Rom",15,-5],
+["Warschau",38,8],
+["New York",-110,8],
+["Los Angeles",-140,-5],
+["Mexiko-Stadt",-125,-35],
+["Peking",130,20],
+["Tokio",150,20],
+["Delhi",100,-5]
+];
+
+function city(name,x,z){
+
+    const group=new THREE.Group();
+
+    const tower=new THREE.Mesh(
+        new THREE.BoxGeometry(4,10,4),
+        new THREE.MeshStandardMaterial({color:0xbcc6d1})
+    );
+
+    tower.position.y=5;
+
+    group.add(tower);
+
+    const roof=new THREE.Mesh(
+        new THREE.ConeGeometry(3.5,4,4),
+        new THREE.MeshStandardMaterial({color:0x8c4037})
+    );
+
+    roof.position.y=12;
+
+    group.add(roof);
+
+    group.position.set(x,height(x,z),z);
+
+    scene.add(group);
+
+    createCityLabel(name,x,z);
+}
+
+function createCityLabel(name,x,z){
+
+    const canvas=document.createElement("canvas");
+    canvas.width=500;
+    canvas.height=100;
+
+    const ctx=canvas.getContext("2d");
+
+    ctx.fillStyle="#ffffff";
+    ctx.roundRect(10,10,480,80,18);
+    ctx.fill();
+
+    ctx.fillStyle="#111";
+    ctx.font="bold 34px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(name,250,62);
+
+    const tex=new THREE.CanvasTexture(canvas);
+
+    const sprite=new THREE.Sprite(
+        new THREE.SpriteMaterial({
+            map:tex,
+            transparent:true,
+            depthTest:false
+        })
+    );
+
+    sprite.scale.set(24,4.8,1);
+    sprite.position.set(x,18,z);
+
+    scene.add(sprite);
+}
+
+cities.forEach(c=>city(...c));
+
+
+/* =========================
+   BIBLIOTHEKEN
+========================= */
+
+const libraries=[
+["Stadtbibliothek Berlin",12,13],
+["Bibliothèque Centrale",-4,43],
+["New York Public Library",-108,10],
+["Bibliothek Warschau",40,10],
+["Tokyo City Library",153,22]
+];
+
+function createLibrary(name,x,z){
+
+    const group=new THREE.Group();
+
+    const building=new THREE.Mesh(
+        new THREE.BoxGeometry(7,5,6),
+        new THREE.MeshStandardMaterial({
+            color:0xd8c8a8
+        })
+    );
+
+    building.position.y=2.5;
+    building.castShadow=true;
+
+    group.add(building);
+
+    for(let i=-2;i<=2;i++){
+
+        const col=new THREE.Mesh(
+            new THREE.CylinderGeometry(.25,.25,6,10),
+            new THREE.MeshStandardMaterial({
+                color:0xf2eee5
+            })
+        );
+
+        col.position.set(i*1.3,3.2,3.1);
+
+        group.add(col);
+    }
+
+    const roof=new THREE.Mesh(
+        new THREE.BoxGeometry(8,1,7),
+        new THREE.MeshStandardMaterial({
+            color:0x6d5542
+        })
+    );
+
+    roof.position.y=5.5;
+    group.add(roof);
+
+    group.position.set(
+        x,
+        height(x,z),
+        z
+    );
+
+    scene.add(group);
+
+    createCityLabel(name,x,z);
+}
+
+libraries.forEach(x=>createLibrary(...x));
+
+
+/* =========================
+   MARKER
+========================= */
+
+let marker=null;
+
+function createMarker(x,z){
+
+    if(marker)scene.remove(marker);
+
+    marker=new THREE.Group();
+
+    const pole=new THREE.Mesh(
+        new THREE.CylinderGeometry(.5,.5,12,16),
+        new THREE.MeshStandardMaterial({
+            color:0xff2020
+        })
+    );
+
+    pole.position.y=6;
+
+    const ball=new THREE.Mesh(
+        new THREE.SphereGeometry(2.2,20,20),
+        new THREE.MeshStandardMaterial({
+            color:0xff2020
+        })
+    );
+
+    ball.position.y=13;
+
+    marker.add(pole,ball);
+
+    marker.position.set(
+        x,
+        height(x,z),
+        z
+    );
+
+    scene.add(marker);
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function flyTo(x,y,z){
+
+    const target=new THREE.Vector3(x,y,z);
+
+    camera.position.set(
+        x+35,
+        65,
+        z+35
+    );
+
+    controls.target.copy(target);
+
+    createMarker(x,z);
+}
+
+function searchLocation(){
+
+    const query=document
+        .getElementById("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+    if(!query)return;
+
+    for(const c of cities){
+
+        if(c[0].toLowerCase().includes(query)){
+
+            flyTo(c[1],20,c[2]);
+            return;
         }
+    }
 
-        velocityY-=18/60;
+    for(const r of roads){
 
-        camera.position.y+=velocityY/60;
+        if(r.name.toLowerCase().includes(query)){
 
-        if(camera.position.y<floor){
-            camera.position.y=floor;
-            velocityY=0;
-            grounded=true;
+            flyTo(r.x,20,r.z);
+            return;
+        }
+    }
+
+    for(const l of libraries){
+
+        if(l[0].toLowerCase().includes(query)){
+
+            flyTo(l[1],20,l[2]);
+            return;
         }
     }
 }
 
-/* NORMALE BEWEGUNG */
+document
+.getElementById("search")
+.addEventListener("keydown",e=>{
+    if(e.key==="Enter")searchLocation();
+});
 
-function updatePlayer(){
 
-    if(steering)return;
+/* =========================
+   MOUSE POSITION
+========================= */
 
-    let speedMove=keys.ShiftLeft||keys.ShiftRight?6:3.5;
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
 
-    const forward=new THREE.Vector3();
-    controls.getDirection(forward);
+renderer.domElement.addEventListener("mousemove",e=>{
 
-    forward.y=0;
-    forward.normalize();
+    mouse.x=(e.clientX/innerWidth)*2-1;
+    mouse.y=-(e.clientY/innerHeight)*2+1;
 
-    const right=new THREE.Vector3()
-        .crossVectors(forward,new THREE.Vector3(0,1,0))
-        .normalize();
+});
 
-    let dx=0,dz=0;
 
-    if(keys.KeyW){
-        dx+=forward.x*speedMove/60;
-        dz+=forward.z*speedMove/60;
-    }
+/* =========================
+   START
+========================= */
 
-    if(keys.KeyS){
-        dx-=forward.x*speedMove/60;
-        dz-=forward.z*speedMove/60;
-    }
+setTimeout(()=>{
+    document.getElementById("loading").style.display="none";
+},800);
 
-    if(keys.KeyA){
-        dx-=right.x*speedMove/60;
-        dz-=right.z*speedMove/60;
-    }
 
-    if(keys.KeyD){
-        dx+=right.x*speedMove/60;
-        dz+=right.z*speedMove/60;
-    }
+/* =========================
+   RESIZE
+========================= */
 
-    if(dx||dz){
-        movePlayer(dx,dz);
-    }
+addEventListener("resize",()=>{
 
-    updatePlayerFloor();
-}
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
 
-/* POSITION */
+    renderer.setSize(
+        innerWidth,
+        innerHeight
+    );
+});
 
-function updateHUD(){
-    document.getElementById("position").textContent=
-        Math.round(camera.position.x)+" / "+
-        Math.round(camera.position.z);
-}
 
-/* RENDER */
-
-const clock=new THREE.Clock();
+/* =========================
+   LOOP
+========================= */
 
 function animate(){
+
     requestAnimationFrame(animate);
 
-    const dt=Math.min(clock.getDelta(),.05);
+    controls.update();
 
-    if(!steering){
-        updatePlayer();
+    if(marker){
+
+        marker.rotation.y+=.01;
+
     }
 
-    updateBoat(dt);
-    updateBridge(dt);
-    updateCrane(dt);
-    updateFishing(dt);
-    updatePrompt();
-    updateHUD();
-
-    renderer.render(scene,camera);
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
 animate();
 
-/* RESIZE */
-
-window.addEventListener("resize",()=>{
-    camera.aspect=innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth,innerHeight);
-});
 </script>
 </body>
 </html>
