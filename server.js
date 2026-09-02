@@ -1,322 +1,207 @@
-// server.js
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(__dirname));
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
-});
+const players = new Map();
 
-const MAX_PLAYERS = 2;
-const HUNTER_DELAY = 30000;
-const ROUND_TIME = 120000;
-
-const players = {};
-let lobby = [];
-let game = null;
-
-function sendLobby() {
-    io.emit("waiting", {
-        players: lobby.length
-    });
-}
-
-function startGame() {
-
-    if (game) return;
-    if (lobby.length < 2) return;
-
-    const ids = lobby.splice(0, 2);
-
-    const hunterId =
-        ids[Math.floor(Math.random() * ids.length)];
-
-    game = {
-        ids,
-        hunterId,
-        started: Date.now(),
-        finished: false
-    };
-
-    ids.forEach((id, index) => {
-
-        const p = players[id];
-
-        if (!p) return;
-
-        p.inGame = true;
-        p.role = id === hunterId
-            ? "hunter"
-            : "chameleon";
-
-        p.x = id === hunterId ? -7 : 7;
-        p.y = 0;
-        p.z = 35;
-        p.rotation = 0;
-        p.color = 0xff1744;
-        p.hidden = false;
-    });
-
-    const publicPlayers = {};
-
-    ids.forEach(id => {
-
-        const p = players[id];
-
-        publicPlayers[id] = {
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            rotation: p.rotation,
-            color: p.color,
-            hidden: p.hidden
-        };
-    });
-
-    ids.forEach(id => {
-
-        io.to(id).emit("gameStart", {
-            players: publicPlayers,
-            hunterId
-        });
-    });
-
-    sendLobby();
-}
-
-function endGame(winner) {
-
-    if (!game || game.finished) return;
-
-    game.finished = true;
-
-    io.emit("roundResult", {
-        winner
-    });
-
-    setTimeout(() => {
-
-        game = null;
-
-        Object.keys(players).forEach(id => {
-
-            if (!players[id]) return;
-
-            players[id].inGame = false;
-            players[id].role = null;
-
-        });
-
-        lobby = [];
-
-        sendLobby();
-
-    }, 1000);
-}
-
-setInterval(() => {
-
-    if (!game || game.finished) return;
-
-    const elapsed = Date.now() - game.started;
-
-    const hunterRemaining =
-        Math.max(0, HUNTER_DELAY - elapsed);
-
-    io.emit("hunterTimer", {
-        remaining: hunterRemaining
-    });
-
-    if (elapsed >= ROUND_TIME) {
-        endGame("chameleon");
+function findOpponent(socketId) {
+  for (const [id, player] of players) {
+    if (id !== socketId && player.inBattle) {
+      return id;
     }
-
-}, 250);
+  }
+  return null;
+}
 
 io.on("connection", socket => {
 
-    players[socket.id] = {
-        id: socket.id,
-        inGame: false,
-        role: null,
-        x: 0,
-        y: 0,
-        z: 35,
-        rotation: 0,
-        color: 0xff1744,
-        hidden: false
-    };
+  players.set(socket.id, {
+    id: socket.id,
+    x: 0,
+    y: 5,
+    z: 15,
+    lives: 3,
+    inBattle: false,
+    opponent: null
+  });
 
-    socket.emit("waiting", {
-        players: lobby.length
-    });
+  socket.emit("connected", {
+    id: socket.id
+  });
 
-    socket.on("requestState", () => {
+  socket.on("findBattle", () => {
 
-        if (!game && !lobby.includes(socket.id)) {
-            lobby.push(socket.id);
-        }
+    const player = players.get(socket.id);
+    if (!player) return;
 
-        sendLobby();
+    const opponentId = findOpponent(socket.id);
 
-        if (lobby.length >= 2) {
-            setTimeout(startGame, 200);
-        }
-    });
+    if (opponentId) {
 
-    socket.on("joinLobby", () => {
+      const opponent = players.get(opponentId);
 
-        if (!players[socket.id]) return;
-        if (players[socket.id].inGame) return;
+      player.inBattle = true;
+      opponent.inBattle = true;
 
-        if (!lobby.includes(socket.id)) {
-            lobby.push(socket.id);
-        }
+      player.opponent = opponentId;
+      opponent.opponent = socket.id;
 
-        sendLobby();
+      socket.emit("battleFound", {
+        opponent: opponentId
+      });
 
-        if (lobby.length >= 2 && !game) {
-            setTimeout(startGame, 200);
-        }
-    });
+      io.to(opponentId).emit("battleFound", {
+        opponent: socket.id
+      });
 
-    socket.on("playerMove", data => {
+    } else {
 
-        const p = players[socket.id];
+      player.inBattle = true;
 
-        if (!p || !p.inGame || !game) return;
+      socket.emit("waiting", {
+        message: "Warte auf einen Gegner..."
+      });
+    }
+  });
 
-        const elapsed =
-            Date.now() - game.started;
+  socket.on("position", data => {
 
-        if (
-            p.role === "hunter" &&
-            elapsed < HUNTER_DELAY
-        ) {
-            socket.emit("hunterLocked");
-            return;
-        }
+    const player = players.get(socket.id);
+    if (!player || !player.inBattle) return;
 
-        if (typeof data.x === "number") p.x = data.x;
-        if (typeof data.y === "number") p.y = data.y;
-        if (typeof data.z === "number") p.z = data.z;
-        if (typeof data.rotation === "number") {
-            p.rotation = data.rotation;
-        }
+    player.x = Number(data.x) || 0;
+    player.y = Number(data.y) || 5;
+    player.z = Number(data.z) || 0;
 
-        if (typeof data.hidden === "boolean") {
-            p.hidden = data.hidden;
-        }
+    if (player.opponent) {
 
-        socket.broadcast.emit("playerUpdate", {
-            id: socket.id,
-            x: p.x,
-            y: p.y,
-            z: p.z,
-            rotation: p.rotation,
-            color: p.color,
-            hidden: p.hidden
-        });
-    });
+      io.to(player.opponent).emit("enemyPosition", {
+        x: player.x,
+        y: player.y,
+        z: player.z
+      });
+    }
+  });
 
-    socket.on("paint", color => {
+  socket.on("shoot", () => {
 
-        const p = players[socket.id];
+    const player = players.get(socket.id);
+    if (!player || !player.inBattle) return;
 
-        if (!p || !p.inGame) return;
-        if (p.role !== "chameleon") return;
+    if (!player.opponent) return;
 
-        if (typeof color !== "number") return;
+    const opponent = players.get(player.opponent);
 
-        p.color = color;
+    if (!opponent) return;
 
-        socket.broadcast.emit("playerPaint", {
-            id: socket.id,
-            color
-        });
-    });
+    io.to(opponent.id).emit("enemyShot");
 
-    socket.on("catchPlayer", targetId => {
+    opponent.lives--;
 
-        if (!game || game.finished) return;
+    if (opponent.lives <= 0) {
 
-        const hunter = players[socket.id];
-        const target = players[targetId];
+      socket.emit("battleWon");
 
-        if (!hunter || !target) return;
+      io.to(opponent.id).emit("battleLost");
 
-        if (hunter.role !== "hunter") return;
-        if (target.role !== "chameleon") return;
+      player.inBattle = false;
+      opponent.inBattle = false;
+      player.opponent = null;
+      opponent.opponent = null;
 
-        const elapsed =
-            Date.now() - game.started;
+    } else {
 
-        if (elapsed < HUNTER_DELAY) {
-            socket.emit("hunterLocked");
-            return;
-        }
+      io.to(player.id).emit("enemyHit", {
+        lives: opponent.lives
+      });
+    }
+  });
 
-        const dx = hunter.x - target.x;
-        const dz = hunter.z - target.z;
+  socket.on("respawn", data => {
 
-        const distance =
-            Math.sqrt(dx * dx + dz * dz);
+    const player = players.get(socket.id);
+    if (!player) return;
 
-        if (distance <= 3.5) {
+    player.x = Number(data.x) || 0;
+    player.y = 5;
+    player.z = Number(data.z) || 0;
 
-            io.emit("playerCaught", {
-                hunterId: socket.id,
-                targetId
-            });
+    if (player.opponent) {
 
-            endGame("hunter");
-        }
-    });
+      io.to(player.opponent).emit("enemyPosition", {
+        x: player.x,
+        y: player.y,
+        z: player.z
+      });
+    }
+  });
 
-    socket.on("disconnect", () => {
+  socket.on("leaveBattle", () => {
 
-        const wasInGame =
-            players[socket.id] &&
-            players[socket.id].inGame;
+    const player = players.get(socket.id);
 
-        const wasHunter =
-            players[socket.id] &&
-            players[socket.id].role === "hunter";
+    if (!player) return;
 
-        lobby =
-            lobby.filter(id => id !== socket.id);
+    if (player.opponent) {
 
-        delete players[socket.id];
+      const opponent = players.get(player.opponent);
 
-        io.emit("playerLeft", socket.id);
+      if (opponent) {
 
-        if (wasInGame && game && !game.finished) {
+        opponent.inBattle = false;
+        opponent.opponent = null;
 
-            endGame(
-                wasHunter
-                    ? "chameleon"
-                    : "hunter"
-            );
+        io.to(opponent.id).emit("opponentLeft");
+      }
+    }
 
-        } else {
+    player.inBattle = false;
+    player.opponent = null;
+  });
 
-            sendLobby();
-        }
-    });
+  socket.on("disconnect", () => {
+
+    const player = players.get(socket.id);
+
+    if (player && player.opponent) {
+
+      const opponent = players.get(player.opponent);
+
+      if (opponent) {
+
+        opponent.inBattle = false;
+        opponent.opponent = null;
+
+        io.to(opponent.id).emit("opponentLeft");
+      }
+    }
+
+    players.delete(socket.id);
+  });
 });
 
-server.listen(PORT, "0.0.0.0", () => {
-    console.log(
-        "MECHA CHAMELEON läuft auf Port " + PORT
-    );
+app.get("/api/status", (req, res) => {
+
+  res.json({
+    online: true,
+    players: players.size,
+    battles: [...players.values()]
+      .filter(p => p.inBattle).length
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`MECH ARENA läuft auf Port ${PORT}`);
 });
