@@ -3,96 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>Fishing World FPS</title>
+<title>MECH ARENA</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#70c9ed}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#080b10}
 body{touch-action:none}
 #game{position:fixed;inset:0}
-#hud{
-position:fixed;top:10px;left:10px;right:10px;z-index:20;
-display:flex;gap:7px;flex-wrap:wrap;pointer-events:none
+#ui{position:fixed;inset:0;color:#fff;pointer-events:none}
+.top{
+position:absolute;left:0;right:0;top:0;height:75px;
+padding:18px 24px;
+background:linear-gradient(#070a0fee,transparent);
+display:flex;align-items:center
 }
-.stat{
-background:#000b;color:#fff;padding:8px 11px;border-radius:12px;
-font-size:14px
+.logo{font-size:26px;font-weight:900;letter-spacing:3px}
+.money{
+margin-left:auto;background:#151b25dd;border:1px solid #445164;
+padding:10px 15px;border-radius:11px
+}
+.bottom{
+position:absolute;left:0;right:0;bottom:0;
+height:130px;padding:20px;
+display:flex;align-items:flex-end;
+background:linear-gradient(transparent,#070a0fee)
+}
+.info{
+background:#111821ee;border:1px solid #3c4858;
+padding:13px 17px;border-radius:14px
+}
+.info b{font-size:19px}
+.info small{display:block;color:#9ca9b9;margin-top:4px}
+.buttons{margin-left:auto;display:flex;gap:8px}
+button{
+border:0;border-radius:11px;padding:12px 17px;
+font-weight:800;cursor:pointer
+}
+button:hover{filter:brightness(1.1)}
+#custom{
+position:absolute;right:20px;top:95px;width:270px;
+background:#101720f5;border:1px solid #465365;
+border-radius:16px;padding:15px;pointer-events:auto;
+display:none;box-shadow:0 15px 50px #0008
+}
+#custom h2{margin:0 0 12px}
+.tab{
+width:100%;margin:5px 0;background:#202a36;color:white;
+text-align:left
+}
+.option{
+background:#151d27;border-radius:10px;padding:10px;margin:8px 0
+}
+.option button{margin:3px;padding:8px 10px}
+.remove{background:#b83333;color:white}
+.upgrade{background:#4b9fff;color:white}
+#battle{
+position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+width:min(92vw,540px);background:#101720f8;
+border:1px solid #4b596d;border-radius:18px;padding:24px;
+display:none;pointer-events:auto;box-shadow:0 20px 80px #000b
+}
+#battle h1{margin-top:0}
+.battleBtn{
+width:100%;background:#e7edf5;color:#111820;
+font-size:19px;margin-top:10px
+}
+#fightUI{
+position:absolute;left:0;right:0;top:0;bottom:0;
+display:none;pointer-events:none
+}
+#fightTop{
+position:absolute;top:15px;left:50%;transform:translateX(-50%);
+display:flex;gap:30px;align-items:center
+}
+.life{
+background:#10151dcc;padding:10px 16px;border-radius:12px;
+font-weight:bold
+}
+#timer{
+font-size:25px;font-weight:900;
+background:#10151dcc;padding:10px 16px;border-radius:12px
+}
+#arenaHint{
+position:absolute;bottom:25px;left:50%;transform:translateX(-50%);
+background:#000b;padding:10px 16px;border-radius:12px
 }
 #crosshair{
-position:fixed;left:50%;top:50%;width:18px;height:18px;
-transform:translate(-50%,-50%);z-index:15;pointer-events:none
+position:absolute;left:50%;top:50%;
+transform:translate(-50%,-50%);
+width:20px;height:20px;display:none
 }
 #crosshair:before,#crosshair:after{
-content:"";position:absolute;background:white;box-shadow:0 0 3px #000
+content:"";position:absolute;background:white;box-shadow:0 0 4px #000
 }
-#crosshair:before{width:18px;height:2px;left:0;top:8px}
-#crosshair:after{width:2px;height:18px;left:8px;top:0}
-#hint{
-position:fixed;left:50%;bottom:105px;transform:translateX(-50%);
-background:#000b;color:white;padding:8px 14px;border-radius:12px;
-z-index:20;text-align:center;font-size:13px
-}
-#actions{
-position:fixed;bottom:15px;left:50%;transform:translateX(-50%);
-display:flex;gap:7px;z-index:30;flex-wrap:wrap;justify-content:center
-}
-button{
-border:0;border-radius:12px;padding:11px 14px;
-font-weight:bold;background:white;color:#17202a
-}
-button:active{transform:scale(.95)}
-.panel{
-position:fixed;z-index:100;left:50%;top:50%;
+#crosshair:before{width:20px;height:2px;top:9px}
+#crosshair:after{height:20px;width:2px;left:9px}
+#result{
+position:absolute;left:50%;top:50%;
 transform:translate(-50%,-50%);
-width:min(94vw,680px);max-height:90vh;overflow:auto;
-background:#f5f5f5;border-radius:22px;padding:20px;
-box-shadow:0 15px 60px #0009
+background:#101720fa;border:1px solid #58677b;
+padding:30px;border-radius:20px;text-align:center;
+display:none;pointer-events:auto;min-width:280px
 }
-.panel h2{margin-top:0}
-.item{
-background:white;border-radius:14px;padding:12px;margin:8px 0;
-display:flex;justify-content:space-between;align-items:center;gap:10px
+#result h1{margin-top:0}
+#mobile{
+display:none;position:absolute;left:20px;bottom:100px;
+width:140px;height:140px;pointer-events:auto
 }
-.close{width:100%;background:#222;color:#fff;margin-top:10px}
-.hidden{display:none}
-#message{
-position:fixed;top:72px;left:50%;transform:translateX(-50%);
-background:#000d;color:#fff;padding:11px 17px;border-radius:15px;
-z-index:200;display:none
-}
-.progress{
-height:14px;background:#bbb;border-radius:10px;overflow:hidden;margin:10px 0
-}
-#progressBar,#boneProgress{
-height:100%;width:0;background:#32a852
-}
-canvas{
-display:block;width:100%;height:auto;border-radius:16px;
-background:#dceef4;touch-action:none
-}
-#fishParts{
-display:flex;gap:12px;justify-content:center;flex-wrap:wrap
-}
-.part{
-background:white;border-radius:16px;padding:8px;text-align:center
-}
-.part canvas{width:280px;max-width:100%}
-#bag{text-align:center;font-size:85px;padding:20px}
-#movePad{
-display:none;position:fixed;left:18px;bottom:105px;
-width:130px;height:130px;z-index:25
-}
-.padBtn{
+.pad{
 position:absolute;width:45px;height:45px;padding:0;
-background:#ffffff99;border:2px solid white
+background:#ffffff99;border:1px solid white
 }
-#up{left:42px;top:0}
-#down{left:42px;bottom:0}
-#left{left:0;top:42px}
-#right{right:0;top:42px}
+#up{left:47px;top:0}
+#down{left:47px;bottom:0}
+#left{left:0;top:47px}
+#right{right:0;top:47px}
+#jump{
+position:absolute;right:20px;bottom:105px;
+display:none;pointer-events:auto;
+background:#ffffffaa
+}
 @media(max-width:700px){
-#movePad{display:block}
-#actions button:nth-child(n+5){display:none}
-#hint{bottom:88px}
+#mobile{display:block}
+#jump{display:block}
+.bottom .buttons button:nth-child(2),
+.bottom .buttons button:nth-child(3){display:none}
 }
 </style>
 </head>
@@ -100,430 +134,846 @@ background:#ffffff99;border:2px solid white
 
 <div id="game"></div>
 
-<div id="hud">
-<div class="stat">💰 <span id="money">100</span> €</div>
-<div class="stat">🎣 Angel <span id="rod">1</span></div>
-<div class="stat">🪱 <span id="bait">10</span></div>
-<div class="stat">🐟 <span id="fishCount">0</span></div>
-<div class="stat">☀️ <span id="timeText">Tag</span></div>
+<div id="ui">
+<div class="top">
+<div class="logo">MECH//ARENA</div>
+<div class="money">💰 <span id="money">100</span> €</div>
+</div>
+
+<div id="custom">
+<h2>MECH ANPASSEN</h2>
+
+<button class="tab" onclick="showSection('mech')">🤖 Mech</button>
+<button class="tab" onclick="showSection('left')">🦾 Linker Arm</button>
+<button class="tab" onclick="showSection('right')">🦾 Rechter Arm</button>
+
+<div id="section"></div>
+</div>
+
+<div class="bottom">
+<div class="info">
+<b>MK-01 STRIKER</b>
+<small>Starter-Mech · 2 Beine · Triple-Sturmgewehr je Hand</small>
+</div>
+<div class="buttons">
+<button onclick="toggleCustomize()">⚙ Anpassen</button>
+<button onclick="resetView()">🔄 Ansicht</button>
+<button onclick="openBattle()">⚔ BATTLE</button>
+</div>
+</div>
+
+<div id="battle">
+<h1>⚔ MECH BATTLE</h1>
+<p>Trete online gegen einen anderen Spieler an.</p>
+<p>❤️ 3 Leben · ⏱ 2 Minuten · 🪙 +50 € bei Sieg</p>
+<button class="battleBtn" onclick="startBattle()">▶ MATCH SUCHEN</button>
+<button class="battleBtn" onclick="closeBattle()">Schließen</button>
+</div>
+
+<div id="fightUI">
+<div id="fightTop">
+<div class="life">DU ❤️ <span id="myLives">3</span></div>
+<div id="timer">2:00</div>
+<div class="life">GEGNER ❤️ <span id="enemyLives">3</span></div>
+</div>
+<div id="arenaHint">WASD · Maus · Leertaste = Springen · Linksklick = Schießen</div>
 </div>
 
 <div id="crosshair"></div>
 
-<div id="hint">
-PC: WASD bewegen · Maus schauen · E angeln<br>
-Mobil: Steuerkreuz + Ziehen zum Umschauen
+<div id="result">
+<h1 id="resultTitle">SIEG!</h1>
+<p id="resultText"></p>
+<button onclick="leaveBattle()">Zurück zum Hangar</button>
 </div>
 
-<div id="movePad">
-<button class="padBtn" id="up">▲</button>
-<button class="padBtn" id="down">▼</button>
-<button class="padBtn" id="left">◀</button>
-<button class="padBtn" id="right">▶</button>
+<div id="mobile">
+<button class="pad" id="up">▲</button>
+<button class="pad" id="down">▼</button>
+<button class="pad" id="left">◀</button>
+<button class="pad" id="right">▶</button>
 </div>
 
-<div id="actions">
-<button onclick="castLine()">🎣 Auswerfen</button>
-<button onclick="reel()">↩️ Einholen</button>
-<button onclick="openInventory()">🎒 Inventar</button>
-<button onclick="openTable()">🔪 Fischtisch</button>
-<button onclick="openShop()">🛒 Shop</button>
-<button onclick="saveGame()">💾 Speichern</button>
-</div>
-
-<div id="message"></div>
-
-<div id="inventory" class="panel hidden">
-<h2>🎒 Inventar</h2>
-<div id="inventoryContent"></div>
-<button class="close" onclick="closePanels()">Schließen</button>
-</div>
-
-<div id="shop" class="panel hidden">
-<h2>🛒 Angel-Shop</h2>
-<div class="item">
-<span>🎣 Angel verbessern</span>
-<button onclick="upgradeRod()">50 €</button>
-</div>
-<div class="item">
-<span>🪱 10 Köder</span>
-<button onclick="buyBait()">20 €</button>
-</div>
-<div class="item">
-<span>✨ Spezialköder</span>
-<button onclick="buyPremium()">75 €</button>
-</div>
-<button class="close" onclick="closePanels()">Schließen</button>
-</div>
-
-<div id="table" class="panel hidden">
-<h2>🔪 Fischtisch</h2>
-<div id="tableContent"></div>
-<button class="close" onclick="closePanels()">Schließen</button>
-</div>
-
-<div id="cutGame" class="panel hidden">
-<h2>🔪 Fisch vorbereiten</h2>
-<p>Halte gedrückt und folge genau der roten Linie.</p>
-<div class="progress"><div id="progressBar"></div></div>
-<canvas id="cutCanvas" width="700" height="390"></canvas>
-<button class="close" onclick="closeCutGame()">Abbrechen</button>
-</div>
-
-<div id="halvesGame" class="panel hidden">
-<h2>🐟 Zwei Fischhälften</h2>
-<p>Die Vorbereitung ist geschafft.</p>
-<div id="fishParts">
-<div class="part">
-<canvas id="half1" width="300" height="180"></canvas>
-Fischhälfte 1
-</div>
-<div class="part">
-<canvas id="half2" width="300" height="180"></canvas>
-Fischhälfte 2
-</div>
-</div>
-<button class="close" onclick="startBonesGame()">Gräten entfernen</button>
-</div>
-
-<div id="bonesGame" class="panel hidden">
-<h2>🦴 Gräten entfernen</h2>
-<p>Halte eine markierte Gräte gedrückt und ziehe sie heraus.</p>
-<div class="progress"><div id="boneProgress"></div></div>
-<canvas id="boneCanvas" width="700" height="390"></canvas>
-<button class="close" onclick="closePanels()">Abbrechen</button>
-</div>
-
-<div id="bagGame" class="panel hidden">
-<h2>🛍️ Fisch in den Beutel</h2>
-<div id="bag">🛍️</div>
-<p style="text-align:center">
-Lege die vorbereiteten Fischhälften in den Beutel.
-</p>
-<button id="bagBtn" style="display:block;margin:auto;background:#50ad62;color:white"
-onclick="putIntoBag()">🐟 In Beutel legen</button>
+<button id="jump" onclick="jump()">⬆ SPRINGEN</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
 <script>
-/* =========================
-   SPIELDATEN
-========================= */
-
-let money=100;
-let rodLevel=1;
-let bait=10;
-let premiumBait=0;
-let fish=[];
-let gameTime=0;
-let currentFishIndex=-1;
-
-const fishTypes=[
-{name:"Forelle",value:15},
-{name:"Karpfen",value:25},
-{name:"Hecht",value:45},
-{name:"Lachs",value:65},
-{name:"Goldfisch",value:120}
-];
-
-/* =========================
-   THREE.JS FPS
-========================= */
+/* =====================================================
+   GRUNDLAGEN
+===================================================== */
 
 const scene=new THREE.Scene();
-
-scene.background=new THREE.Color(0x72cbed);
-scene.fog=new THREE.Fog(0x72cbed,35,110);
+scene.background=new THREE.Color(0x080c12);
+scene.fog=new THREE.Fog(0x080c12,28,100);
 
 const camera=new THREE.PerspectiveCamera(
-75,
-innerWidth/innerHeight,
-.05,
-250
+62,innerWidth/innerHeight,.1,180
 );
+camera.position.set(8,5,12);
 
-camera.position.set(0,2.2,7);
-
-const renderer=new THREE.WebGLRenderer({
-antialias:true
-});
-
+const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-
 document.getElementById("game").appendChild(renderer.domElement);
 
-scene.add(
-new THREE.HemisphereLight(
-0xcceeff,
-0x40552c,
-1.2
-)
+scene.add(new THREE.HemisphereLight(0xaacbff,0x151515,1.3));
+
+const light=new THREE.DirectionalLight(0xffffff,1.7);
+light.position.set(10,20,10);
+scene.add(light);
+
+const floor=new THREE.Mesh(
+new THREE.PlaneGeometry(100,100),
+new THREE.MeshStandardMaterial({
+color:0x252c35,
+metalness:.35,
+roughness:.75
+})
+);
+floor.rotation.x=-Math.PI/2;
+scene.add(floor);
+
+for(let x=-45;x<=45;x+=5){
+const l=new THREE.Mesh(
+new THREE.BoxGeometry(.035,.01,90),
+new THREE.MeshBasicMaterial({color:0x394451})
+);
+l.position.set(x,.01,0);
+scene.add(l);
+}
+
+for(let z=-45;z<=45;z+=5){
+const l=new THREE.Mesh(
+new THREE.BoxGeometry(90,.01,.035),
+new THREE.MeshBasicMaterial({color:0x394451})
+);
+l.position.set(0,.011,z);
+scene.add(l);
+}
+
+/* =====================================================
+   HANGAR
+===================================================== */
+
+function box(x,y,z,w,h,d,color){
+const m=new THREE.Mesh(
+new THREE.BoxGeometry(w,h,d),
+new THREE.MeshStandardMaterial({
+color,
+metalness:.45,
+roughness:.45
+})
+);
+m.position.set(x,y,z);
+scene.add(m);
+return m;
+}
+
+box(0,9,-25,55,18,1,0x161d26);
+box(-27,9,0,1,18,52,0x121820);
+box(27,9,0,1,18,52,0x121820);
+
+for(let x=-22;x<=22;x+=5){
+const bar=box(x,12,-24.3,2.8,.15,.2,0x637083);
+}
+
+for(let x=-20;x<=20;x+=5){
+const lamp=new THREE.PointLight(0x75aaff,1.3,13);
+lamp.position.set(x,11,-5);
+scene.add(lamp);
+}
+
+/* =====================================================
+   MECH
+===================================================== */
+
+const mech=new THREE.Group();
+mech.position.set(0,0,-4);
+scene.add(mech);
+
+function mechPart(x,y,z,w,h,d,color){
+const m=new THREE.Mesh(
+new THREE.BoxGeometry(w,h,d),
+new THREE.MeshStandardMaterial({
+color,
+metalness:.75,
+roughness:.3
+})
+);
+m.position.set(x,y,z);
+mech.add(m);
+return m;
+}
+
+/* Beine */
+
+const legL=mechPart(
+-1.1,2,0,
+1.05,3.4,1.2,
+0x495563
 );
 
-const sun=new THREE.DirectionalLight(
-0xffffff,
-1.4
+const legR=mechPart(
+1.1,2,0,
+1.05,3.4,1.2,
+0x495563
 );
 
-sun.position.set(-30,40,20);
-scene.add(sun);
+mechPart(-1.1,.4,0,1.5,.7,2,0x303944);
+mechPart(1.1,.4,0,1.5,.7,2,0x303944);
 
-/* =========================
-   WELT
-========================= */
+mechPart(-1.1,3.75,-.05,1.25,.55,1.35,0x718091);
+mechPart(1.1,3.75,-.05,1.25,.55,1.35,0x718091);
 
-const ground=new THREE.Mesh(
-new THREE.PlaneGeometry(150,150),
-new THREE.MeshLambertMaterial({color:0x609b48})
+/* Becken */
+
+mechPart(0,4.55,0,3.6,1.1,1.8,0x303943);
+
+/* Torso */
+
+const torso=mechPart(
+0,6.35,0,
+4.1,3.2,2,
+0x414d5a
 );
 
-ground.rotation.x=-Math.PI/2;
-scene.add(ground);
+mechPart(0,6.45,-1.1,3.4,2,.35,0x596776);
 
-const waterGeo=new THREE.PlaneGeometry(
-100,65,50,35
+/* Energie-Kern */
+
+const core=new THREE.Mesh(
+new THREE.CylinderGeometry(.55,.55,.22,24),
+new THREE.MeshStandardMaterial({
+color:0x43c9ff,
+emissive:0x168cff,
+emissiveIntensity:2
+})
+);
+core.rotation.x=Math.PI/2;
+core.position.set(0,6.4,-1.3);
+mech.add(core);
+
+/* Hals + Kopf */
+
+mechPart(0,7.85,0,1.1,.6,1,0x20262e);
+mechPart(0,8.65,0,2.5,2,1.8,0x303944);
+
+const visor=new THREE.Mesh(
+new THREE.BoxGeometry(1.9,.42,.25),
+new THREE.MeshStandardMaterial({
+color:0x75e7ff,
+emissive:0x138cff,
+emissiveIntensity:1.8
+})
+);
+visor.position.set(0,8.8,-.95);
+mech.add(visor);
+
+/* Arme */
+
+const leftArm=mechPart(
+-3.15,6,0,
+1.05,2.6,1.2,
+0x3c4652
 );
 
-const waterMat=new THREE.MeshPhongMaterial({
-color:0x238fc4,
-transparent:true,
-opacity:.86,
-side:THREE.DoubleSide
+const rightArm=mechPart(
+3.15,6,0,
+1.05,2.6,1.2,
+0x3c4652
+);
+
+const leftHand=mechPart(
+-3.15,4.55,0,
+1.15,.75,1.25,
+0x252c34
+);
+
+const rightHand=mechPart(
+3.15,4.55,0,
+1.15,.75,1.25,
+0x252c34
+);
+
+/* Keine rotierenden Teile */
+
+/* =====================================================
+   TRIPLE GUNS
+===================================================== */
+
+function createGun(side){
+
+const group=new THREE.Group();
+
+for(let i=-1;i<=1;i++){
+
+const gun=new THREE.Group();
+
+const body=new THREE.Mesh(
+new THREE.BoxGeometry(.42,.5,1.65),
+new THREE.MeshStandardMaterial({
+color:0x14191e,
+metalness:.85,
+roughness:.22
+})
+);
+
+gun.add(body);
+
+const barrel=new THREE.Mesh(
+new THREE.CylinderGeometry(.1,.1,1.8,10),
+new THREE.MeshStandardMaterial({
+color:0x697681,
+metalness:.9,
+roughness:.18
+})
+);
+
+barrel.rotation.x=Math.PI/2;
+barrel.position.z=-1.6;
+gun.add(barrel);
+
+const muzzle=new THREE.Mesh(
+new THREE.CylinderGeometry(.15,.15,.25,10),
+new THREE.MeshStandardMaterial({
+color:0x101419,
+metalness:.9
+})
+);
+
+muzzle.rotation.x=Math.PI/2;
+muzzle.position.z=-2.55;
+gun.add(muzzle);
+
+gun.position.x=i*.45;
+group.add(gun);
+}
+
+group.position.set(
+side*3.15,
+4.55,
+-.65
+);
+
+group.rotation.y=side*.06;
+
+mech.add(group);
+
+return group;
+}
+
+const leftGuns=createGun(-1);
+const rightGuns=createGun(1);
+
+/* =====================================================
+   HANGAR KAMERA
+===================================================== */
+
+let hangarZoom=0;
+let hangarYaw=0;
+
+function resetView(){
+hangarZoom=0;
+hangarYaw=0;
+}
+
+renderer.domElement.addEventListener("wheel",e=>{
+if(!battleActive){
+hangarZoom+=e.deltaY*.01;
+hangarZoom=Math.max(-3,Math.min(8,hangarZoom));
+}
 });
 
-const water=new THREE.Mesh(
-waterGeo,
-waterMat
-);
+renderer.domElement.addEventListener("click",e=>{
+if(battleActive)return;
 
-water.rotation.x=-Math.PI/2;
-water.position.set(0,.05,-25);
-scene.add(water);
-
-const waterOriginal=
-waterGeo.attributes.position.array.slice();
-
-function makeBox(
-x,y,z,w,h,d,color
+if(
+e.clientX>innerWidth*.25 &&
+e.clientX<innerWidth*.75 &&
+e.clientY>innerHeight*.15 &&
+e.clientY<innerHeight*.9
 ){
-const mesh=new THREE.Mesh(
-new THREE.BoxGeometry(w,h,d),
-new THREE.MeshLambertMaterial({color})
-);
+hangarZoom-=.7;
+hangarZoom=Math.max(-3,Math.min(8,hangarZoom));
+}
+});
 
-mesh.position.set(x,y,z);
-scene.add(mesh);
+/* =====================================================
+   CUSTOMIZING
+===================================================== */
 
-return mesh;
+let mechUpgrade=0;
+let leftUpgrade=0;
+let rightUpgrade=0;
+
+function toggleCustomize(){
+
+const c=document.getElementById("custom");
+
+c.style.display=
+c.style.display==="block"?"none":"block";
+
+if(c.style.display==="block")
+showSection("mech");
 }
 
-/* Steg */
+function showSection(type){
 
-makeBox(
-0,.35,6,
-28,.7,5,
-0x76502f
-);
+const s=document.getElementById("section");
 
-/* Hütte */
+if(type==="mech"){
 
-makeBox(
--12,2,4,
-6,4,6,
-0xb67a45
-);
-
-makeBox(
--12,4.3,4,
-6.4,.4,6.4,
-0x633c25
-);
-
-makeBox(
--12,1.2,.9,
-1,2,.25,
-0x4a2919
-);
-
-/* Tisch */
-
-makeBox(
--7,1.3,4,
-3,.2,2,
-0x73451f
-);
-
-makeBox(
--7,.65,4,
-.3,1.2,.3,
-0x553117
-);
-
-/* Bäume */
-
-for(let i=0;i<35;i++){
-
-const x=-60+Math.random()*120;
-const z=-55+Math.random()*110;
-
-if(Math.abs(x)<18&&z>0)continue;
-
-makeBox(
-x,.8,z,
-.7,1.6,.7,
-0x65402a
-);
-
-const crown=new THREE.Mesh(
-new THREE.ConeGeometry(2.4,5,8),
-new THREE.MeshLambertMaterial({color:0x28783a})
-);
-
-crown.position.set(x,4,z);
-scene.add(crown);
+s.innerHTML=`
+<div class="option">
+<b>🤖 Mech-Level ${mechUpgrade+1}</b>
+<p>Mehr Stabilität und Energie.</p>
+<button class="upgrade" onclick="upgrade('mech')">
+⬆ Upgrade · ${50+mechUpgrade*50} €
+</button>
+</div>
+<div class="option">
+<b>Mech entfernen</b>
+<p>Setzt den aktuellen Mech zurück.</p>
+<button class="remove" onclick="removeUpgrade('mech')">↩ Zurücksetzen</button>
+</div>`;
 }
 
-/* =========================
-   FIRST PERSON
-========================= */
+if(type==="left"){
+
+s.innerHTML=`
+<div class="option">
+<b>🦾 Linker Arm-Level ${leftUpgrade+1}</b>
+<p>Verbessert die drei Waffen an der linken Hand.</p>
+<button class="upgrade" onclick="upgrade('left')">
+⬆ Upgrade · ${50+leftUpgrade*50} €
+</button>
+</div>
+<div class="option">
+<b>Linken Arm entfernen</b>
+<button class="remove" onclick="removeUpgrade('left')">Entfernen</button>
+</div>`;
+}
+
+if(type==="right"){
+
+s.innerHTML=`
+<div class="option">
+<b>🦾 Rechter Arm-Level ${rightUpgrade+1}</b>
+<p>Verbessert die drei Waffen an der rechten Hand.</p>
+<button class="upgrade" onclick="upgrade('right')">
+⬆ Upgrade · ${50+rightUpgrade*50} €
+</button>
+</div>
+<div class="option">
+<b>Rechten Arm entfernen</b>
+<button class="remove" onclick="removeUpgrade('right')">Entfernen</button>
+</div>`;
+}
+}
+
+function upgrade(type){
+
+const price=
+50+
+(type==="mech"?mechUpgrade:
+type==="left"?leftUpgrade:rightUpgrade)*50;
+
+if(money<price){
+alert("Nicht genug Münzen.");
+return;
+}
+
+money-=price;
+
+if(type==="mech")mechUpgrade++;
+if(type==="left")leftUpgrade++;
+if(type==="right")rightUpgrade++;
+
+updateMoney();
+showSection(type);
+}
+
+function removeUpgrade(type){
+
+if(type==="mech")mechUpgrade=0;
+if(type==="left")leftUpgrade=0;
+if(type==="right")rightUpgrade=0;
+
+showSection(type);
+}
+
+/* =====================================================
+   BATTLE
+===================================================== */
+
+let battleActive=false;
+let battleTime=120;
+let timerInterval=null;
+
+let myLives=3;
+let enemyLives=3;
+
+let velocityY=0;
+let onGround=true;
 
 let yaw=0;
 let pitch=0;
 
 const keys={
-w:false,
-a:false,
-s:false,
-d:false
+w:false,a:false,s:false,d:false
 };
 
-let mobileLook=false;
-let lastTouchX=0;
-let lastTouchY=0;
+function openBattle(){
+
+document.getElementById("custom").style.display="none";
+document.getElementById("battle").style.display="block";
+}
+
+function closeBattle(){
+document.getElementById("battle").style.display="none";
+}
+
+function startBattle(){
+
+closeBattle();
+
+battleActive=true;
+
+myLives=3;
+enemyLives=3;
+battleTime=120;
+
+document.getElementById("fightUI").style.display="block";
+document.getElementById("crosshair").style.display="block";
+
+document.querySelector(".bottom").style.display="none";
+
+camera.position.set(0,5,18);
+yaw=Math.PI;
+pitch=0;
+
+renderer.domElement.requestPointerLock?.();
+
+timerInterval=setInterval(()=>{
+
+battleTime--;
+
+document.getElementById("timer").textContent=
+Math.floor(battleTime/60)+":"+
+String(battleTime%60).padStart(2,"0");
+
+if(battleTime<=0){
+endBattle(false,"Zeit abgelaufen.");
+}
+
+},1000);
+}
+
+function leaveBattle(){
+
+document.getElementById("result").style.display="none";
+
+battleActive=false;
+
+clearInterval(timerInterval);
+
+document.exitPointerLock?.();
+
+document.getElementById("fightUI").style.display="none";
+document.getElementById("crosshair").style.display="none";
+
+document.querySelector(".bottom").style.display="flex";
+
+camera.position.set(8,5,12);
+camera.lookAt(0,5,-4);
+}
+
+function endBattle(win,text){
+
+if(!battleActive)return;
+
+battleActive=false;
+clearInterval(timerInterval);
+
+document.exitPointerLock?.();
+
+document.getElementById("fightUI").style.display="none";
+document.getElementById("crosshair").style.display="none";
+
+document.getElementById("resultTitle").textContent=
+win?"🏆 SIEG!":"❌ NIEDERLAGE";
+
+document.getElementById("resultText").textContent=
+win?
+text+" +50 Münzen!":
+text;
+
+document.getElementById("result").style.display="block";
+
+document.querySelector(".bottom").style.display="none";
+
+if(win){
+money+=50;
+updateMoney();
+}
+}
+
+function damageEnemy(){
+
+if(!battleActive)return;
+
+enemyLives--;
+
+document.getElementById("enemyLives")
+.textContent=enemyLives;
+
+if(enemyLives<=0){
+
+endBattle(
+true,
+"Der Gegner wurde besiegt."
+);
+
+return;
+}
+
+showBattleMessage(
+"Treffer! Gegner hat noch "+enemyLives+" Leben."
+);
+}
+
+function playerDeath(){
+
+if(!battleActive)return;
+
+myLives--;
+
+document.getElementById("myLives").textContent=myLives;
+
+if(myLives<=0){
+
+endBattle(
+false,
+"Dein Mech wurde besiegt."
+);
+
+return;
+}
+
+/* Respawn */
+
+camera.position.set(
+(Math.random()-.5)*12,
+5,
+12+Math.random()*5
+);
+
+velocityY=0;
+
+showBattleMessage(
+"💥 Respawn! Noch "+myLives+" Leben."
+);
+}
+
+/* =====================================================
+   FPS STEUERUNG
+===================================================== */
 
 document.addEventListener("keydown",e=>{
+
 const k=e.key.toLowerCase();
 
-if(k==="w"||k==="a"||k==="s"||k==="d"){
-keys[k]=true;
-}
+if(k in keys)keys[k]=true;
 
-if(k==="e"){
-if(!isPanelOpen()){
-if(lineActive)reel();
-else castLine();
-}
+if(k===" "){
+jump();
+e.preventDefault();
 }
 });
 
 document.addEventListener("keyup",e=>{
+
 const k=e.key.toLowerCase();
 
 if(k in keys)keys[k]=false;
 });
 
-renderer.domElement.addEventListener("click",()=>{
-if(innerWidth>700&&!isPanelOpen()){
-renderer.domElement.requestPointerLock?.();
-}
-});
-
 document.addEventListener("mousemove",e=>{
+
+if(!battleActive)return;
 if(document.pointerLockElement!==renderer.domElement)return;
-if(isPanelOpen())return;
 
-yaw-=e.movementX*.0023;
-pitch-=e.movementY*.0023;
+yaw-=e.movementX*.0025;
+pitch-=e.movementY*.0025;
 
-pitch=Math.max(-1.45,Math.min(1.45,pitch));
+pitch=Math.max(-1.25,Math.min(1.25,pitch));
 });
 
-renderer.domElement.addEventListener("touchstart",e=>{
-if(isPanelOpen())return;
+renderer.domElement.addEventListener("mousedown",e=>{
 
-const t=e.touches[0];
+if(!battleActive)return;
 
-mobileLook=true;
-lastTouchX=t.clientX;
-lastTouchY=t.clientY;
-},{passive:false});
-
-renderer.domElement.addEventListener("touchmove",e=>{
-if(isPanelOpen())return;
-
-const t=e.touches[0];
-
-const dx=t.clientX-lastTouchX;
-const dy=t.clientY-lastTouchY;
-
-lastTouchX=t.clientX;
-lastTouchY=t.clientY;
-
-yaw-=dx*.006;
-pitch-=dy*.006;
-
-pitch=Math.max(-1.45,Math.min(1.45,pitch));
-
-e.preventDefault();
-},{passive:false});
-
-renderer.domElement.addEventListener("touchend",()=>{
-mobileLook=false;
+if(e.button===0){
+shoot();
+}
 });
 
-/* Mobile movement */
+function jump(){
 
-function holdButton(id,key){
+if(!battleActive)return;
 
-const b=document.getElementById(id);
+if(onGround){
 
-b.addEventListener("pointerdown",e=>{
-e.preventDefault();
-keys[key]=true;
-});
-
-b.addEventListener("pointerup",e=>{
-e.preventDefault();
-keys[key]=false;
-});
-
-b.addEventListener("pointerleave",()=>{
-keys[key]=false;
-});
-
-b.addEventListener("pointercancel",()=>{
-keys[key]=false;
-});
+velocityY=.28;
+onGround=false;
+}
 }
 
-holdButton("up","w");
-holdButton("down","s");
-holdButton("left","a");
-holdButton("right","d");
+/* =====================================================
+   SCHUSS-ANIMATION
+===================================================== */
 
-function isPanelOpen(){
-return [...document.querySelectorAll(".panel")]
-.some(p=>!p.classList.contains("hidden"));
+let shooting=false;
+let shootTimer=0;
+
+function shoot(){
+
+if(!battleActive||shooting)return;
+
+shooting=true;
+shootTimer=0;
+
+leftGuns.position.z=-.25;
+rightGuns.position.z=-.25;
+
+const origin=camera.position.clone();
+
+const direction=new THREE.Vector3(
+0,0,-1
+).applyQuaternion(camera.quaternion);
+
+const end=origin.clone()
+.addScaledVector(direction,55);
+
+const tracer=new THREE.Line(
+new THREE.BufferGeometry().setFromPoints([
+origin,end
+]),
+new THREE.LineBasicMaterial({
+color:0xffd45a
+})
+);
+
+scene.add(tracer);
+
+setTimeout(()=>{
+scene.remove(tracer);
+},70);
+
+/*
+   Demo-Gegnerprüfung.
+   Für echte Online-Kämpfe wird dies vom Server
+   ausgewertet.
+*/
+if(Math.random()<.25){
+setTimeout(()=>damageEnemy(),80);
 }
 
-function updateFPS(){
+setTimeout(()=>{
+shooting=false;
+leftGuns.position.z=0;
+rightGuns.position.z=0;
+},130);
+}
 
-if(isPanelOpen())return;
+/* =====================================================
+   ONLINE-SERVER KOMMUNIKATION
+===================================================== */
 
-const speed=.105;
+let socket=null;
+
+/*
+Wenn server.js läuft, wird automatisch versucht,
+eine Socket.IO-Verbindung herzustellen.
+
+Beispiel:
+http://localhost:3000
+*/
+
+function connectServer(){
+
+if(typeof io==="undefined")return;
+
+try{
+
+socket=io();
+
+socket.on("connect",()=>{
+showBattleMessage("🟢 Mit Server verbunden.");
+});
+
+socket.on("enemyShot",()=>{
+playerDeath();
+});
+
+socket.on("enemyHit",()=>{
+damageEnemy();
+});
+
+socket.on("enemyPosition",data=>{
+if(enemyMech){
+enemyMech.position.x=data.x;
+enemyMech.position.z=data.z;
+}
+});
+
+}catch(e){}
+}
+
+/* =====================================================
+   SERVER-GEGNER
+===================================================== */
+
+let enemyMech=null;
+
+function createEnemyMech(){
+
+enemyMech=mech.clone(true);
+
+enemyMech.position.set(0,0,-15);
+
+enemyMech.traverse(o=>{
+
+if(o.material){
+o.material=o.material.clone();
+
+if(o.material.color)
+o.material.color.set(0xc04444);
+}
+
+});
+
+scene.add(enemyMech);
+}
+
+/* =====================================================
+   BEWEGUNG
+===================================================== */
+
+function updateBattle(){
+
+if(!battleActive)return;
+
+const speed=.13;
 
 const forward=new THREE.Vector3(
--Math.sin(yaw),
-0,
--Math.cos(yaw)
+-Math.sin(yaw),0,-Math.cos(yaw)
 );
 
 const right=new THREE.Vector3(
-Math.cos(yaw),
-0,
--Math.sin(yaw)
+Math.cos(yaw),0,-Math.sin(yaw)
 );
 
 if(keys.w)camera.position.addScaledVector(forward,speed);
@@ -531,930 +981,151 @@ if(keys.s)camera.position.addScaledVector(forward,-speed);
 if(keys.a)camera.position.addScaledVector(right,-speed);
 if(keys.d)camera.position.addScaledVector(right,speed);
 
-camera.position.y=2.2;
+velocityY-=.012;
+camera.position.y+=velocityY;
 
-/* Weltgrenzen */
+if(camera.position.y<=5){
 
-camera.position.x=Math.max(-68,Math.min(68,camera.position.x));
-camera.position.z=Math.max(-68,Math.min(68,camera.position.z));
+camera.position.y=5;
+velocityY=0;
+onGround=true;
+}
+
+camera.position.x=
+Math.max(-23,Math.min(23,camera.position.x));
+
+camera.position.z=
+Math.max(-23,Math.min(23,camera.position.z));
 
 camera.rotation.order="YXZ";
 camera.rotation.y=yaw;
 camera.rotation.x=pitch;
+
+/* Gegner-Demo-KI */
+
+if(enemyMech){
+
+enemyMech.position.x=
+Math.sin(Date.now()*.0005)*8;
+
+enemyMech.position.z=
+-15+Math.cos(Date.now()*.0007)*4;
+
+enemyMech.rotation.y=
+Math.sin(Date.now()*.0005)*.4;
+}
 }
 
-/* =========================
-   ANGEL IN FIRST PERSON
-========================= */
+/* =====================================================
+   ANIMATIONEN
+===================================================== */
 
-const fishingRod=new THREE.Group();
+let animationTime=0;
 
-const rodStick=new THREE.Mesh(
-new THREE.CylinderGeometry(.045,.07,3.8,10),
-new THREE.MeshLambertMaterial({color:0x3b2517})
-);
+function animateMech(){
 
-rodStick.rotation.z=-.55;
-rodStick.position.set(.75,-.7,-1.3);
+animationTime+=.08;
 
-fishingRod.add(rodStick);
+/* Idle */
 
-const handle=new THREE.Mesh(
-new THREE.CylinderGeometry(.12,.12,.65,10),
-new THREE.MeshLambertMaterial({color:0x1f1f1f})
-);
+if(!battleActive){
 
-handle.rotation.z=-.55;
-handle.position.set(.98,-1.45,-1.05);
+mech.position.y=
+Math.sin(animationTime*.5)*.025;
 
-fishingRod.add(handle);
-
-camera.add(fishingRod);
-scene.add(camera);
-
-let line=null;
-let lineActive=false;
-let fishBiting=false;
-let biteTimer=null;
-
-function getRodTip(){
-
-const v=new THREE.Vector3(.75,.15,-3.2);
-
-return v.applyMatrix4(camera.matrixWorld);
-}
-
-function castLine(){
-
-if(lineActive)return;
-
-if(bait<=0){
-showMessage("🪱 Kein Köder mehr!");
 return;
 }
 
-bait--;
-lineActive=true;
-fishBiting=false;
+/* Gehen */
 
-if(line)scene.remove(line);
+const moving=
+keys.w||keys.a||keys.s||keys.d;
 
-const start=getRodTip();
+if(moving){
 
-const direction=new THREE.Vector3(
-0,
-0,
--1
-).applyQuaternion(camera.quaternion);
+const walk=Math.sin(animationTime*2.5)*.28;
 
-const points=[];
+legL.rotation.x=walk;
+legR.rotation.x=-walk;
 
-for(let i=0;i<45;i++){
+leftArm.rotation.x=-walk*.3;
+rightArm.rotation.x=walk*.3;
 
-const t=i/44;
-
-const p=start.clone().addScaledVector(
-direction,
-4+t*15
-);
-
-p.y+=
--Math.sin(t*Math.PI)*1.2+
-Math.sin(t*7)*.08;
-
-points.push(p);
-}
-
-line=new THREE.Line(
-new THREE.BufferGeometry().setFromPoints(points),
-new THREE.LineBasicMaterial({
-color:0xffffff
-})
-);
-
-scene.add(line);
-
-showMessage("🎣 Ausgeworfen! Warte auf einen Biss...");
-updateHUD();
-
-biteTimer=setTimeout(()=>{
-if(lineActive){
-fishBiting=true;
-showMessage("🐟 BISS! Drücke E zum Einholen!");
-}
-},1800+Math.random()*3000);
-}
-
-function reel(){
-
-if(!lineActive){
-showMessage("🎣 Du hast noch nichts ausgeworfen.");
-return;
-}
-
-clearTimeout(biteTimer);
-
-lineActive=false;
-
-if(line){
-scene.remove(line);
-line=null;
-}
-
-if(!fishBiting){
-showMessage("↩️ Zu früh eingeholt.");
-updateHUD();
-return;
-}
-
-let type;
-
-if(premiumBait>0&&Math.random()<.5){
-type=fishTypes[4];
-premiumBait--;
 }else{
-type=fishTypes[
-Math.floor(Math.random()*4)
-];
+
+legL.rotation.x*=.85;
+legR.rotation.x*=.85;
+leftArm.rotation.x*=.85;
+rightArm.rotation.x*=.85;
 }
 
-fish.push({
-name:type.name,
-value:type.value,
-prepared:false,
-bagged:false
-});
+/* Springen */
 
-fishBiting=false;
+if(!onGround){
 
-showMessage(
-"🐟 Gefangen: "+type.name+
-" · "+type.value+" €"
-);
-
-updateHUD();
-saveGame();
+legL.rotation.x=-.35;
+legR.rotation.x=.35;
 }
 
-/* =========================
+/* Schuss */
+
+if(shooting){
+
+leftArm.rotation.x=-.18;
+rightArm.rotation.x=-.18;
+}
+
+/* Tod / Respawn wird über Lives abgewickelt */
+}
+
+/* =====================================================
    UI
-========================= */
+===================================================== */
 
-function updateHUD(){
-
+function updateMoney(){
 document.getElementById("money").textContent=money;
-document.getElementById("rod").textContent=rodLevel;
-document.getElementById("bait").textContent=bait;
-document.getElementById("fishCount").textContent=fish.length;
-
-document.getElementById("timeText").textContent=
-(gameTime%120)<60?"Tag":"Nacht";
 }
 
-function showMessage(text){
+function showBattleMessage(text){
 
-const el=document.getElementById("message");
+let e=document.getElementById("battleMessage");
 
-el.textContent=text;
-el.style.display="block";
+if(e)e.remove();
 
-clearTimeout(window.messageTimer);
+e=document.createElement("div");
+e.id="battleMessage";
+e.textContent=text;
 
-window.messageTimer=setTimeout(()=>{
-el.style.display="none";
-},2600);
+e.style.position="absolute";
+e.style.left="50%";
+e.style.top="75%";
+e.style.transform="translateX(-50%)";
+e.style.background="#000c";
+e.style.padding="11px 17px";
+e.style.borderRadius="12px";
+e.style.fontWeight="bold";
+e.style.zIndex="50";
+
+document.body.appendChild(e);
+
+setTimeout(()=>e.remove(),1800);
 }
 
-function closePanels(){
-
-document.querySelectorAll(".panel")
-.forEach(p=>p.classList.add("hidden"));
-
-document.getElementById("bagBtn").disabled=false;
-document.getElementById("bagBtn").textContent=
-"🐟 In Beutel legen";
-
-if(innerWidth>700){
-renderer.domElement.requestPointerLock?.();
-}
-}
-
-/* =========================
-   INVENTAR
-========================= */
-
-function openInventory(){
-
-document.exitPointerLock?.();
-closePanels();
-
-const c=document.getElementById("inventoryContent");
-c.innerHTML="";
-
-if(fish.length===0){
-
-c.innerHTML=
-"<div class='item'>Noch keine Fische.</div>";
-
-}else{
-
-fish.forEach(f=>{
-
-const d=document.createElement("div");
-d.className="item";
-
-d.innerHTML=
-"<span>🐟 <b>"+f.name+
-"</b><br><small>"+
-(f.bagged?
-"🛍️ Im Beutel":
-"🎣 Noch nicht vorbereitet")+
-"</small></span>"+
-"<b>"+f.value+" €</b>";
-
-c.appendChild(d);
-});
-}
-
-document.getElementById("inventory")
-.classList.remove("hidden");
-}
-
-/* =========================
-   SHOP
-========================= */
-
-function openShop(){
-
-document.exitPointerLock?.();
-closePanels();
-
-document.getElementById("shop")
-.classList.remove("hidden");
-}
-
-function upgradeRod(){
-
-if(rodLevel>=5){
-showMessage("🎣 Maximale Angelstufe.");
-return;
-}
-
-const price=rodLevel*50;
-
-if(money<price){
-showMessage("💰 Nicht genug Geld.");
-return;
-}
-
-money-=price;
-rodLevel++;
-
-showMessage("🎣 Angel verbessert!");
-
-updateHUD();
-saveGame();
-}
-
-function buyBait(){
-
-if(money<20){
-showMessage("💰 Nicht genug Geld.");
-return;
-}
-
-money-=20;
-bait+=10;
-
-showMessage("🪱 10 Köder gekauft.");
-
-updateHUD();
-saveGame();
-}
-
-function buyPremium(){
-
-if(money<75){
-showMessage("💰 Nicht genug Geld.");
-return;
-}
-
-money-=75;
-premiumBait++;
-
-showMessage("✨ Spezialköder gekauft.");
-
-updateHUD();
-saveGame();
-}
-
-/* =========================
-   FISCHTISCH
-========================= */
-
-function openTable(){
-
-document.exitPointerLock?.();
-closePanels();
-
-const c=document.getElementById("tableContent");
-c.innerHTML="";
-
-if(fish.length===0){
-
-c.innerHTML=
-"<div class='item'>Du hast keinen Fisch.</div>";
-
-}else{
-
-fish.forEach((f,i)=>{
-
-const d=document.createElement("div");
-d.className="item";
-
-let status="🎣 Gefangen";
-
-if(f.bagged)status="🛍️ Im Beutel";
-else if(f.prepared)status="✅ Vorbereitet";
-
-d.innerHTML=
-"<span>🐟 <b>"+f.name+
-"</b><br><small>"+status+
-"</small></span>";
-
-if(!f.prepared&&!f.bagged){
-
-const b=document.createElement("button");
-
-b.textContent="🔪 Vorbereiten";
-
-b.onclick=()=>{
-startCutGame(i);
-};
-
-d.appendChild(b);
-}
-
-c.appendChild(d);
-});
-}
-
-document.getElementById("table")
-.classList.remove("hidden");
-}
-
-/* =========================
-   SCHNEIDE-MINISPIEL
-========================= */
-
-const cutCanvas=
-document.getElementById("cutCanvas");
-
-const cutCtx=cutCanvas.getContext("2d");
-
-let cutPath=[];
-let cutTrace=[];
-let cutProgress=0;
-let cutLastIndex=0;
-let cutting=false;
-
-function startCutGame(index){
-
-currentFishIndex=index;
-
-document.exitPointerLock?.();
-
-closePanels();
-
-document.getElementById("cutGame")
-.classList.remove("hidden");
-
-createCutPath();
-}
-
-function createCutPath(){
-
-cutPath=[];
-cutTrace=[];
-cutProgress=0;
-cutLastIndex=0;
-
-for(let i=0;i<90;i++){
-
-const t=i/89;
-
-cutPath.push({
-x:80+t*540,
-y:
-195+
-Math.sin(t*Math.PI*2)*40+
-Math.sin(t*Math.PI*6)*8
-});
-}
-
-drawCut();
-}
-
-function drawCut(){
-
-cutCtx.clearRect(
-0,0,700,390
-);
-
-cutCtx.fillStyle="#dceef4";
-cutCtx.fillRect(0,0,700,390);
-
-cutCtx.fillStyle="#8cc7d5";
-
-cutCtx.beginPath();
-cutCtx.ellipse(
-350,195,
-270,105,
-0,0,Math.PI*2
-);
-cutCtx.fill();
-
-cutCtx.fillStyle="#222";
-cutCtx.beginPath();
-cutCtx.arc(525,160,7,0,Math.PI*2);
-cutCtx.fill();
-
-cutCtx.strokeStyle="#e63946";
-cutCtx.lineWidth=7;
-cutCtx.setLineDash([14,10]);
-
-cutCtx.beginPath();
-
-cutPath.forEach((p,i)=>{
-if(i===0)cutCtx.moveTo(p.x,p.y);
-else cutCtx.lineTo(p.x,p.y);
-});
-
-cutCtx.stroke();
-cutCtx.setLineDash([]);
-
-if(cutTrace.length>1){
-
-cutCtx.strokeStyle="#2166f3";
-cutCtx.lineWidth=8;
-
-cutCtx.beginPath();
-
-cutTrace.forEach((p,i)=>{
-if(i===0)cutCtx.moveTo(p.x,p.y);
-else cutCtx.lineTo(p.x,p.y);
-});
-
-cutCtx.stroke();
-}
-
-document.getElementById("progressBar")
-.style.width=cutProgress+"%";
-}
-
-function cutPosition(e){
-
-const r=cutCanvas.getBoundingClientRect();
-
-return {
-x:(e.clientX-r.left)*
-cutCanvas.width/r.width,
-
-y:(e.clientY-r.top)*
-cutCanvas.height/r.height
-};
-}
-
-function nearestCutPoint(p){
-
-let best=-1;
-let distance=Infinity;
-
-for(
-let i=Math.max(0,cutLastIndex-8);
-i<cutPath.length;
-i++
-){
-
-const dx=p.x-cutPath[i].x;
-const dy=p.y-cutPath[i].y;
-
-const d=Math.hypot(dx,dy);
-
-if(d<distance){
-distance=d;
-best=i;
-}
-}
-
-return {
-index:best,
-distance
-};
-}
-
-cutCanvas.addEventListener("pointerdown",e=>{
-
-e.preventDefault();
-
-const p=cutPosition(e);
-const n=nearestCutPoint(p);
-
-if(n.distance>35){
-
-showMessage("❌ Zu weit von der Linie entfernt.");
-return;
-}
-
-cutting=true;
-
-cutCanvas.setPointerCapture(e.pointerId);
-
-cutLastIndex=n.index;
-cutTrace=[p];
-
-drawCut();
-});
-
-cutCanvas.addEventListener("pointermove",e=>{
-
-if(!cutting)return;
-
-e.preventDefault();
-
-const p=cutPosition(e);
-const n=nearestCutPoint(p);
-
-if(n.distance>38){
-
-cutting=false;
-
-const f=fish[currentFishIndex];
-
-const loss=Math.max(
-1,
-Math.round(f.value*.25)
-);
-
-f.value=Math.max(
-1,
-f.value-loss
-);
-
-showMessage(
-"⚠️ Linie verfehlt! Der Fisch ist jetzt "+
-f.value+" € wert."
-);
-
-setTimeout(()=>{
-document.getElementById("cutGame")
-.classList.add("hidden");
-openTable();
-},1000);
-
-return;
-}
-
-if(n.index>=cutLastIndex){
-
-cutLastIndex=n.index;
-cutTrace.push(p);
-
-cutProgress=Math.round(
-cutLastIndex/
-(cutPath.length-1)*100
-);
-
-drawCut();
-
-if(cutProgress>=100){
-
-cutting=false;
-
-setTimeout(()=>{
-document.getElementById("cutGame")
-.classList.add("hidden");
-showHalves();
-},500);
-}
-}
-});
-
-cutCanvas.addEventListener("pointerup",()=>{
-cutting=false;
-});
-
-cutCanvas.addEventListener("pointercancel",()=>{
-cutting=false;
-});
-
-function closeCutGame(){
-
-document.getElementById("cutGame")
-.classList.add("hidden");
-
-currentFishIndex=-1;
-
-openTable();
-}
-
-/* =========================
-   ZWEI HÄLFTEN
-========================= */
-
-function showHalves(){
-
-document.getElementById("halvesGame")
-.classList.remove("hidden");
-
-drawHalf("half1",false);
-drawHalf("half2",true);
-}
-
-function drawHalf(id,flip){
-
-const c=document.getElementById(id);
-const x=c.getContext("2d");
-
-x.clearRect(0,0,c.width,c.height);
-
-x.fillStyle="#dff3f8";
-x.fillRect(0,0,c.width,c.height);
-
-x.save();
-
-if(flip){
-x.translate(c.width,0);
-x.scale(-1,1);
-}
-
-x.fillStyle="#8cc7d5";
-
-x.beginPath();
-x.ellipse(
-140,90,
-105,48,
-0,0,Math.PI*2
-);
-
-x.fill();
-
-x.fillStyle="#f1f1f1";
-
-for(let i=0;i<5;i++){
-
-x.beginPath();
-x.arc(
-105+i*25,
-90,
-7,
-0,
-Math.PI*2
-);
-
-x.fill();
-}
-
-x.restore();
-}
-
-/* =========================
-   GRÄTEN
-========================= */
-
-const boneCanvas=
-document.getElementById("boneCanvas");
-
-const boneCtx=
-boneCanvas.getContext("2d");
-
-let bones=[];
-let boneDragging=-1;
-let bonesDone=0;
-
-function startBonesGame(){
-
-document.getElementById("halvesGame")
-.classList.add("hidden");
-
-document.getElementById("bonesGame")
-.classList.remove("hidden");
-
-createBones();
-}
-
-function createBones(){
-
-bones=[];
-bonesDone=0;
-
-for(let i=0;i<7;i++){
-
-bones.push({
-x:110+i*80,
-y:190+Math.sin(i)*20,
-progress:0,
-removed:false
-});
-}
-
-drawBones();
-}
-
-function drawBones(){
-
-boneCtx.clearRect(
-0,0,700,390
-);
-
-boneCtx.fillStyle="#dceef4";
-boneCtx.fillRect(0,0,700,390);
-
-boneCtx.fillStyle="#8cc7d5";
-
-boneCtx.beginPath();
-boneCtx.ellipse(
-350,195,
-285,105,
-0,0,Math.PI*2
-);
-
-boneCtx.fill();
-
-bones.forEach(b=>{
-
-if(b.removed)return;
-
-boneCtx.strokeStyle="#555";
-boneCtx.lineWidth=7;
-
-boneCtx.beginPath();
-
-boneCtx.moveTo(
-b.x,
-b.y+25
-);
-
-boneCtx.lineTo(
-b.x,
-b.y-25
-);
-
-boneCtx.stroke();
-
-boneCtx.fillStyle="#fff";
-
-boneCtx.beginPath();
-
-boneCtx.arc(
-b.x,
-b.y-28,
-10,
-0,Math.PI*2
-);
-
-boneCtx.fill();
-});
-
-document.getElementById("boneProgress")
-.style.width=
-bonesDone/bones.length*100+"%";
-}
-
-function bonePosition(e){
-
-const r=boneCanvas.getBoundingClientRect();
-
-return {
-x:(e.clientX-r.left)*
-boneCanvas.width/r.width,
-
-y:(e.clientY-r.top)*
-boneCanvas.height/r.height
-};
-}
-
-boneCanvas.addEventListener("pointerdown",e=>{
-
-const p=bonePosition(e);
-
-for(let i=0;i<bones.length;i++){
-
-const b=bones[i];
-
-if(b.removed)continue;
-
-if(
-Math.hypot(
-p.x-b.x,
-p.y-(b.y-10)
-)<32
-){
-
-boneDragging=i;
-
-boneCanvas.setPointerCapture(
-e.pointerId
-);
-
-return;
-}
-}
-});
-
-boneCanvas.addEventListener("pointermove",e=>{
-
-if(boneDragging<0)return;
-
-const b=bones[boneDragging];
-const p=bonePosition(e);
-
-b.x=p.x;
-b.y=p.y;
-b.progress++;
-
-if(b.progress>18){
-
-b.removed=true;
-bonesDone++;
-boneDragging=-1;
-
-showMessage("🦴 Gräte entfernt!");
-
-drawBones();
-
-if(bonesDone===bones.length){
-
-setTimeout(()=>{
-document.getElementById("bonesGame")
-.classList.add("hidden");
-
-document.getElementById("bagGame")
-.classList.remove("hidden");
-},500);
-}
-}
-});
-
-boneCanvas.addEventListener("pointerup",()=>{
-boneDragging=-1;
-});
-
-boneCanvas.addEventListener("pointercancel",()=>{
-boneDragging=-1;
-});
-
-/* =========================
-   BEUTEL
-========================= */
-
-function putIntoBag(){
-
-if(currentFishIndex<0)return;
-
-fish[currentFishIndex].prepared=true;
-fish[currentFishIndex].bagged=true;
-
-document.getElementById("bagBtn").disabled=true;
-document.getElementById("bagBtn")
-.textContent="✅ Im Beutel";
-
-updateHUD();
-saveGame();
-
-showMessage("🛍️ Fisch wurde in den Beutel gelegt.");
-
-setTimeout(()=>{
-
-document.getElementById("bagGame")
-.classList.add("hidden");
-
-currentFishIndex=-1;
-
-openTable();
-
-},900);
-}
-
-/* =========================
-   SPEICHERN
-========================= */
+/* =====================================================
+   SAVE
+===================================================== */
 
 function saveGame(){
 
 localStorage.setItem(
-"fishing_world_save",
+"mech_game_save",
 JSON.stringify({
 money,
-rodLevel,
-bait,
-premiumBait,
-fish,
-gameTime
+mechUpgrade,
+leftUpgrade,
+rightUpgrade
 })
 );
-
-showMessage("💾 Gespeichert.");
 }
 
 function loadGame(){
@@ -1462,70 +1133,61 @@ function loadGame(){
 try{
 
 const d=JSON.parse(
-localStorage.getItem("fishing_world_save")
+localStorage.getItem("mech_game_save")
 );
 
 if(!d)return;
 
 money=d.money??100;
-rodLevel=d.rodLevel??1;
-bait=d.bait??10;
-premiumBait=d.premiumBait??0;
-fish=d.fish??[];
-gameTime=d.gameTime??0;
+mechUpgrade=d.mechUpgrade??0;
+leftUpgrade=d.leftUpgrade??0;
+rightUpgrade=d.rightUpgrade??0;
 
 }catch(e){}
 }
 
-/* =========================
-   ANIMATION
-========================= */
+/* =====================================================
+   RENDER LOOP
+===================================================== */
+
+function updateHangarCamera(){
+
+if(battleActive)return;
+
+const distance=12-hangarZoom;
+
+camera.position.x=distance*.65;
+camera.position.y=5.5;
+camera.position.z=distance;
+
+camera.lookAt(
+mech.position.x,
+5,
+mech.position.z
+);
+}
 
 function animate(){
 
 requestAnimationFrame(animate);
 
-gameTime+=.003;
+if(battleActive){
 
-const p=
-water.geometry.attributes.position.array;
+updateBattle();
+animateMech();
 
-for(let i=0;i<p.length;i+=3){
+}else{
 
-const x=waterOriginal[i];
-const y=waterOriginal[i+1];
-
-p[i+2]=
-Math.sin(x*.25+gameTime*2)*.12+
-Math.cos(y*.3+gameTime*1.5)*.1;
+updateHangarCamera();
+animateMech();
 }
-
-water.geometry.attributes.position.needsUpdate=true;
-
-const day=
-(Math.sin(gameTime*.4)+1)/2;
-
-scene.background.lerpColors(
-new THREE.Color(0x101d45),
-new THREE.Color(0x72cbed),
-day
-);
-
-scene.fog.color.copy(scene.background);
-
-sun.intensity=.35+day*1.3;
-
-updateFPS();
-updateHUD();
 
 renderer.render(scene,camera);
 }
 
 window.addEventListener("resize",()=>{
 
-camera.aspect=
-innerWidth/innerHeight;
-
+camera.aspect=innerWidth/innerHeight;
 camera.updateProjectionMatrix();
 
 renderer.setSize(
@@ -1535,24 +1197,43 @@ innerHeight
 });
 
 loadGame();
-updateHUD();
+updateMoney();
+createEnemyMech();
 animate();
 
-setInterval(()=>{
+/* =====================================================
+   MOBILE
+===================================================== */
 
-localStorage.setItem(
-"fishing_world_save",
-JSON.stringify({
-money,
-rodLevel,
-bait,
-premiumBait,
-fish,
-gameTime
-})
-);
+function hold(id,key){
 
-},30000);
+const b=document.getElementById(id);
+
+b.addEventListener("pointerdown",e=>{
+e.preventDefault();
+keys[key]=true;
+});
+
+b.addEventListener("pointerup",()=>{
+keys[key]=false;
+});
+
+b.addEventListener("pointercancel",()=>{
+keys[key]=false;
+});
+
+b.addEventListener("pointerleave",()=>{
+keys[key]=false;
+});
+}
+
+hold("up","w");
+hold("down","s");
+hold("left","a");
+hold("right","d");
+
+setInterval(saveGame,30000);
 </script>
+
 </body>
 </html>
