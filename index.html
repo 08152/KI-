@@ -3,450 +3,822 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>WORLD NAVI 3D</title>
+<title>3D World Navi</title>
 
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#9edcff}
-#map{position:fixed;inset:0}
-
-#top{
-position:fixed;
-top:15px;
-left:15px;
-right:15px;
-z-index:10;
-display:flex;
-gap:10px;
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial;
+    background:#8fd8ff;
 }
 
-#search{
-flex:1;
-max-width:550px;
-height:52px;
-border:0;
-border-radius:15px;
-padding:0 20px;
-font-size:17px;
-box-shadow:0 4px 18px #0003;
-outline:none;
+#map{
+    position:fixed;
+    inset:0;
+}
+
+#ui{
+    position:fixed;
+    top:15px;
+    left:15px;
+    z-index:20;
+    display:flex;
+    gap:8px;
+}
+
+input{
+    width:380px;
+    max-width:60vw;
+    height:48px;
+    border:0;
+    border-radius:14px;
+    padding:0 17px;
+    font-size:16px;
+    outline:0;
+    box-shadow:0 4px 18px #0004;
 }
 
 button{
-height:52px;
-padding:0 20px;
-border:0;
-border-radius:15px;
-background:#1677ff;
-color:white;
-font-size:16px;
-font-weight:bold;
-cursor:pointer;
-box-shadow:0 4px 18px #0003;
+    height:48px;
+    border:0;
+    border-radius:14px;
+    padding:0 18px;
+    background:#1677ff;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-#panel{
-position:fixed;
-left:15px;
-top:82px;
-width:310px;
-max-height:75vh;
-overflow:auto;
-z-index:9;
-background:#ffffffed;
-backdrop-filter:blur(12px);
-border-radius:18px;
-padding:15px;
-box-shadow:0 8px 30px #0003;
+#menu{
+    position:fixed;
+    top:80px;
+    left:15px;
+    width:280px;
+    max-height:75vh;
+    overflow:auto;
+    z-index:20;
+    background:#ffffffed;
+    border-radius:18px;
+    padding:15px;
+    box-shadow:0 5px 25px #0004;
 }
 
-h2{margin:4px 0 12px;font-size:20px}
-h3{margin:18px 0 8px;font-size:15px}
+#menu h2{
+    margin:0 0 15px;
+}
+
+#menu h3{
+    font-size:14px;
+    color:#666;
+    margin:17px 0 7px;
+}
 
 .place{
-padding:12px;
-margin:7px 0;
-background:#f1f5f9;
-border-radius:12px;
-cursor:pointer;
+    background:#eef2f5;
+    border-radius:11px;
+    padding:11px;
+    margin:6px 0;
+    cursor:pointer;
 }
 
-.place:hover{background:#dbeafe}
+.place:hover{
+    background:#d8eaff;
+}
 
-#info{
-position:fixed;
-right:15px;
-bottom:15px;
-z-index:10;
-background:#ffffffed;
-padding:12px 16px;
-border-radius:14px;
-box-shadow:0 5px 20px #0003;
-font-size:13px;
+#status{
+    position:fixed;
+    right:15px;
+    bottom:15px;
+    z-index:20;
+    background:#ffffffed;
+    padding:11px 15px;
+    border-radius:12px;
+    box-shadow:0 4px 18px #0004;
 }
 
 #compass{
-position:fixed;
-right:20px;
-top:90px;
-width:60px;
-height:60px;
-z-index:10;
-border-radius:50%;
-background:#ffffffdd;
-box-shadow:0 5px 20px #0003;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-font-size:22px;
-}
-
-#loading{
-position:fixed;
-inset:0;
-z-index:100;
-display:flex;
-align-items:center;
-justify-content:center;
-background:#9edcff;
-font-size:25px;
-font-weight:bold;
+    position:fixed;
+    right:18px;
+    top:80px;
+    z-index:20;
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:#ffffffed;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    box-shadow:0 4px 18px #0004;
 }
 </style>
 </head>
 
 <body>
 
-<div id="loading">Weltkarte wird geladen...</div>
 <div id="map"></div>
 
-<div id="top">
-<input id="search" placeholder="Ort, Straße oder Stadt suchen...">
-<button onclick="searchLocation()">Suchen</button>
+<div id="ui">
+    <input id="search" placeholder="Straße, Stadt oder Bibliothek...">
+    <button onclick="search()">Suchen</button>
 </div>
 
-<div id="panel">
+<div id="menu">
+
 <h2>🌍 Weltkarte</h2>
 
-<h3>Europa</h3>
-<div class="place" onclick="flyTo(10,0,20)">🇩🇪 Deutschland</div>
-<div class="place" onclick="flyTo(2,0,35)">🇫🇷 Frankreich</div>
-<div class="place" onclick="flyTo(25,0,20)">🇵🇱 Polen</div>
-<div class="place" onclick="flyTo(15,0,5)">🇮🇹 Italien</div>
-<div class="place" onclick="flyTo(-3,0,40)">🇬🇧 Großbritannien</div>
+<h3>Städte</h3>
 
-<h3>Nordamerika</h3>
-<div class="place" onclick="flyTo(-100,0,10)">🇺🇸 USA</div>
-<div class="place" onclick="flyTo(-110,0,35)">🇨🇦 Kanada</div>
-<div class="place" onclick="flyTo(-102,0,-15)">🇲🇽 Mexiko</div>
+<div class="place" onclick="go(10,10)">🇩🇪 Berlin</div>
+<div class="place" onclick="go(-5,45)">🇫🇷 Paris</div>
+<div class="place" onclick="go(-25,48)">🇬🇧 London</div>
+<div class="place" onclick="go(38,8)">🇵🇱 Warschau</div>
+<div class="place" onclick="go(-110,8)">🇺🇸 New York</div>
+<div class="place" onclick="go(130,20)">🇨🇳 Peking</div>
+<div class="place" onclick="go(150,20)">🇯🇵 Tokio</div>
 
-<h3>Asien</h3>
-<div class="place" onclick="flyTo(105,0,25)">🇨🇳 China</div>
-<div class="place" onclick="flyTo(138,0,20)">🇯🇵 Japan</div>
-<div class="place" onclick="flyTo(78,0,5)">🇮🇳 Indien</div>
+<h3>📚 Bibliotheken</h3>
 
-<h3>Sehenswürdigkeiten</h3>
-<div class="place" onclick="flyTo(10.75,0,28.5)">Brandenburger Tor</div>
-<div class="place" onclick="flyTo(2.35,0,46.7)">Eiffelturm</div>
-<div class="place" onclick="flyTo(-74,0,40.7)">New York</div>
-<div class="place" onclick="flyTo(139.7,0,35.7)">Tokio</div>
+<div class="place" onclick="go(12,13)">
+Stadtbibliothek Berlin
+</div>
+
+<div class="place" onclick="go(-4,43)">
+Bibliothèque Centrale
+</div>
+
+<div class="place" onclick="go(-108,10)">
+New York Public Library
+</div>
+
+<div class="place" onclick="go(40,10)">
+Bibliothek Warschau
+</div>
+
+<div class="place" onclick="go(153,22)">
+Tokyo City Library
+</div>
+
+<h3>🛣 Straßen</h3>
+
+<div class="place" onclick="go(10,8)">
+Unter den Linden
+</div>
+
+<div class="place" onclick="go(17,8)">
+Friedrichstraße
+</div>
+
+<div class="place" onclick="go(10,-7)">
+Hauptstraße
+</div>
+
+<div class="place" onclick="go(28,0)">
+Bergstraße
+</div>
+
+<div class="place" onclick="go(-110,8)">
+Broadway
+</div>
+
+<div class="place" onclick="go(-100,10)">
+5th Avenue
+</div>
+
+<div class="place" onclick="go(105,15)">
+Nanjing Road
+</div>
+
+<div class="place" onclick="go(145,20)">
+Tokyo Avenue
+</div>
+
 </div>
 
 <div id="compass">N</div>
 
-<div id="info">
-Weltkarte · 3D
+<div id="status">
+3D-Weltkarte
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
 
 <script>
 
-const scene = new THREE.Scene();
+if(typeof THREE==="undefined"){
 
-scene.background = new THREE.Color(0x9edcff);
-scene.fog = new THREE.Fog(0x9edcff,180,650);
+document.getElementById("status").innerHTML=
+"❌ Three.js konnte nicht geladen werden";
 
-const camera = new THREE.PerspectiveCamera(
+throw new Error("Three.js nicht geladen");
+
+}
+
+
+const scene=new THREE.Scene();
+
+scene.background=
+new THREE.Color(0x91d8ff);
+
+scene.fog=
+new THREE.Fog(
+0x91d8ff,
+250,
+800
+);
+
+
+const camera=
+new THREE.PerspectiveCamera(
 55,
 innerWidth/innerHeight,
 0.1,
 2000
 );
 
-camera.position.set(0,260,220);
+camera.position.set(
+0,
+250,
+220
+);
 
-const renderer = new THREE.WebGLRenderer({
+
+const renderer=
+new THREE.WebGLRenderer({
 antialias:true
 });
 
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-document.getElementById("map").appendChild(renderer.domElement);
+renderer.setSize(
+innerWidth,
+innerHeight
+);
 
-const controls = new THREE.OrbitControls(camera,renderer.domElement);
+renderer.setPixelRatio(
+Math.min(devicePixelRatio,2)
+);
+
+renderer.shadowMap.enabled=true;
+
+document
+.getElementById("map")
+.appendChild(renderer.domElement);
+
+
+const controls=
+new THREE.OrbitControls(
+camera,
+renderer.domElement
+);
+
 controls.enableDamping=true;
 controls.dampingFactor=.08;
-controls.maxPolarAngle=Math.PI/2.05;
-controls.minDistance=15;
-controls.maxDistance=650;
+controls.maxPolarAngle=
+Math.PI/2.03;
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x668899,2));
+controls.minDistance=10;
+controls.maxDistance=700;
 
-const sun = new THREE.DirectionalLight(0xffffff,2.2);
-sun.position.set(100,300,100);
+
+/* LICHT */
+
+scene.add(
+new THREE.HemisphereLight(
+0xffffff,
+0x567080,
+2
+)
+);
+
+const sun=
+new THREE.DirectionalLight(
+0xffffff,
+2
+);
+
+sun.position.set(
+150,
+300,
+100
+);
+
 sun.castShadow=true;
+
 scene.add(sun);
 
 
-/* =========================
-   WELTKARTE
-========================= */
+/* HÖHEN */
 
-const WORLD_W=620;
-const WORLD_H=320;
+function terrain(x,z){
 
-function height(x,z){
+let h=0;
 
-    const a=Math.sin(x*.035)*3;
-    const b=Math.cos(z*.045)*3;
-    const c=Math.sin((x+z)*.025)*4;
+h+=Math.sin(x*.035)*3;
+h+=Math.cos(z*.045)*3;
+h+=Math.sin((x+z)*.025)*5;
 
-    const europe=
-        Math.exp(-((x-10)**2+(z-10)**2)/2500)*15;
+h+=
+Math.sin(x*.09+z*.04)*1.5;
 
-    const asia=
-        Math.exp(-((x-130)**2+(z-5)**2)/6000)*12;
-
-    const america=
-        Math.exp(-((x+110)**2+(z-5)**2)/7000)*10;
-
-    return Math.max(0,a+b+c+europe+asia+america);
+return Math.max(0,h);
 }
 
 
-/* Meer */
+/* WASSER */
 
-const waterGeo=new THREE.PlaneGeometry(
-WORLD_W,
-WORLD_H,
-1,
-1
+const water=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+700,
+450
+),
+new THREE.MeshPhongMaterial({
+color:0x238fd0,
+transparent:true,
+opacity:.8
+})
 );
 
-const waterMat=new THREE.MeshPhongMaterial({
-color:0x319bd8,
-transparent:true,
-opacity:.78
-});
-
-const water=new THREE.Mesh(waterGeo,waterMat);
 water.rotation.x=-Math.PI/2;
 water.position.y=-1;
+
 scene.add(water);
 
 
-/* Kontinente */
+/* LAND */
 
-function createLand(x,z,w,d,color){
+function land(
+x,
+z,
+w,
+d,
+color
+){
 
-    const geo=new THREE.PlaneGeometry(w,d,35,25);
-    const pos=geo.attributes.position;
+const geo=
+new THREE.PlaneGeometry(
+w,
+d,
+45,
+35
+);
 
-    for(let i=0;i<pos.count;i++){
+const p=geo.attributes.position;
 
-        const lx=pos.getX(i);
-        const lz=pos.getY(i);
+for(let i=0;i<p.count;i++){
 
-        pos.setZ(
-            i,
-            height(x+lx,z+lz)
-        );
-    }
+let lx=p.getX(i);
+let lz=p.getY(i);
 
-    geo.computeVertexNormals();
+p.setZ(
+i,
+terrain(
+x+lx,
+z+lz
+)
+);
 
-    const mat=new THREE.MeshStandardMaterial({
-        color,
-        roughness:1
-    });
+}
 
-    const mesh=new THREE.Mesh(geo,mat);
+geo.computeVertexNormals();
 
-    mesh.rotation.x=-Math.PI/2;
-    mesh.position.set(x,0,z);
+const mesh=
+new THREE.Mesh(
+geo,
+new THREE.MeshStandardMaterial({
+color:color,
+roughness:1
+})
+);
 
-    mesh.receiveShadow=true;
+mesh.rotation.x=-Math.PI/2;
+mesh.position.set(x,0,z);
+mesh.receiveShadow=true;
 
-    scene.add(mesh);
+scene.add(mesh);
 }
 
 
-/* große Landflächen */
+/* KONTINENTE */
 
-createLand(-105,10,180,125,0x78a957);
-createLand(5,10,155,110,0x86ad62);
-createLand(105,15,210,135,0x91ae68);
-createLand(155,-100,150,100,0x78a957);
-createLand(-25,-95,90,90,0x83a95c);
+land(
+-110,
+10,
+190,
+140,
+0x70a653
+);
+
+land(
+5,
+10,
+170,
+120,
+0x82ae61
+);
+
+land(
+115,
+15,
+230,
+145,
+0x91ae68
+);
+
+land(
+150,
+-100,
+160,
+100,
+0x75a151
+);
+
+land(
+-25,
+-95,
+100,
+90,
+0x7fa95b
+);
 
 
-/* =========================
-   STRASSEN
-========================= */
+/* STRASSEN */
 
 const roads=[];
 
-function road(name,x,z,length,width,rotation=0){
+function createRoad(
+name,
+x,
+z,
+length,
+width,
+rotation
+){
 
-    const group=new THREE.Group();
+const group=
+new THREE.Group();
 
-    const segments=30;
 
-    for(let i=0;i<segments;i++){
+const road=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+width,
+.5,
+length
+),
+new THREE.MeshStandardMaterial({
+color:0x42464b
+})
+);
 
-        const t=(i/(segments-1))-.5;
+road.position.y=2;
 
-        const px=t*length;
+group.add(road);
 
-        const localZ=px;
 
-        const geo=new THREE.BoxGeometry(
-            width,
-            .35,
-            length/segments+1
-        );
+/* Seitenwege */
 
-        const mat=new THREE.MeshStandardMaterial({
-            color:0x45484c
-        });
+const sideMaterial=
+new THREE.MeshStandardMaterial({
+color:0xa8a8a8
+});
 
-        const r=new THREE.Mesh(geo,mat);
+const a=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+1.5,
+.25,
+length
+),
+sideMaterial
+);
 
-        r.position.set(
-            Math.sin(rotation)*localZ,
-            1.5,
-            Math.cos(rotation)*localZ
-        );
+a.position.x=
+-width/2-1;
 
-        r.rotation.y=rotation;
+a.position.y=1.65;
 
-        r.castShadow=true;
-        r.receiveShadow=true;
+group.add(a);
 
-        group.add(r);
-    }
 
-    group.position.set(x,0,z);
+const b=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+1.5,
+.25,
+length
+),
+sideMaterial
+);
 
-    scene.add(group);
+b.position.x=
+width/2+1;
 
-    roads.push({
-        name,
-        x,
-        z,
-        length,
-        width,
-        rotation
-    });
+b.position.y=1.65;
 
-    createStreetLabel(
-        name,
-        x,
-        z,
-        rotation
-    );
+group.add(b);
+
+
+/* Mittellinie */
+
+for(
+let z2=-length/2+6;
+z2<length/2;
+z2+=12
+){
+
+const line=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+.3,
+.1,
+6
+),
+new THREE.MeshBasicMaterial({
+color:0xffd83d
+})
+);
+
+line.position.y=2.3;
+line.position.z=z2;
+
+group.add(line);
+
 }
 
 
-/* Europa */
+group.rotation.y=rotation;
 
-road("Unter den Linden",10,8,65,5,.0);
-road("Friedrichstraße",17,8,60,5,Math.PI/2);
-road("Kantstraße",5,20,55,5,.15);
-road("Hauptstraße",10,-5,90,6,0);
-road("Bahnhofstraße",-15,5,65,5,.7);
-road("Bergstraße",28,0,55,5,-.4);
-road("Seestraße",5,32,70,5,.1);
-road("Waldstraße",-25,20,80,5,-.3);
+group.position.set(
+x,
+0,
+z
+);
 
+scene.add(group);
 
-/* Frankreich */
-
-road("Rue de Rivoli", -5,45,65,5,.15);
-road("Avenue de Paris",0,35,70,5,.8);
-
-
-/* Polen */
-
-road("Aleje Jerozolimskie",38,5,70,5,.1);
-road("Marszałkowska",45,5,60,5,Math.PI/2);
+roads.push({
+name:name,
+x:x,
+z:z
+});
 
 
-/* USA */
-
-road("Broadway",-110,8,75,5,.2);
-road("5th Avenue",-100,10,70,5,Math.PI/2);
-road("Main Street",-120,0,90,5,0);
-
-
-/* Asien */
-
-road("Nanjing Road",105,15,85,5,.2);
-road("Central Avenue",120,5,80,5,Math.PI/2);
-road("Tokyo Avenue",145,20,75,5,.5);
-
-
-/* =========================
-   STRASSENNAMEN
-========================= */
-
-function createStreetLabel(text,x,z,rotation){
-
-    const canvas=document.createElement("canvas");
-    canvas.width=700;
-    canvas.height=120;
-
-    const ctx=canvas.getContext("2d");
-
-    ctx.clearRect(0,0,700,120);
-
-    ctx.fillStyle="rgba(255,255,255,.9)";
-    ctx.roundRect(10,20,680,80,20);
-    ctx.fill();
-
-    ctx.fillStyle="#222";
-    ctx.font="bold 38px Arial";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText(text,350,60);
-
-    const texture=new THREE.CanvasTexture(canvas);
-
-    const material=new THREE.SpriteMaterial({
-        map:texture,
-        transparent:true,
-        depthTest:false
-    });
-
-    const sprite=new THREE.Sprite(material);
-
-    sprite.scale.set(30,5.2,1);
-
-    sprite.position.set(x,7,z);
-
-    sprite.rotation.z=-rotation;
-
-    scene.add(sprite);
+streetLabel(
+name,
+x,
+z,
+rotation
+);
 }
 
 
-/* =========================
-   STÄDTE
-========================= */
+/* EUROPA */
+
+createRoad(
+"Unter den Linden",
+10,
+8,
+70,
+6,
+0
+);
+
+createRoad(
+"Friedrichstraße",
+17,
+8,
+65,
+6,
+Math.PI/2
+);
+
+createRoad(
+"Hauptstraße",
+10,
+-7,
+95,
+7,
+0
+);
+
+createRoad(
+"Bahnhofstraße",
+-15,
+5,
+70,
+6,
+.7
+);
+
+createRoad(
+"Bergstraße",
+28,
+0,
+60,
+6,
+-.4
+);
+
+createRoad(
+"Seestraße",
+5,
+32,
+75,
+6,
+.1
+);
+
+createRoad(
+"Waldstraße",
+-25,
+20,
+85,
+6,
+-.3
+);
+
+
+/* FRANKREICH */
+
+createRoad(
+"Rue de Rivoli",
+-5,
+45,
+70,
+6,
+.15
+);
+
+createRoad(
+"Avenue de Paris",
+0,
+35,
+75,
+6,
+.8
+);
+
+
+/* POLEN */
+
+createRoad(
+"Aleje Jerozolimskie",
+38,
+5,
+75,
+6,
+.1
+);
+
+createRoad(
+"Marszałkowska",
+45,
+5,
+65,
+6,
+Math.PI/2
+);
+
+
+/* AMERIKA */
+
+createRoad(
+"Broadway",
+-110,
+8,
+80,
+6,
+.2
+);
+
+createRoad(
+"5th Avenue",
+-100,
+10,
+75,
+6,
+Math.PI/2
+);
+
+createRoad(
+"Main Street",
+-120,
+0,
+95,
+6,
+0
+);
+
+
+/* ASIEN */
+
+createRoad(
+"Nanjing Road",
+105,
+15,
+90,
+6,
+.2
+);
+
+createRoad(
+"Central Avenue",
+120,
+5,
+85,
+6,
+Math.PI/2
+);
+
+createRoad(
+"Tokyo Avenue",
+145,
+20,
+80,
+6,
+.5
+);
+
+
+/* STRASSENNAME */
+
+function streetLabel(
+text,
+x,
+z,
+rotation
+){
+
+const canvas=
+document.createElement("canvas");
+
+canvas.width=700;
+canvas.height=100;
+
+const ctx=
+canvas.getContext("2d");
+
+ctx.fillStyle="white";
+
+ctx.fillRect(
+5,
+10,
+690,
+80
+);
+
+ctx.fillStyle="#111";
+
+ctx.font=
+"bold 35px Arial";
+
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+
+ctx.fillText(
+text,
+350,
+50
+);
+
+const texture=
+new THREE.CanvasTexture(
+canvas
+);
+
+const sprite=
+new THREE.Sprite(
+new THREE.SpriteMaterial({
+map:texture,
+transparent:true,
+depthTest:false
+})
+);
+
+sprite.scale.set(
+30,
+4.3,
+1
+);
+
+sprite.position.set(
+x,
+9,
+z
+);
+
+sprite.rotation.z=-rotation;
+
+scene.add(sprite);
+}
+
+
+/* STÄDTE */
 
 const cities=[
 ["Berlin",10,10],
@@ -462,74 +834,141 @@ const cities=[
 ["Delhi",100,-5]
 ];
 
-function city(name,x,z){
 
-    const group=new THREE.Group();
+function createCity(
+name,
+x,
+z
+){
 
-    const tower=new THREE.Mesh(
-        new THREE.BoxGeometry(4,10,4),
-        new THREE.MeshStandardMaterial({color:0xbcc6d1})
-    );
+const group=
+new THREE.Group();
 
-    tower.position.y=5;
+const building=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+5,
+12,
+5
+),
+new THREE.MeshStandardMaterial({
+color:0xbfc7ce
+})
+);
 
-    group.add(tower);
+building.position.y=6;
 
-    const roof=new THREE.Mesh(
-        new THREE.ConeGeometry(3.5,4,4),
-        new THREE.MeshStandardMaterial({color:0x8c4037})
-    );
+group.add(building);
 
-    roof.position.y=12;
 
-    group.add(roof);
+const roof=
+new THREE.Mesh(
+new THREE.ConeGeometry(
+4,
+4,
+4
+),
+new THREE.MeshStandardMaterial({
+color:0x95463e
+})
+);
 
-    group.position.set(x,height(x,z),z);
+roof.position.y=14;
 
-    scene.add(group);
+group.add(roof);
 
-    createCityLabel(name,x,z);
+
+group.position.set(
+x,
+terrain(x,z),
+z
+);
+
+scene.add(group);
+
+cityLabel(
+name,
+x,
+z
+);
 }
 
-function createCityLabel(name,x,z){
 
-    const canvas=document.createElement("canvas");
-    canvas.width=500;
-    canvas.height=100;
+function cityLabel(
+text,
+x,
+z
+){
 
-    const ctx=canvas.getContext("2d");
+const canvas=
+document.createElement("canvas");
 
-    ctx.fillStyle="#ffffff";
-    ctx.roundRect(10,10,480,80,18);
-    ctx.fill();
+canvas.width=500;
+canvas.height=100;
 
-    ctx.fillStyle="#111";
-    ctx.font="bold 34px Arial";
-    ctx.textAlign="center";
-    ctx.fillText(name,250,62);
+const ctx=
+canvas.getContext("2d");
 
-    const tex=new THREE.CanvasTexture(canvas);
+ctx.fillStyle="white";
 
-    const sprite=new THREE.Sprite(
-        new THREE.SpriteMaterial({
-            map:tex,
-            transparent:true,
-            depthTest:false
-        })
-    );
+ctx.fillRect(
+5,
+5,
+490,
+90
+);
 
-    sprite.scale.set(24,4.8,1);
-    sprite.position.set(x,18,z);
+ctx.fillStyle="#111";
 
-    scene.add(sprite);
+ctx.font=
+"bold 34px Arial";
+
+ctx.textAlign="center";
+
+ctx.fillText(
+text,
+250,
+60
+);
+
+const texture=
+new THREE.CanvasTexture(canvas);
+
+const sprite=
+new THREE.Sprite(
+new THREE.SpriteMaterial({
+map:texture,
+transparent:true,
+depthTest:false
+})
+);
+
+sprite.scale.set(
+25,
+5,
+1
+);
+
+sprite.position.set(
+x,
+22,
+z
+);
+
+scene.add(sprite);
 }
 
-cities.forEach(c=>city(...c));
+
+cities.forEach(c=>{
+createCity(
+c[0],
+c[1],
+c[2]
+);
+});
 
 
-/* =========================
-   BIBLIOTHEKEN
-========================= */
+/* BIBLIOTHEKEN */
 
 const libraries=[
 ["Stadtbibliothek Berlin",12,13],
@@ -539,230 +978,318 @@ const libraries=[
 ["Tokyo City Library",153,22]
 ];
 
-function createLibrary(name,x,z){
 
-    const group=new THREE.Group();
+function library(
+name,
+x,
+z
+){
 
-    const building=new THREE.Mesh(
-        new THREE.BoxGeometry(7,5,6),
-        new THREE.MeshStandardMaterial({
-            color:0xd8c8a8
-        })
-    );
+const group=
+new THREE.Group();
 
-    building.position.y=2.5;
-    building.castShadow=true;
 
-    group.add(building);
+const body=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+9,
+6,
+7
+),
+new THREE.MeshStandardMaterial({
+color:0xd8c6a3
+})
+);
 
-    for(let i=-2;i<=2;i++){
+body.position.y=3;
 
-        const col=new THREE.Mesh(
-            new THREE.CylinderGeometry(.25,.25,6,10),
-            new THREE.MeshStandardMaterial({
-                color:0xf2eee5
-            })
-        );
+group.add(body);
 
-        col.position.set(i*1.3,3.2,3.1);
 
-        group.add(col);
-    }
+/* Säulen */
 
-    const roof=new THREE.Mesh(
-        new THREE.BoxGeometry(8,1,7),
-        new THREE.MeshStandardMaterial({
-            color:0x6d5542
-        })
-    );
+for(
+let i=-2;
+i<=2;
+i++
+){
 
-    roof.position.y=5.5;
-    group.add(roof);
+const column=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+.3,
+.3,
+6.5,
+12
+),
+new THREE.MeshStandardMaterial({
+color:0xf1ede3
+})
+);
 
-    group.position.set(
-        x,
-        height(x,z),
-        z
-    );
+column.position.set(
+i*1.4,
+3.2,
+3.6
+);
 
-    scene.add(group);
+group.add(column);
 
-    createCityLabel(name,x,z);
 }
 
-libraries.forEach(x=>createLibrary(...x));
+
+/* Dach */
+
+const roof=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+10,
+1,
+8
+),
+new THREE.MeshStandardMaterial({
+color:0x684c39
+})
+);
+
+roof.position.y=6.5;
+
+group.add(roof);
 
 
-/* =========================
-   MARKER
-========================= */
+group.position.set(
+x,
+terrain(x,z),
+z
+);
+
+scene.add(group);
+
+cityLabel(
+"📚 "+name,
+x,
+z
+);
+}
+
+
+libraries.forEach(l=>{
+library(
+l[0],
+l[1],
+l[2]
+);
+});
+
+
+/* MARKER */
 
 let marker=null;
 
-function createMarker(x,z){
+function markerAt(x,z){
 
-    if(marker)scene.remove(marker);
+if(marker)
+scene.remove(marker);
 
-    marker=new THREE.Group();
+marker=
+new THREE.Group();
 
-    const pole=new THREE.Mesh(
-        new THREE.CylinderGeometry(.5,.5,12,16),
-        new THREE.MeshStandardMaterial({
-            color:0xff2020
-        })
-    );
 
-    pole.position.y=6;
+const pole=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+.5,
+.5,
+10,
+16
+),
+new THREE.MeshStandardMaterial({
+color:0xff2222
+})
+);
 
-    const ball=new THREE.Mesh(
-        new THREE.SphereGeometry(2.2,20,20),
-        new THREE.MeshStandardMaterial({
-            color:0xff2020
-        })
-    );
+pole.position.y=5;
 
-    ball.position.y=13;
+marker.add(pole);
 
-    marker.add(pole,ball);
 
-    marker.position.set(
-        x,
-        height(x,z),
-        z
-    );
+const ball=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+2.3,
+20,
+20
+),
+new THREE.MeshStandardMaterial({
+color:0xff2222
+})
+);
 
-    scene.add(marker);
+ball.position.y=11;
+
+marker.add(ball);
+
+
+marker.position.set(
+x,
+terrain(x,z),
+z
+);
+
+scene.add(marker);
 }
 
 
-/* =========================
-   NAVIGATION
-========================= */
+/* NAVIGATION */
 
-function flyTo(x,y,z){
+function go(x,z){
 
-    const target=new THREE.Vector3(x,y,z);
+camera.position.set(
+x+45,
+75,
+z+45
+);
 
-    camera.position.set(
-        x+35,
-        65,
-        z+35
-    );
+controls.target.set(
+x,
+terrain(x,z),
+z
+);
 
-    controls.target.copy(target);
-
-    createMarker(x,z);
+markerAt(x,z);
 }
 
-function searchLocation(){
 
-    const query=document
-        .getElementById("search")
-        .value
-        .toLowerCase()
-        .trim();
+/* SUCHE */
 
-    if(!query)return;
+function search(){
 
-    for(const c of cities){
+const q=
+document
+.getElementById("search")
+.value
+.toLowerCase()
+.trim();
 
-        if(c[0].toLowerCase().includes(query)){
+if(!q)return;
 
-            flyTo(c[1],20,c[2]);
-            return;
-        }
-    }
 
-    for(const r of roads){
+for(
+const c of cities
+){
 
-        if(r.name.toLowerCase().includes(query)){
+if(
+c[0]
+.toLowerCase()
+.includes(q)
+){
 
-            flyTo(r.x,20,r.z);
-            return;
-        }
-    }
+go(c[1],c[2]);
+return;
 
-    for(const l of libraries){
-
-        if(l[0].toLowerCase().includes(query)){
-
-            flyTo(l[1],20,l[2]);
-            return;
-        }
-    }
 }
+
+}
+
+
+for(
+const r of roads
+){
+
+if(
+r.name
+.toLowerCase()
+.includes(q)
+){
+
+go(r.x,r.z);
+return;
+
+}
+
+}
+
+
+for(
+const l of libraries
+){
+
+if(
+l[0]
+.toLowerCase()
+.includes(q)
+){
+
+go(l[1],l[2]);
+return;
+
+}
+
+}
+
+document.getElementById("status")
+.innerHTML="Ort nicht gefunden";
+}
+
 
 document
 .getElementById("search")
-.addEventListener("keydown",e=>{
-    if(e.key==="Enter")searchLocation();
-});
+.addEventListener(
+"keydown",
+e=>{
+if(e.key==="Enter")
+search();
+}
+);
 
 
-/* =========================
-   MOUSE POSITION
-========================= */
+/* RESIZE */
 
-const raycaster=new THREE.Raycaster();
-const mouse=new THREE.Vector2();
+window.addEventListener(
+"resize",
+()=>{
 
-renderer.domElement.addEventListener("mousemove",e=>{
+camera.aspect=
+innerWidth/innerHeight;
 
-    mouse.x=(e.clientX/innerWidth)*2-1;
-    mouse.y=-(e.clientY/innerHeight)*2+1;
+camera.updateProjectionMatrix();
 
-});
+renderer.setSize(
+innerWidth,
+innerHeight
+);
 
-
-/* =========================
-   START
-========================= */
-
-setTimeout(()=>{
-    document.getElementById("loading").style.display="none";
-},800);
+}
+);
 
 
-/* =========================
-   RESIZE
-========================= */
-
-addEventListener("resize",()=>{
-
-    camera.aspect=innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        innerWidth,
-        innerHeight
-    );
-});
-
-
-/* =========================
-   LOOP
-========================= */
+/* LOOP */
 
 function animate(){
 
-    requestAnimationFrame(animate);
+requestAnimationFrame(
+animate
+);
 
-    controls.update();
+controls.update();
 
-    if(marker){
+if(marker)
+marker.rotation.y+=.015;
 
-        marker.rotation.y+=.01;
+renderer.render(
+scene,
+camera
+);
 
-    }
-
-    renderer.render(
-        scene,
-        camera
-    );
 }
 
 animate();
 
+document.getElementById("status")
+.innerHTML=
+"🌍 3D Weltkarte aktiv";
+
 </script>
+
 </body>
 </html>
