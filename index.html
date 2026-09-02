@@ -2,101 +2,220 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Fishing Simulator</title>
+
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#75ccef;font-family:Arial}
-canvas{display:block}
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    background:#75c9ec;
+}
+
+canvas{
+    display:block;
+}
+
 #crosshair{
-position:fixed;left:50%;top:50%;width:8px;height:8px;
-transform:translate(-50%,-50%);border:2px solid white;
-border-radius:50%;z-index:10;pointer-events:none
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:8px;
+    height:8px;
+    transform:translate(-50%,-50%);
+    border:2px solid white;
+    border-radius:50%;
+    z-index:20;
+    pointer-events:none;
 }
-#hud,#status,#prompt,#drive{
-position:fixed;color:white;background:rgba(0,0,0,.72);
-border-radius:10px;z-index:20
+
+#hud,
+#status,
+#prompt,
+#boatControls{
+    position:fixed;
+    color:white;
+    background:rgba(0,0,0,.72);
+    border-radius:10px;
+    z-index:30;
 }
-#hud{top:12px;left:12px;padding:12px;line-height:1.5}
-#status{top:12px;right:12px;padding:12px}
+
+#hud{
+    left:15px;
+    top:15px;
+    padding:12px 16px;
+    line-height:1.55;
+}
+
+#status{
+    right:15px;
+    top:15px;
+    padding:12px 16px;
+}
+
 #prompt{
-left:50%;bottom:55px;transform:translateX(-50%);
-padding:13px 22px;font-size:18px;display:none;text-align:center
+    left:50%;
+    bottom:65px;
+    transform:translateX(-50%);
+    padding:13px 22px;
+    font-size:18px;
+    text-align:center;
+    display:none;
 }
-#drive{
-bottom:15px;left:50%;transform:translateX(-50%);
-padding:12px 25px;text-align:center;display:none
+
+#boatControls{
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    padding:12px 22px;
+    text-align:center;
+    display:none;
 }
+
 #start{
-position:fixed;inset:0;z-index:100;background:#06131ddd;
-display:flex;align-items:center;justify-content:center;
-flex-direction:column;color:white
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    color:white;
+    background:linear-gradient(#061522dd,#02080eee);
 }
-#start h1{font-size:48px}
-button{padding:15px 35px;border:0;border-radius:10px;font-size:20px;cursor:pointer}
+
+#start h1{
+    font-size:50px;
+    margin:0 0 12px;
+}
+
+#start button{
+    border:0;
+    border-radius:10px;
+    padding:15px 38px;
+    font-size:20px;
+    background:#158bd1;
+    color:white;
+    cursor:pointer;
+}
 </style>
 </head>
+
 <body>
 
 <div id="start">
-<h1>🎣 FISHING SIMULATOR</h1>
-<button id="startBtn">START</button>
+    <h1>🎣 FISHING SIMULATOR</h1>
+    <p>Hafen • Fischerboot • Kran • Netz</p>
+    <button id="startButton">STARTEN</button>
 </div>
 
 <div id="crosshair"></div>
 
 <div id="hud">
-<b>🎣 FISHING SIMULATOR</b><br>
-WASD = Laufen<br>
-Maus = Umschauen<br>
-E = Interagieren<br>
-R = Brücke drehen<br>
-Shift = Rennen<br>
-Space = Springen
+    <b>🎣 FISHING SIMULATOR</b><br>
+    WASD = Laufen<br>
+    Maus = Umschauen<br>
+    E = Interagieren<br>
+    R = Brücke drehen<br>
+    Shift = Rennen<br>
+    Space = Springen
 </div>
 
 <div id="status">
-🔩 Brücke: <b id="bridgeText">am Hafen</b>
+    🔩 Brücke: <b id="bridgeStatus">am Hafen</b>
 </div>
 
 <div id="prompt"></div>
 
-<div id="drive">
-🚤 <b>BOOT STEUERN</b><br>
-W/S = Gas &nbsp; A/D = Lenken<br>
-E = Steuerstand verlassen
+<div id="boatControls">
+    🚤 <b>BOOT STEUERN</b><br>
+    W/S = Gas &nbsp; A/D = Lenken<br>
+    E = Steuerstand verlassen
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
+
 /* =========================================================
    ENGINE
 ========================================================= */
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x83ccef);
-scene.fog=new THREE.Fog(0x83ccef,45,180);
+const scene = new THREE.Scene();
 
-const camera=new THREE.PerspectiveCamera(
-75,innerWidth/innerHeight,.1,300
+scene.background =
+    new THREE.Color(0x83ccef);
+
+scene.fog =
+    new THREE.Fog(
+        0x83ccef,
+        45,
+        180
+    );
+
+const camera =
+    new THREE.PerspectiveCamera(
+        75,
+        innerWidth / innerHeight,
+        .1,
+        300
+    );
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
 );
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
-renderer.shadowMap.enabled=true;
-document.body.appendChild(renderer.domElement);
+renderer.setPixelRatio(
+    Math.min(devicePixelRatio,1.5)
+);
 
-const controls=new THREE.PointerLockControls(camera,document.body);
+renderer.shadowMap.enabled = true;
 
-scene.add(new THREE.HemisphereLight(0xbfeeff,0x39444a,1.5));
+document.body.appendChild(
+    renderer.domElement
+);
 
-const sun=new THREE.DirectionalLight(0xffffff,1.8);
-sun.position.set(-30,50,20);
-sun.castShadow=true;
-sun.shadow.mapSize.width=1024;
-sun.shadow.mapSize.height=1024;
+const controls =
+    new THREE.PointerLockControls(
+        camera,
+        document.body
+    );
+
+scene.add(
+    new THREE.HemisphereLight(
+        0xbfeeff,
+        0x39444a,
+        1.5
+    )
+);
+
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.8
+    );
+
+sun.position.set(
+    -30,
+    50,
+    20
+);
+
+sun.castShadow = true;
+
+sun.shadow.mapSize.width = 1024;
+sun.shadow.mapSize.height = 1024;
+
 scene.add(sun);
 
 
@@ -104,48 +223,144 @@ scene.add(sun);
    MATERIALIEN
 ========================================================= */
 
-function mat(color,rough=.8,metalness=0,transparent=false,opacity=1){
-return new THREE.MeshStandardMaterial({
-color,
-roughness:rough,
-metalness,
-transparent,
-opacity
-});
+const concrete =
+    new THREE.MeshStandardMaterial({
+        color:0x555b5e,
+        roughness:.9
+    });
+
+const wood =
+    new THREE.MeshStandardMaterial({
+        color:0x704321,
+        roughness:.85
+    });
+
+const darkWood =
+    new THREE.MeshStandardMaterial({
+        color:0x352116,
+        roughness:.9
+    });
+
+const metal =
+    new THREE.MeshStandardMaterial({
+        color:0x747b80,
+        metalness:.85,
+        roughness:.25
+    });
+
+const darkMetal =
+    new THREE.MeshStandardMaterial({
+        color:0x252b2f,
+        metalness:.9,
+        roughness:.25
+    });
+
+const white =
+    new THREE.MeshStandardMaterial({
+        color:0xe4e4dc
+    });
+
+const glass =
+    new THREE.MeshStandardMaterial({
+        color:0x65b4ce,
+        transparent:true,
+        opacity:.6,
+        roughness:.1
+    });
+
+const waterMaterial =
+    new THREE.MeshStandardMaterial({
+        color:0x157ca7,
+        roughness:.25
+    });
+
+const netMaterial =
+    new THREE.MeshStandardMaterial({
+        color:0x3c4b51,
+        transparent:true,
+        opacity:.72,
+        side:THREE.DoubleSide
+    });
+
+const yellowMetal =
+    new THREE.MeshStandardMaterial({
+        color:0xe0a51e,
+        metalness:.7,
+        roughness:.3
+    });
+
+
+/* =========================================================
+   HILFSFUNKTIONEN
+========================================================= */
+
+function createBox(
+    w,h,d,
+    material,
+    x,y,z,
+    parent=scene
+){
+
+    const mesh =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                w,h,d
+            ),
+            material
+        );
+
+    mesh.position.set(
+        x,y,z
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    parent.add(mesh);
+
+    return mesh;
 }
 
-const M={
-ground:mat(0x565b5e),
-wood:mat(0x704521),
-darkWood:mat(0x342016),
-metal:mat(0x747d82,.25,.85),
-darkMetal:mat(0x252b2f,.25,.9),
-white:mat(0xe6e4d9),
-glass:mat(0x55b6d3,.1,.1,true,.55),
-water:mat(0x147da8,.25),
-net:mat(0x34464d,.8,.2,true,.7),
-yellow:mat(0xe0aa22,.3,.7)
-};
+function createCylinder(
+    radius,
+    height,
+    material,
+    x,y,z,
+    parent=scene,
+    segments=16
+){
 
-function box(w,h,d,m,x,y,z,parent=scene){
-const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
-o.position.set(x,y,z);
-o.castShadow=true;
-o.receiveShadow=true;
-parent.add(o);
-return o;
+    const mesh =
+        new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                radius,
+                radius,
+                height,
+                segments
+            ),
+            material
+        );
+
+    mesh.position.set(
+        x,y,z
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    parent.add(mesh);
+
+    return mesh;
 }
 
-function cyl(r,h,m,x,y,z,parent=scene){
-const o=new THREE.Mesh(
-new THREE.CylinderGeometry(r,r,h,16),
-m
-);
-o.position.set(x,y,z);
-o.castShadow=true;
-o.receiveShadow=true;
-parent.add(o);
-return o;
+function worldPosition(object){
+
+    const p =
+        new THREE.Vector3();
+
+    object.getWorldPosition(p);
+
+    return p;
 }
 
 
@@ -153,24 +368,101 @@ return o;
    HAFEN
 ========================================================= */
 
-box(90,.5,60,M.ground,0,-.25,8);
-
-const water=new THREE.Mesh(
-new THREE.PlaneGeometry(180,180),
-M.water
+createBox(
+    90,
+    .5,
+    60,
+    concrete,
+    0,
+    -.25,
+    5
 );
-water.rotation.x=-Math.PI/2;
-water.position.set(0,-.7,-55);
+
+const water =
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            180,
+            180
+        ),
+        waterMaterial
+    );
+
+water.rotation.x =
+    -Math.PI/2;
+
+water.position.set(
+    0,
+    -.72,
+    -55
+);
+
 scene.add(water);
 
-/* Hafenfläche */
 
-box(70,.4,2,M.darkWood,0,.1,-1.2);
-box(70,.4,2,M.darkWood,0,.1,13);
+/* Hafenrand */
+
+createBox(
+    70,
+    .5,
+    2,
+    darkWood,
+    0,
+    .1,
+    -2
+);
+
+createBox(
+    70,
+    .5,
+    2,
+    darkWood,
+    0,
+    .1,
+    13
+);
+
+createBox(
+    2,
+    .5,
+    17,
+    darkWood,
+    -34,
+    .1,
+    5.5
+);
+
+createBox(
+    2,
+    .5,
+    17,
+    darkWood,
+    34,
+    .1,
+    5.5
+);
+
+
+/* Poller */
 
 for(let x=-30;x<=30;x+=10){
-cyl(.35,1,M.darkMetal,x,.55,1);
-cyl(.35,1,M.darkMetal,x,.55,10);
+
+    createCylinder(
+        .35,
+        1,
+        darkMetal,
+        x,
+        .55,
+        1.5
+    );
+
+    createCylinder(
+        .35,
+        1,
+        darkMetal,
+        x,
+        .55,
+        10
+    );
 }
 
 
@@ -178,133 +470,344 @@ cyl(.35,1,M.darkMetal,x,.55,10);
    BOOT
 ========================================================= */
 
-const boat=new THREE.Group();
-boat.position.set(0,.15,-7);
+const boat =
+    new THREE.Group();
+
+boat.position.set(
+    0,
+    .2,
+    -7
+);
+
 scene.add(boat);
+
+const hullMaterial =
+    new THREE.MeshStandardMaterial({
+        color:0x263944,
+        roughness:.65
+    });
+
 
 /* Rumpf */
 
-box(
-9,
-1.35,
-21,
-M.darkMetal,
-0,
-.55,
-0,
-boat
+createBox(
+    10,
+    1.5,
+    22,
+    hullMaterial,
+    0,
+    .7,
+    0,
+    boat
 );
+
 
 /* Deck */
 
-box(
-8.7,
-.25,
-20,
-M.wood,
-0,
-1.35,
-0,
-boat
+createBox(
+    9.4,
+    .3,
+    20,
+    wood,
+    0,
+    1.5,
+    0,
+    boat
 );
+
 
 /* Bug */
 
-const bow=new THREE.Mesh(
-new THREE.ConeGeometry(4.5,6,4),
-M.darkMetal
+const bow =
+    new THREE.Mesh(
+        new THREE.ConeGeometry(
+            5,
+            7,
+            4
+        ),
+        hullMaterial
+    );
+
+bow.rotation.x =
+    Math.PI/2;
+
+bow.rotation.y =
+    Math.PI/4;
+
+bow.scale.z=1.4;
+
+bow.position.set(
+    0,
+    .75,
+    -12
 );
-bow.rotation.x=Math.PI/2;
-bow.rotation.y=Math.PI/4;
-bow.position.set(0,.65,-11);
-bow.scale.z=1.2;
+
 bow.castShadow=true;
+
 boat.add(bow);
 
 
 /* =========================================================
-   BOOT-REELING
+   RELING
 ========================================================= */
 
-for(let z=-9;z<=9;z+=3){
+for(
+    let z=-9;
+    z<=9;
+    z+=3
+){
 
-box(.14,1,.14,M.metal,-4.3,2,z,boat);
-box(.14,1,.14,M.metal,4.3,2,z,boat);
+    createBox(
+        .15,
+        1,
+        .15,
+        metal,
+        -4.5,
+        2,
+        z,
+        boat
+    );
+
+    createBox(
+        .15,
+        1,
+        .15,
+        metal,
+        4.5,
+        2,
+        z,
+        boat
+    );
 }
 
-box(8.6,.12,.12,M.metal,0,2.5,-9.5,boat);
-box(8.6,.12,.12,M.metal,0,2.5,9.5,boat);
+createBox(
+    9,
+    .12,
+    .12,
+    metal,
+    0,
+    2.45,
+    -9.5,
+    boat
+);
+
+createBox(
+    9,
+    .12,
+    .12,
+    metal,
+    0,
+    2.45,
+    9.5,
+    boat
+);
 
 
 /* =========================================================
    KABINE
 ========================================================= */
 
-const cabin=new THREE.Group();
-cabin.position.set(0,1.45,2.8);
+const cabin =
+    new THREE.Group();
+
+cabin.position.set(
+    0,
+    1.5,
+    3
+);
+
 boat.add(cabin);
 
+
 /*
-   Keine massive Frontwand.
-   Dadurch funktioniert die Tür wirklich.
+   Rückwand
 */
 
-box(7,3.3,.3,M.white,0,1.65,2.4,cabin);
-box(.3,3.3,4.5,M.white,-3.35,1.65,0,cabin);
-box(.3,3.3,4.5,M.white,3.35,1.65,0,cabin);
-box(7,3.3,.3,M.white,0,1.65,-2.4,cabin);
-box(7.6,.35,5.1,M.darkWood,0,3.45,0,cabin);
+createBox(
+    7,
+    3.5,
+    .3,
+    white,
+    0,
+    1.75,
+    2.35,
+    cabin
+);
+
+
+/*
+   Linke Wand
+*/
+
+createBox(
+    .3,
+    3.5,
+    5,
+    white,
+    -3.35,
+    1.75,
+    0,
+    cabin
+);
+
+
+/*
+   Rechte Wand
+*/
+
+createBox(
+    .3,
+    3.5,
+    5,
+    white,
+    3.35,
+    1.75,
+    0,
+    cabin
+);
+
+
+/*
+   Frontwand NICHT komplett schließen.
+   Dadurch existiert eine echte Türöffnung.
+*/
+
+createBox(
+    2.5,
+    3.5,
+    .3,
+    white,
+    2.25,
+    1.75,
+    -2.35,
+    cabin
+);
+
+createBox(
+    2.5,
+    3.5,
+    .3,
+    white,
+    -2.25,
+    1.75,
+    -2.35,
+    cabin
+);
+
+
+/* Dach */
+
+createBox(
+    7.8,
+    .35,
+    5.7,
+    darkWood,
+    0,
+    3.65,
+    0,
+    cabin
+);
+
 
 /* Fenster */
 
-box(2.2,1.2,.08,M.glass,-1.8,2.25,-2.56,cabin);
-box(2.2,1.2,.08,M.glass,1.8,2.25,-2.56,cabin);
+createBox(
+    2.4,
+    1.3,
+    .08,
+    glass,
+    -1.7,
+    2.4,
+    -2.53,
+    cabin
+);
+
+createBox(
+    2.4,
+    1.3,
+    .08,
+    glass,
+    1.7,
+    2.4,
+    -2.53,
+    cabin
+);
 
 
 /* =========================================================
    TÜR
 ========================================================= */
 
-const door=new THREE.Group();
-door.position.set(-.9,1.35,2.42);
-cabin.add(door);
+const cabinDoor =
+    new THREE.Group();
 
-box(1.8,2.7,.14,M.darkWood,.9,0,0,door);
+cabinDoor.position.set(
+    -1.1,
+    1.35,
+    -2.48
+);
+
+cabin.add(cabinDoor);
+
+createBox(
+    2,
+    2.7,
+    .15,
+    darkWood,
+    1,
+    0,
+    0,
+    cabinDoor
+);
 
 let doorOpen=false;
-let doorAnim=false;
+let doorMoving=false;
 
 function toggleDoor(){
 
-if(doorAnim)return;
+    if(doorMoving)
+        return;
 
-doorAnim=true;
+    doorMoving=true;
 
-const start=doorOpen?1:0;
-const end=doorOpen?0:1;
+    const start =
+        doorOpen ? 1 : 0;
 
-let t=0;
+    const end =
+        doorOpen ? 0 : 1;
 
-function a(){
+    let t=0;
 
-t+=.06;
-const p=Math.min(t,1);
+    function animateDoor(){
 
-const e=p<.5
-?2*p*p
-:1-Math.pow(-2*p+2,2)/2;
+        t+=.08;
 
-door.rotation.y=
--(start+(end-start)*e)*Math.PI/2;
+        const p=
+            Math.min(t,1);
 
-if(p<1)requestAnimationFrame(a);
-else{
-doorOpen=!doorOpen;
-doorAnim=false;
-}
-}
+        const e=
+            p<.5
+            ?2*p*p
+            :1-Math.pow(-2*p+2,2)/2;
 
-a();
+        cabinDoor.rotation.y=
+            -(start+(end-start)*e)
+            *Math.PI/2;
+
+        if(p<1){
+
+            requestAnimationFrame(
+                animateDoor
+            );
+
+        }else{
+
+            doorOpen=!doorOpen;
+            doorMoving=false;
+        }
+    }
+
+    animateDoor();
 }
 
 
@@ -312,155 +815,373 @@ a();
    STEUERRAD
 ========================================================= */
 
-const wheel=new THREE.Group();
-wheel.position.set(0,2.55,.7);
+const wheel =
+    new THREE.Group();
+
+wheel.position.set(
+    0,
+    2.7,
+    .2
+);
+
 boat.add(wheel);
 
-const ring=new THREE.Mesh(
-new THREE.TorusGeometry(1,.13,10,24),
-M.darkWood
-);
-ring.rotation.x=Math.PI/2;
+const ring =
+    new THREE.Mesh(
+        new THREE.TorusGeometry(
+            1,
+            .13,
+            10,
+            24
+        ),
+        darkWood
+    );
+
+ring.rotation.x=
+    Math.PI/2;
+
 wheel.add(ring);
 
 for(let i=0;i<8;i++){
-const a=i*Math.PI/4;
-const s=box(
-.12,.12,1.7,
-M.metal,
-Math.sin(a)*.75,
-0,
-Math.cos(a)*.75,
-wheel
-);
-s.rotation.y=a;
+
+    const a=
+        i*Math.PI/4;
+
+    const spoke=
+        createBox(
+            .12,
+            .12,
+            1.65,
+            metal,
+            Math.sin(a)*.75,
+            0,
+            Math.cos(a)*.75,
+            wheel
+        );
+
+    spoke.rotation.y=a;
 }
 
-box(3,.8,1.1,M.darkMetal,0,2.05,1.15,boat);
+createBox(
+    3,
+    .9,
+    1.2,
+    darkMetal,
+    0,
+    2.1,
+    .7,
+    boat
+);
 
-box(3,.4,1.1,M.darkWood,0,2.3,2.2,boat);
+createBox(
+    3,
+    .4,
+    1.2,
+    darkWood,
+    0,
+    2.25,
+    1.8,
+    boat
+);
 
 
 /* =========================================================
-   REAR
+   HINTERER BEREICH
 ========================================================= */
 
-const rear=new THREE.Group();
-rear.position.set(0,0,7.5);
+const rear =
+    new THREE.Group();
+
+rear.position.set(
+    0,
+    0,
+    8
+);
+
 boat.add(rear);
 
-box(8,.2,4.5,M.wood,0,1.55,0,rear);
+createBox(
+    8,
+    .2,
+    5,
+    wood,
+    0,
+    1.7,
+    0,
+    rear
+);
 
 
 /* =========================================================
    NETZ
 ========================================================= */
 
-const net=new THREE.Group();
-net.position.set(0,1.75,7.5);
-boat.add(net);
+const deckNet =
+    new THREE.Group();
 
-const netPlane=new THREE.Mesh(
-new THREE.PlaneGeometry(5,3.5,12,8),
-M.net
+deckNet.position.set(
+    0,
+    1.88,
+    7.5
 );
-netPlane.rotation.x=-Math.PI/2;
-net.add(netPlane);
 
-for(let x=-2.4;x<=2.4;x+=.4)
-box(.025,.025,3.5,M.metal,x,.04,0,net);
+boat.add(deckNet);
 
-for(let z=-1.5;z<=1.5;z+=.4)
-box(5,.025,.025,M.metal,0,.05,z,net);
+const netPlane =
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            5,
+            3.5,
+            12,
+            8
+        ),
+        netMaterial
+    );
+
+netPlane.rotation.x=
+    -Math.PI/2;
+
+deckNet.add(netPlane);
+
+for(
+    let x=-2.4;
+    x<=2.4;
+    x+=.4
+){
+
+    createBox(
+        .025,
+        .025,
+        3.5,
+        metal,
+        x,
+        .03,
+        0,
+        deckNet
+    );
+}
+
+for(
+    let z=-1.5;
+    z<=1.5;
+    z+=.4
+){
+
+    createBox(
+        5,
+        .025,
+        .025,
+        metal,
+        0,
+        .035,
+        z,
+        deckNet
+    );
+}
 
 
 /* =========================================================
    KRAN
 ========================================================= */
 
-const crane=new THREE.Group();
-crane.position.set(3,1.65,8);
+const crane =
+    new THREE.Group();
+
+crane.position.set(
+    3.2,
+    1.7,
+    8
+);
+
 boat.add(crane);
 
-box(1,.45,1,M.darkMetal,0,0,0,crane);
+createBox(
+    1,
+    .5,
+    1,
+    darkMetal,
+    0,
+    0,
+    0,
+    crane
+);
 
-const craneArm=new THREE.Group();
-craneArm.position.set(0,.2,0);
+const craneArm =
+    new THREE.Group();
+
+craneArm.position.set(
+    0,
+    .25,
+    0
+);
+
 crane.add(craneArm);
 
-box(.5,4,.5,M.darkMetal,0,2,0,craneArm);
+createBox(
+    .5,
+    4,
+    .5,
+    darkMetal,
+    0,
+    2,
+    0,
+    craneArm
+);
 
-const boom=new THREE.Group();
-boom.position.set(0,4,0);
+const boom =
+    new THREE.Group();
+
+boom.position.set(
+    0,
+    3.8,
+    0
+);
+
 craneArm.add(boom);
 
-box(4,.4,.4,M.darkMetal,1.7,0,0,boom);
-
-const rope=new THREE.Mesh(
-new THREE.CylinderGeometry(.055,.055,4,8),
-M.metal
+createBox(
+    4,
+    .4,
+    .4,
+    darkMetal,
+    1.7,
+    0,
+    0,
+    boom
 );
-rope.position.set(3.5,-2,0);
+
+const rope =
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .055,
+            .055,
+            4,
+            8
+        ),
+        metal
+    );
+
+rope.position.set(
+    3.5,
+    -2,
+    0
+);
+
 boom.add(rope);
 
-const hook=new THREE.Group();
-hook.position.set(3.5,-4,0);
+const hook =
+    new THREE.Group();
+
+hook.position.set(
+    3.5,
+    -4,
+    0
+);
+
 boom.add(hook);
 
-cyl(.16,.5,M.yellow,0,0,0,hook);
+createCylinder(
+    .18,
+    .5,
+    yellowMetal,
+    0,
+    0,
+    0,
+    hook,
+    12
+);
 
-const hangingNet=new THREE.Group();
-hangingNet.position.set(0,-.4,0);
+const hangingNet =
+    new THREE.Group();
+
+hangingNet.position.set(
+    0,
+    -.3,
+    0
+);
+
 hook.add(hangingNet);
 
-const basket=new THREE.Mesh(
-new THREE.CylinderGeometry(1.5,.8,1.4,12,1,true),
-M.net
+const hangingBasket =
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            1.6,
+            .8,
+            1.5,
+            12,
+            1,
+            true
+        ),
+        netMaterial
+    );
+
+hangingNet.add(
+    hangingBasket
 );
-hangingNet.add(basket);
 
-let craneDown=false;
-let craneBusy=false;
+let craneLowered=false;
+let craneAnimationRunning=false;
 
-function moveCrane(){
+function animateCrane(){
 
-if(craneBusy)return;
+    if(craneAnimationRunning)
+        return;
 
-craneBusy=true;
+    craneAnimationRunning=true;
 
-const from=craneDown?1:0;
-const to=craneDown?0:1;
+    const from=
+        craneLowered ? 1 : 0;
 
-let t=0;
+    const to=
+        craneLowered ? 0 : 1;
 
-function a(){
+    let t=0;
 
-t+=.025;
+    function step(){
 
-const p=Math.min(t,1);
+        t+=.025;
 
-const e=p<.5
-?2*p*p
-:1-Math.pow(-2*p+2,2)/2;
+        const p=
+            Math.min(t,1);
 
-const v=from+(to-from)*e;
+        const eased=
+            p<.5
+            ?2*p*p
+            :1-Math.pow(-2*p+2,2)/2;
 
-boom.rotation.z=-v*.45;
+        const value=
+            from+
+            (to-from)*eased;
 
-rope.scale.y=1+v*2;
-rope.position.y=-2-v*2;
+        boom.rotation.z=
+            -value*.45;
 
-hook.position.y=-4-v*2;
-hangingNet.position.y=-.4-v*1.5;
+        rope.scale.y=
+            1+value*2;
 
-if(p<1)requestAnimationFrame(a);
-else{
-craneDown=!craneDown;
-craneBusy=false;
-}
-}
+        rope.position.y=
+            -2-value*2;
 
-a();
+        hook.position.y=
+            -4-value*2;
+
+        hangingNet.position.y=
+            -.3-value*1.5;
+
+        if(p<1){
+
+            requestAnimationFrame(step);
+
+        }else{
+
+            craneLowered=
+                !craneLowered;
+
+            craneAnimationRunning=false;
+        }
+    }
+
+    step();
 }
 
 
@@ -468,254 +1189,368 @@ a();
    BRÜCKE
 ========================================================= */
 
-const bridge=new THREE.Group();
+const bridge =
+    new THREE.Group();
 
-box(2.2,.22,6,M.darkMetal,0,0,0,bridge);
+createBox(
+    2.4,
+    .22,
+    7,
+    darkMetal,
+    0,
+    0,
+    0,
+    bridge
+);
 
-for(let z=-2.5;z<=2.5;z+=1)
-box(2.2,.12,.13,M.metal,0,.15,z,bridge);
+for(
+    let z=-3;
+    z<=3;
+    z+=1
+){
+
+    createBox(
+        2.4,
+        .12,
+        .13,
+        metal,
+        0,
+        .16,
+        z,
+        bridge
+    );
+}
+
+bridge.position.set(
+    0,
+    .3,
+    -1.5
+);
 
 scene.add(bridge);
 
-bridge.position.set(0,.45,-1.9);
 
-let bridgeState=0;
 /*
-0 Hafen
-1 in Hand
-2 liegt zwischen Hafen und Boot
-3 auf Boot
+0 = Hafen
+1 = in Hand
+2 = aufgestellt
+3 = auf Boot
 */
 
-let bridgeVel=new THREE.Vector3();
-let bridgeSpin=0;
+let bridgeState=0;
 
-const BRIDGE_LENGTH=6;
-const BRIDGE_WIDTH=2.2;
+let bridgeVelocity=
+    new THREE.Vector3();
+
+let bridgeRotation=0;
+
+const BRIDGE_LENGTH=7;
+const BRIDGE_WIDTH=2.4;
 
 
 /* =========================================================
    BRÜCKEN-PHYSIK
 ========================================================= */
 
-function bridgeEnds(){
+function getBridgeEnds(){
 
-const dir=new THREE.Vector3(0,0,1);
-dir.applyEuler(bridge.rotation);
+    const direction=
+        new THREE.Vector3(
+            0,
+            0,
+            1
+        );
 
-const a=bridge.position.clone()
-.addScaledVector(dir,-BRIDGE_LENGTH/2);
+    direction.applyQuaternion(
+        bridge.quaternion
+    );
 
-const b=bridge.position.clone()
-.addScaledVector(dir,BRIDGE_LENGTH/2);
+    return {
+        a:bridge.position.clone()
+            .addScaledVector(
+                direction,
+                -BRIDGE_LENGTH/2
+            ),
 
-return {a,b};
+        b:bridge.position.clone()
+            .addScaledVector(
+                direction,
+                BRIDGE_LENGTH/2
+            )
+    };
 }
 
-function boatDeckHeight(){
-return boat.position.y+1.48;
+function boatLocalPosition(world){
+
+    const p=
+        world.clone()
+        .sub(boat.position);
+
+    p.applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        -boat.rotation.y
+    );
+
+    return p;
 }
 
-function pointOnBoatDeck(p){
+function isOnBoatDeckPoint(p){
 
-const q=p.clone()
-.sub(boat.position);
+    const q=
+        boatLocalPosition(p);
 
-q.applyAxisAngle(
-new THREE.Vector3(0,1,0),
--boat.rotation.y
-);
-
-return (
-Math.abs(q.x)<4.0 &&
-Math.abs(q.z)<9.0 &&
-p.y>=boatDeckHeight()-.4 &&
-p.y<=boatDeckHeight()+2
-);
+    return (
+        Math.abs(q.x)<4.15 &&
+        q.z>-9.5 &&
+        q.z<9.5 &&
+        p.y>boat.position.y+1.1 &&
+        p.y<boat.position.y+4
+    );
 }
 
 function updateBridgePhysics(dt){
 
-if(bridgeState!==2)return;
+    if(bridgeState!==2)
+        return;
 
-bridgeVel.y-=16*dt;
+    bridgeVelocity.y-=14*dt;
 
-bridge.position.addScaledVector(
-bridgeVel,
-dt
-);
+    bridge.position.addScaledVector(
+        bridgeVelocity,
+        dt
+    );
 
-bridge.rotation.y+=bridgeSpin*dt;
+    /*
+      Hafenboden
+    */
 
-bridgeSpin*=.985;
+    if(
+        bridge.position.y<.16
+    ){
 
+        bridge.position.y=.16;
 
-/*
-  Die Brücke kann nicht durch das
-  Bootdeck fallen.
-*/
+        if(
+            Math.abs(
+                bridgeVelocity.y
+            )>.3
+        ){
 
-const ends=bridgeEnds();
+            bridgeVelocity.y*=-.22;
 
-let supportA=.11;
-let supportB=.11;
+        }else{
 
-if(pointOnBoatDeck(ends.a))
-supportA=boatDeckHeight();
+            bridgeVelocity.y=0;
+        }
+    }
 
-if(pointOnBoatDeck(ends.b))
-supportB=boatDeckHeight();
+    /*
+      BOOTDECK:
+      Die Brücke wird NICHT mehr
+      durch das Boot fallen.
+    */
 
+    const ends=
+        getBridgeEnds();
 
-/*
-  Wenn beide Seiten auf dem Hafen
-  liegen.
-*/
+    let onBoatA=
+        isOnBoatDeckPoint(ends.a);
 
-if(
-Math.abs(supportA-.11)<.01 &&
-Math.abs(supportB-.11)<.01
-){
+    let onBoatB=
+        isOnBoatDeckPoint(ends.b);
 
-if(bridge.position.y<.13){
+    if(
+        onBoatA ||
+        onBoatB
+    ){
 
-bridge.position.y=.13;
-bridgeVel.y=0;
-bridgeSpin*=.5;
+        const deckY=
+            boat.position.y+1.66;
 
-}
+        /*
+          Wenn mindestens ein Ende
+          das Boot berührt, bleibt die
+          Brücke auf Deckhöhe.
+        */
 
-return;
-}
+        if(
+            bridge.position.y<
+            deckY
+        ){
 
+            bridge.position.y=
+                deckY;
 
-/*
-  Wenn eine Seite auf dem Boot
-  und eine auf dem Hafen liegt:
-  Brücke wird zu einer Rampe.
-*/
+            bridgeVelocity.y=0;
+        }
+    }
 
-const targetY=
-(supportA+supportB)/2+.11;
+    /*
+      Wenn die Brücke genau zwischen
+      Hafen und Boot liegt, wird sie
+      automatisch zur Rampe.
+    */
 
-if(
-bridge.position.y<targetY
-){
+    const nearBoat=
+        bridge.position.distanceTo(
+            boat.position
+        )<9;
 
-bridge.position.y=targetY;
+    if(nearBoat){
 
-bridgeVel.y=0;
-bridgeSpin*=.3;
+        const q=
+            boatLocalPosition(
+                bridge.position
+            );
 
-const difference=
-supportB-supportA;
+        /*
+          Bereich hinter dem Boot
+        */
 
-bridge.rotation.x=
-Math.atan2(
-difference,
-BRIDGE_LENGTH
-);
+        if(
+            q.z>7 &&
+            q.z<12 &&
+            Math.abs(q.x)<5
+        ){
 
-}
+            const deckY=
+                boat.position.y+1.66;
 
+            if(
+                bridge.position.y<
+                deckY-.1
+            ){
 
-/*
-  Wenn die Brücke komplett auf dem
-  Boot liegt.
-*/
+                bridge.position.y=
+                    deckY-.05;
 
-if(
-supportA>1 &&
-supportB>1
-){
-
-bridge.position.y=
-boatDeckHeight()+.12;
-
-bridge.rotation.x=0;
-
-bridgeVel.set(0,0,0);
-bridgeSpin=0;
-
-}
+                bridgeVelocity.y=0;
+            }
+        }
+    }
 }
 
 
 /* =========================================================
-   BRÜCKE AUFNEHMEN / ABLEGEN
+   BRÜCKE AUFNEHMEN
 ========================================================= */
 
 function pickupBridge(){
 
-bridgeState=1;
-bridge.visible=false;
+    bridgeState=1;
 
-bridgeVel.set(0,0,0);
-bridgeSpin=0;
+    bridge.visible=false;
 
-document.getElementById(
-"bridgeText"
-).textContent="in der Hand";
+    bridgeVelocity.set(
+        0,0,0
+    );
+
+    document.getElementById(
+        "bridgeStatus"
+    ).textContent=
+        "in der Hand";
 }
+
+
+/* =========================================================
+   BRÜCKE PLATZIEREN
+========================================================= */
 
 function dropBridge(){
 
-bridgeState=2;
-bridge.visible=true;
+    const forward=
+        new THREE.Vector3();
 
-const forward=new THREE.Vector3();
-camera.getWorldDirection(forward);
-forward.y=0;
-forward.normalize();
+    camera.getWorldDirection(
+        forward
+    );
 
-bridge.position.copy(camera.position)
-.addScaledVector(forward,3.5);
+    forward.y=0;
 
-bridge.position.y=Math.max(
-.8,
-camera.position.y-.8
-);
+    if(
+        forward.lengthSq()<.01
+    )
+        return;
 
-bridge.rotation.set(
-0,
-Math.atan2(forward.x,forward.z),
-0
-);
+    forward.normalize();
 
-bridgeVel.set(0,-1.5,0);
-bridgeSpin=0;
+    bridge.parent=scene;
 
-document.getElementById(
-"bridgeText"
-).textContent="liegt auf dem Boden";
+    bridge.visible=true;
+
+    bridge.position.copy(
+        camera.position
+    );
+
+    bridge.position.addScaledVector(
+        forward,
+        4
+    );
+
+    bridge.position.y=
+        Math.max(
+            .8,
+            camera.position.y-.8
+        );
+
+    bridge.rotation.set(
+        0,
+        Math.atan2(
+            forward.x,
+            forward.z
+        )+bridgeRotation,
+        0
+    );
+
+    bridgeVelocity.set(
+        0,
+        -1.5,
+        0
+    );
+
+    bridgeState=2;
+
+    document.getElementById(
+        "bridgeStatus"
+    ).textContent=
+        "aufgestellt";
 }
+
+
+/* =========================================================
+   BRÜCKE AUFS BOOT
+========================================================= */
 
 function putBridgeOnBoat(){
 
-bridgeState=3;
+    bridgeState=3;
 
-bridge.parent=boat;
+    bridge.parent=boat;
 
-bridge.position.set(
-0,
-1.85,
-7
-);
+    bridge.position.set(
+        0,
+        1.88,
+        7
+    );
 
-bridge.rotation.set(
-0,
-0,
-0
-);
+    bridge.rotation.set(
+        0,
+        0,
+        0
+    );
 
-bridgeVel.set(0,0,0);
-bridgeSpin=0;
+    bridgeVelocity.set(
+        0,
+        0,
+        0
+    );
 
-bridge.visible=true;
+    bridge.visible=true;
 
-document.getElementById(
-"bridgeText"
-).textContent="auf dem Boot";
+    document.getElementById(
+        "bridgeStatus"
+    ).textContent=
+        "auf dem Boot";
 }
 
 
@@ -724,512 +1559,525 @@ document.getElementById(
 ========================================================= */
 
 camera.position.set(
-0,
-2.2,
-6
+    0,
+    2.2,
+    6
 );
 
-let velY=0;
-let grounded=true;
-let steering=false;
+let velocityY=0;
+let onGround=true;
 
 const keys={};
 
-addEventListener("keydown",e=>{
+let eLocked=false;
 
-keys[e.code]=true;
+addEventListener(
+    "keydown",
+    event=>{
 
-if(
-e.code==="Space" &&
-grounded &&
-!steering
-){
+        keys[event.code]=true;
 
-velY=7;
-grounded=false;
-}
+        /*
+          E nur einmal pro Tastendruck
+        */
 
-if(
-e.code==="KeyR" &&
-bridgeState===1
-){
+        if(
+            event.code==="KeyE" &&
+            !eLocked
+        ){
 
-bridgeRotation+=Math.PI/2;
-}
+            eLocked=true;
 
-if(e.code==="KeyE")
-interact();
+            interact();
+        }
 
-});
+        if(
+            event.code==="KeyR" &&
+            bridgeState===1
+        ){
 
-addEventListener("keyup",e=>{
-keys[e.code]=false;
-});
+            bridgeRotation+=
+                Math.PI/2;
+        }
 
+        if(
+            event.code==="Space" &&
+            onGround &&
+            !steering
+        ){
 
-/* =========================================================
-   SPIELER-KOLLISION
-========================================================= */
-
-const PLAYER_RADIUS=.38;
-
-function localBoatPoint(world){
-
-const p=world.clone()
-.sub(boat.position);
-
-p.applyAxisAngle(
-new THREE.Vector3(0,1,0),
--boat.rotation.y
+            velocityY=7;
+            onGround=false;
+        }
+    }
 );
 
-return p;
-}
+addEventListener(
+    "keyup",
+    event=>{
 
-function insideBoatDeck(p){
+        keys[event.code]=false;
 
-const q=localBoatPoint(p);
+        if(
+            event.code==="KeyE"
+        ){
 
-return (
-Math.abs(q.x)<4.05 &&
-q.z>-9.2 &&
-q.z<9.3
+            eLocked=false;
+        }
+    }
 );
-}
-
-function insideBridge(p){
-
-if(bridgeState!==2)return false;
-
-const q=p.clone()
-.sub(bridge.position);
-
-q.applyEuler(
-new THREE.Euler(
--bridge.rotation.x,
--bridge.rotation.y,
--bridge.rotation.z
-)
-);
-
-return (
-Math.abs(q.x)<BRIDGE_WIDTH/2+.45 &&
-Math.abs(q.z)<BRIDGE_LENGTH/2+.4
-);
-}
-
-function onBoat(p){
-
-return insideBoatDeck(p);
-}
-
-function onBridge(p){
-
-return insideBridge(p);
-}
-
-
-/*
-  Prüft, ob Spieler auf einer
-  erlaubten Fläche steht.
-*/
-
-function getFloor(p){
-
-/*
-  Hafen
-*/
-
-let floor=1.95;
-
-
-/*
-  Boot
-*/
-
-if(onBoat(p)){
-floor=boatDeckHeight()+1.05;
-}
-
-
-/*
-  Brücke
-*/
-
-if(onBridge(p)){
-
-const local=p.clone()
-.sub(bridge.position);
-
-local.applyAxisAngle(
-new THREE.Vector3(0,1,0),
--bridge.rotation.y
-);
-
-const slope=
-Math.tan(bridge.rotation.x);
-
-floor=
-bridge.position.y+
-.18+
-local.z*slope+
-1.05;
-
-}
-
-
-return floor;
-}
-
-
-/* =========================================================
-   HINDERNISSE
-========================================================= */
-
-function blockedByCabin(p){
-
-const q=localBoatPoint(p);
-
-if(
-q.z>-.1 &&
-q.z<5.3 &&
-Math.abs(q.x)<3.55
-){
-
-/*
-  Türöffnung.
-*/
-
-const doorX=-.9;
-
-if(
-Math.abs(q.x-doorX)<1.05 &&
-q.z>4.9
-){
-
-if(doorOpen)
-return false;
-}
-
-return true;
-}
-
-return false;
-}
-
-function blockedByRail(p){
-
-const q=localBoatPoint(p);
-
-if(
-Math.abs(q.x)>4.05 &&
-q.z>-9 &&
-q.z<9
-)return true;
-
-return false;
-}
-
-function canMove(p){
-
-/*
-  Hafen außerhalb
-*/
-
-if(
-p.x<-32 ||
-p.x>32 ||
-p.z>16
-)
-return false;
-
-
-/*
-  Wasser:
-  Nur Brücke oder Boot.
-*/
-
-if(
-p.z<-2.3 &&
-!onBridge(p) &&
-!onBoat(p)
-)
-return false;
-
-
-/*
-  Boot-Kollision.
-  Auf dem Deck darf man laufen.
-*/
-
-if(
-onBoat(p)
-){
-
-if(blockedByCabin(p))
-return false;
-
-if(blockedByRail(p))
-return false;
-
-return true;
-}
-
-
-/*
-  Brücke erlaubt.
-*/
-
-if(onBridge(p))
-return true;
-
-
-/*
-  Hafen.
-*/
-
-if(p.z>-2.3)
-return true;
-
-return false;
-}
-
-
-/* =========================================================
-   SPIELERBEWEGUNG
-========================================================= */
-
-function movePlayer(dt){
-
-if(steering)return;
-
-const speed=
-(keys.ShiftLeft||keys.ShiftRight)
-?8
-:4.5;
-
-const input=new THREE.Vector3();
-
-if(keys.KeyW)input.z-=1;
-if(keys.KeyS)input.z+=1;
-if(keys.KeyA)input.x-=1;
-if(keys.KeyD)input.x+=1;
-
-if(input.lengthSq()>0){
-
-input.normalize();
-
-const forward=new THREE.Vector3();
-camera.getWorldDirection(forward);
-forward.y=0;
-forward.normalize();
-
-const right=new THREE.Vector3();
-right.crossVectors(
-forward,
-new THREE.Vector3(0,1,0)
-).normalize();
-
-const move=new THREE.Vector3();
-
-move.addScaledVector(
-forward,
-input.z*speed*dt
-);
-
-move.addScaledVector(
-right,
-input.x*speed*dt
-);
-
-
-/*
-  X
-*/
-
-const px=camera.position.clone();
-px.x+=move.x;
-
-if(canMove(px))
-camera.position.x=px.x;
-
-
-/*
-  Z
-*/
-
-const pz=camera.position.clone();
-pz.z+=move.z;
-
-if(canMove(pz))
-camera.position.z=pz.z;
-}
-
-
-/*
-  Gravitation
-*/
-
-velY-=18*dt;
-
-camera.position.y+=velY*dt;
-
-const floor=
-getFloor(camera.position);
-
-if(
-camera.position.y<=floor
-){
-
-camera.position.y=floor;
-velY=0;
-grounded=true;
-
-}else{
-grounded=false;
-}
-}
 
 
 /* =========================================================
    STEUERSTAND
 ========================================================= */
 
+let steering=false;
 let boatSpeed=0;
-let boatYaw=0;
+let boatRotation=0;
 
-function enterSteering(){
+function enterBoatControl(){
 
-if(bridgeState!==3)return;
+    if(
+        bridgeState!==3
+    )
+        return;
 
-steering=true;
+    steering=true;
 
-controls.unlock();
+    controls.unlock();
 
-document.getElementById(
-"drive"
-).style.display="block";
+    document.getElementById(
+        "boatControls"
+    ).style.display="block";
 }
 
-function exitSteering(){
+function leaveBoatControl(){
 
-steering=false;
+    steering=false;
 
-document.getElementById(
-"drive"
-).style.display="none";
+    boatSpeed=0;
 
+    document.getElementById(
+        "boatControls"
+    ).style.display="none";
 
-/*
-  Spieler sicher auf das Deck setzen.
-*/
+    /*
+      Sichere Position auf dem Boot.
+    */
 
-const exit=
-new THREE.Vector3(
--3.2,
-1.1,
-2
-);
+    const exit=
+        new THREE.Vector3(
+            -3.2,
+            0,
+            1
+        );
 
-exit.applyAxisAngle(
-new THREE.Vector3(0,1,0),
-boat.rotation.y
-);
+    exit.applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        boat.rotation.y
+    );
 
-camera.position.copy(
-boat.position
-).add(exit);
+    camera.position.copy(
+        boat.position
+    ).add(exit);
 
-camera.position.y=
-boatDeckHeight()+1.05;
+    camera.position.y=
+        boat.position.y+2.65;
 
-boatSpeed=0;
-
-controls.lock();
+    controls.lock();
 }
 
 
 /* =========================================================
-   BOOTFAHREN
+   BOOT FAHREN
 ========================================================= */
 
 function driveBoat(dt){
 
-if(!steering)return;
+    if(!steering)
+        return;
 
-if(keys.KeyW)
-boatSpeed+=7*dt;
+    if(keys.KeyW)
+        boatSpeed+=6*dt;
 
-if(keys.KeyS)
-boatSpeed-=7*dt;
+    if(keys.KeyS)
+        boatSpeed-=6*dt;
 
-boatSpeed*=.985;
+    boatSpeed*=.985;
 
-boatSpeed=Math.max(
--3,
-Math.min(14,boatSpeed)
-);
+    boatSpeed=
+        Math.max(
+            -3,
+            Math.min(
+                14,
+                boatSpeed
+            )
+        );
 
-if(keys.KeyA)
-boatYaw+=1.1*dt;
+    if(keys.KeyA)
+        boatRotation+=
+            1.1*dt;
 
-if(keys.KeyD)
-boatYaw-=1.1*dt;
+    if(keys.KeyD)
+        boatRotation-=
+            1.1*dt;
 
-boat.rotation.y=boatYaw;
+    boat.rotation.y=
+        boatRotation;
 
-const forward=new THREE.Vector3(
-0,0,-1
-);
+    const direction=
+        new THREE.Vector3(
+            0,
+            0,
+            -1
+        );
 
-forward.applyAxisAngle(
-new THREE.Vector3(0,1,0),
-boat.rotation.y
-);
+    direction.applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        boat.rotation.y
+    );
 
-boat.position.addScaledVector(
-forward,
-boatSpeed*dt
-);
+    boat.position.addScaledVector(
+        direction,
+        boatSpeed*dt
+    );
 
+    /*
+      Boot darf nicht auf den Hafen.
+    */
 
-/*
-  Nicht zurück auf den Hafen.
-*/
+    if(
+        boat.position.z>1
+    ){
 
-if(boat.position.z>1){
-boat.position.z=1;
-boatSpeed=0;
+        boat.position.z=1;
+        boatSpeed=0;
+    }
+
+    /*
+      Kamera dreht sich mit dem Boot.
+    */
+
+    const cameraOffset=
+        new THREE.Vector3(
+            0,
+            4.5,
+            5
+        );
+
+    cameraOffset.applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        boat.rotation.y
+    );
+
+    camera.position.copy(
+        boat.position
+    ).add(
+        cameraOffset
+    );
+
+    const look=
+        new THREE.Vector3(
+            0,
+            2,
+            -5
+        );
+
+    look.applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        boat.rotation.y
+    );
+
+    camera.lookAt(
+        boat.position.clone()
+        .add(look)
+    );
 }
 
 
-/*
-  Kamera hinter dem Steuerstand.
-*/
+/* =========================================================
+   SPIELER AUF BOOT / BRÜCKE
+========================================================= */
 
-const offset=new THREE.Vector3(
-0,
-4.5,
-5.5
-);
+function playerOnBoat(){
 
-offset.applyAxisAngle(
-new THREE.Vector3(0,1,0),
-boat.rotation.y
-);
+    const q=
+        boatLocalPosition(
+            camera.position
+        );
 
-camera.position.copy(
-boat.position
-).add(offset);
+    return (
+        Math.abs(q.x)<4.0 &&
+        q.z>-9.2 &&
+        q.z<9.2 &&
+        camera.position.y>
+        boat.position.y+2
+    );
+}
 
-camera.lookAt(
-boat.position.clone().add(
-new THREE.Vector3(0,1,-4)
-.applyAxisAngle(
-new THREE.Vector3(0,1,0),
-boat.rotation.y
-)
-);
+function playerOnBridge(){
+
+    if(bridgeState!==2)
+        return false;
+
+    const q=
+        camera.position.clone()
+        .sub(bridge.position);
+
+    q.applyEuler(
+        new THREE.Euler(
+            0,
+            -bridge.rotation.y,
+            0
+        )
+    );
+
+    return (
+        Math.abs(q.x)<
+            BRIDGE_WIDTH/2+.4 &&
+        Math.abs(q.z)<
+            BRIDGE_LENGTH/2+.4
+    );
+}
+
+
+/* =========================================================
+   BEWEGUNG
+========================================================= */
+
+function canMoveTo(p){
+
+    /*
+      Hafen
+    */
+
+    if(
+        p.x<-32 ||
+        p.x>32 ||
+        p.z>16
+    )
+        return false;
+
+    /*
+      Wasser darf nur mit Boot
+      oder Brücke betreten werden.
+    */
+
+    if(
+        p.z<-2.8 &&
+        !playerOnBridge() &&
+        !playerOnBoat()
+    ){
+
+        /*
+          Zielposition prüfen
+        */
+
+        if(
+            p.z<-2.8
+        )
+            return false;
+    }
+
+    /*
+      Auf Boot:
+      Seitenbegrenzung
+    */
+
+    const q=
+        boatLocalPosition(p);
+
+    if(
+        Math.abs(q.x)>4.05 &&
+        q.z>-9 &&
+        q.z<9
+    ){
+
+        return false;
+    }
+
+    /*
+      Kabine:
+      Türbereich bleibt frei.
+    */
+
+    if(
+        playerOnBoat()
+    ){
+
+        if(
+            q.z>0 &&
+            q.z<6 &&
+            Math.abs(q.x)<3.3
+        ){
+
+            /*
+              Steuerstand und Innenraum
+              betreten erlaubt, wenn Tür offen.
+            */
+
+            if(
+                !doorOpen &&
+                q.z<5.2 &&
+                Math.abs(q.x+1.1)>1.1
+            ){
+
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+function movePlayer(dt){
+
+    if(steering)
+        return;
+
+    const speed=
+        (
+            keys.ShiftLeft ||
+            keys.ShiftRight
+        )
+        ?8
+        :4.5;
+
+    const direction=
+        new THREE.Vector3();
+
+    if(keys.KeyW)
+        direction.z-=1;
+
+    if(keys.KeyS)
+        direction.z+=1;
+
+    if(keys.KeyA)
+        direction.x-=1;
+
+    if(keys.KeyD)
+        direction.x+=1;
+
+    if(direction.lengthSq()>0){
+
+        direction.normalize();
+
+        const forward=
+            new THREE.Vector3();
+
+        camera.getWorldDirection(
+            forward
+        );
+
+        forward.y=0;
+        forward.normalize();
+
+        const right=
+            new THREE.Vector3();
+
+        right.crossVectors(
+            forward,
+            new THREE.Vector3(0,1,0)
+        ).normalize();
+
+        const movement=
+            new THREE.Vector3();
+
+        movement.addScaledVector(
+            forward,
+            direction.z*speed*dt
+        );
+
+        movement.addScaledVector(
+            right,
+            direction.x*speed*dt
+        );
+
+        /*
+          X
+        */
+
+        const px=
+            camera.position.clone();
+
+        px.x+=movement.x;
+
+        if(
+            canMoveTo(px)
+        ){
+
+            camera.position.x=
+                px.x;
+        }
+
+        /*
+          Z
+        */
+
+        const pz=
+            camera.position.clone();
+
+        pz.z+=movement.z;
+
+        if(
+            canMoveTo(pz)
+        ){
+
+            camera.position.z=
+                pz.z;
+        }
+    }
+
+
+    /*
+      Bodenhöhe
+    */
+
+    let floor=2.2;
+
+    if(
+        playerOnBoat()
+    ){
+
+        floor=
+            boat.position.y+2.65;
+    }
+
+    if(
+        playerOnBridge()
+    ){
+
+        floor=
+            Math.max(
+                2.2,
+                bridge.position.y+1.25
+            );
+    }
+
+    /*
+      Gravitation
+    */
+
+    velocityY-=18*dt;
+
+    camera.position.y+=
+        velocityY*dt;
+
+    if(
+        camera.position.y<=floor
+    ){
+
+        camera.position.y=floor;
+
+        velocityY=0;
+
+        onGround=true;
+
+    }else{
+
+        onGround=false;
+    }
 }
 
 
@@ -1237,301 +2085,341 @@ boat.rotation.y
    INTERAKTION
 ========================================================= */
 
-function distanceToBoat(){
-
-return camera.position.distanceTo(
-boat.position
-);
-}
-
 function interact(){
 
-/*
-  WICHTIG:
-  E verlässt den Steuerstand
-  IMMER zuerst.
-*/
-
-if(steering){
-exitSteering();
-return;
-}
+    const player=
+        camera.position.clone();
 
 
-/*
-  Brücke am Hafen
-*/
+    /*
+      1. STEUERUNG VERLASSEN
+      MUSS GANZ OBEN STEHEN.
+    */
 
-if(
-bridgeState===0 &&
-camera.position.distanceTo(
-bridge.position
-)<3.5
-){
+    if(steering){
 
-pickupBridge();
-return;
-}
+        leaveBoatControl();
+
+        return;
+    }
 
 
-/*
-  Brücke ablegen
-*/
+    /*
+      2. BRÜCKE IN HAND
+    */
 
-if(bridgeState===1){
+    if(
+        bridgeState===1
+    ){
 
-dropBridge();
-return;
-}
+        /*
+          Wenn Spieler auf dem Boot ist,
+          wird sie direkt auf das Boot gelegt.
+        */
 
+        if(
+            playerOnBoat()
+        ){
 
-/*
-  Brücke aufnehmen, wenn sie
-  am Boot liegt.
-*/
+            putBridgeOnBoat();
 
-if(
-bridgeState===2 &&
-onBoat(camera.position) &&
-camera.position.distanceTo(
-bridge.position
-)<5
-){
+        }else{
 
-pickupBridge();
-return;
-}
+            dropBridge();
+        }
 
-
-/*
-  Brücke aufs Boot legen.
-*/
-
-if(
-bridgeState===1 &&
-onBoat(camera.position)
-){
-
-putBridgeOnBoat();
-return;
-}
+        return;
+    }
 
 
-/*
-  Tür
-*/
+    /*
+      3. BRÜCKE AM HAFEN AUFNEHMEN
+    */
 
-const doorWorld=
-new THREE.Vector3();
+    if(
+        bridgeState===0 &&
+        player.distanceTo(
+            bridge.position
+        )<4
+    ){
 
-door.getWorldPosition(
-doorWorld
-);
+        pickupBridge();
 
-if(
-camera.position.distanceTo(
-doorWorld
-)<4
-){
-
-toggleDoor();
-return;
-}
+        return;
+    }
 
 
-/*
-  Lenkrad
-*/
+    /*
+      4. BRÜCKE AUF DEM WASSER
+      aufnehmen, wenn man auf dem
+      Boot steht und sie erreicht.
+    */
 
-const wheelWorld=
-new THREE.Vector3();
+    if(
+        bridgeState===2 &&
+        playerOnBoat() &&
+        player.distanceTo(
+            bridge.position
+        )<5
+    ){
 
-wheel.getWorldPosition(
-wheelWorld
-);
+        pickupBridge();
 
-if(
-bridgeState===3 &&
-camera.position.distanceTo(
-wheelWorld
-)<4
-){
-
-enterSteering();
-return;
-}
+        return;
+    }
 
 
-/*
-  Kran
-*/
+    /*
+      5. TÜR
+    */
 
-const craneWorld=
-new THREE.Vector3();
+    const doorPoint=
+        worldPosition(
+            cabinDoor
+        );
 
-crane.getWorldPosition(
-craneWorld
-);
+    if(
+        player.distanceTo(
+            doorPoint
+        )<4
+    ){
 
-if(
-bridgeState===3 &&
-camera.position.distanceTo(
-craneWorld
-)<5
-){
+        toggleDoor();
 
-moveCrane();
-return;
-}
+        return;
+    }
+
+
+    /*
+      6. LENKRAD
+    */
+
+    const wheelPoint=
+        worldPosition(
+            wheel
+        );
+
+    if(
+        bridgeState===3 &&
+        player.distanceTo(
+            wheelPoint
+        )<4.5
+    ){
+
+        enterBoatControl();
+
+        return;
+    }
+
+
+    /*
+      7. KRAN
+    */
+
+    const cranePoint=
+        worldPosition(
+            crane
+        );
+
+    if(
+        bridgeState===3 &&
+        player.distanceTo(
+            cranePoint
+        )<5
+    ){
+
+        animateCrane();
+
+        return;
+    }
 }
 
 
 /* =========================================================
-   PROMPTS
+   PROMPT
 ========================================================= */
 
-function prompt(t){
-const el=document.getElementById("prompt");
-el.innerHTML=t;
-el.style.display="block";
+function showPrompt(text){
+
+    const p=
+        document.getElementById(
+            "prompt"
+        );
+
+    p.innerHTML=text;
+
+    p.style.display="block";
 }
 
-function noPrompt(){
-document.getElementById("prompt").style.display="none";
+function hidePrompt(){
+
+    document.getElementById(
+        "prompt"
+    ).style.display="none";
 }
 
 function updatePrompt(){
 
-if(steering){
-noPrompt();
-return;
-}
+    if(steering){
+
+        hidePrompt();
+
+        return;
+    }
+
+    const player=
+        camera.position;
 
 
-/*
-  Brücke am Hafen
-*/
+    /*
+      Brücke am Hafen
+    */
 
-if(
-bridgeState===0 &&
-camera.position.distanceTo(
-bridge.position
-)<3.5
-){
+    if(
+        bridgeState===0 &&
+        player.distanceTo(
+            bridge.position
+        )<4
+    ){
 
-prompt("E – Eisenbrücke aufnehmen");
-return;
-}
+        showPrompt(
+            "E – Eisenbrücke aufnehmen"
+        );
 
-
-/*
-  Brücke in Hand
-*/
-
-if(bridgeState===1){
-
-if(onBoat(camera.position)){
-
-prompt(
-"E – Brücke auf dem Boot ablegen<br>R – drehen"
-);
-
-}else{
-
-prompt(
-"E – Brücke ablegen<br>R – drehen"
-);
-
-}
-
-return;
-}
+        return;
+    }
 
 
-/*
-  Brücke auf dem Boden
-*/
+    /*
+      Brücke in Hand
+    */
 
-if(
-bridgeState===2 &&
-onBoat(camera.position) &&
-camera.position.distanceTo(
-bridge.position
-)<5
-){
+    if(
+        bridgeState===1
+    ){
 
-prompt(
-"E – Brücke aufnehmen"
-);
+        if(
+            playerOnBoat()
+        ){
 
-return;
-}
+            showPrompt(
+                "E – Brücke aufs Boot legen<br>R – drehen"
+            );
 
+        }else{
 
-/*
-  Tür
-*/
+            showPrompt(
+                "E – Brücke ablegen<br>R – drehen"
+            );
+        }
 
-const dw=new THREE.Vector3();
-door.getWorldPosition(dw);
-
-if(
-camera.position.distanceTo(dw)<4
-){
-
-prompt(
-doorOpen
-?"E – Tür schließen"
-:"E – Tür öffnen"
-);
-
-return;
-}
+        return;
+    }
 
 
-/*
-  Steuerstand
-*/
+    /*
+      Brücke aufgestellt
+    */
 
-if(bridgeState===3){
+    if(
+        bridgeState===2 &&
+        playerOnBoat() &&
+        player.distanceTo(
+            bridge.position
+        )<5
+    ){
 
-const ww=new THREE.Vector3();
-wheel.getWorldPosition(ww);
+        showPrompt(
+            "E – Brücke aufnehmen"
+        );
 
-if(
-camera.position.distanceTo(ww)<4
-){
-
-prompt("E – Steuerstand betreten");
-return;
-}
-}
+        return;
+    }
 
 
-/*
-  Kran
-*/
+    /*
+      Tür
+    */
 
-if(bridgeState===3){
+    const doorPoint=
+        worldPosition(
+            cabinDoor
+        );
 
-const cw=new THREE.Vector3();
-crane.getWorldPosition(cw);
+    if(
+        player.distanceTo(
+            doorPoint
+        )<4
+    ){
 
-if(
-camera.position.distanceTo(cw)<5
-){
+        showPrompt(
+            doorOpen
+            ? "E – Tür schließen"
+            : "E – Tür öffnen"
+        );
 
-prompt(
-craneDown
-?"E – Netz hochziehen"
-:"E – Netz ins Wasser lassen"
-);
+        return;
+    }
 
-return;
-}
-}
 
-noPrompt();
+    /*
+      Lenkrad
+    */
+
+    if(
+        bridgeState===3
+    ){
+
+        const wheelPoint=
+            worldPosition(
+                wheel
+            );
+
+        if(
+            player.distanceTo(
+                wheelPoint
+            )<4.5
+        ){
+
+            showPrompt(
+                "E – Steuerstand betreten"
+            );
+
+            return;
+        }
+    }
+
+
+    /*
+      Kran
+    */
+
+    if(
+        bridgeState===3
+    ){
+
+        const cranePoint=
+            worldPosition(
+                crane
+            );
+
+        if(
+            player.distanceTo(
+                cranePoint
+            )<5
+        ){
+
+            showPrompt(
+                craneLowered
+                ? "E – Netz hochziehen"
+                : "E – Netz ins Wasser lassen"
+            );
+
+            return;
+        }
+    }
+
+    hidePrompt();
 }
 
 
@@ -1540,65 +2428,101 @@ noPrompt();
 ========================================================= */
 
 document.getElementById(
-"startBtn"
-).onclick=()=>{
+    "startButton"
+).addEventListener(
+    "click",
+    function(){
 
-document.getElementById(
-"start"
-).style.display="none";
+        document.getElementById(
+            "start"
+        ).style.display="none";
 
-controls.lock();
-};
+        controls.lock();
+    }
+);
+
+
+/*
+  Pointer-Lock nicht mehr dauerhaft
+  erzwingen.
+*/
+
+controls.addEventListener(
+    "unlock",
+    function(){
+
+        if(!steering){
+
+            /*
+              Spieler darf danach
+              weiterhin E/WASD benutzen.
+            */
+
+        }
+    }
+);
 
 
 /* =========================================================
    LOOP
 ========================================================= */
 
-let last=performance.now();
+let last=
+    performance.now();
 
-function loop(now){
+function animate(now){
 
-requestAnimationFrame(loop);
+    requestAnimationFrame(
+        animate
+    );
 
-const dt=Math.min(
-(now-last)/1000,
-.033
-);
+    const dt=
+        Math.min(
+            (now-last)/1000,
+            .033
+        );
 
-last=now;
+    last=now;
 
-movePlayer(dt);
-updateBridgePhysics(dt);
-driveBoat(dt);
-updatePrompt();
+    movePlayer(dt);
 
-renderer.render(
-scene,
-camera
-);
+    updateBridgePhysics(dt);
+
+    driveBoat(dt);
+
+    updatePrompt();
+
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
-loop(performance.now());
+animate(
+    performance.now()
+);
 
 
 /* =========================================================
    RESIZE
 ========================================================= */
 
-addEventListener("resize",()=>{
+addEventListener(
+    "resize",
+    function(){
 
-camera.aspect=
-innerWidth/innerHeight;
+        camera.aspect=
+            innerWidth/innerHeight;
 
-camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-renderer.setSize(
-innerWidth,
-innerHeight
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+    }
 );
 
-});
 </script>
 </body>
 </html>
