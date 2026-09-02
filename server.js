@@ -1,17 +1,13 @@
+// server.js
+
 const express = require("express");
 const http = require("http");
-const path = require("path");
 const { Server } = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
+const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
@@ -21,544 +17,306 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
-
 const MAX_PLAYERS = 2;
-const HUNTER_WAIT = 30000;
+const HUNTER_DELAY = 30000;
+const ROUND_TIME = 120000;
 
-let waitingPlayers = [];
-let players = {};
+const players = {};
+let lobby = [];
+let game = null;
 
-let game = {
-    running: false,
-    hunterId: null,
-    startedAt: 0
-};
-
-
-/* =========================
-   LOBBY
-========================= */
-
-function sendLobbyState() {
-
-    const count = waitingPlayers.length;
-
-    io.emit("lobbyUpdate", {
-        players: count,
-        needed: Math.max(0, MAX_PLAYERS - count)
+function sendLobby() {
+    io.emit("waiting", {
+        players: lobby.length
     });
 }
-
 
 function startGame() {
 
-    if (game.running) return;
+    if (game) return;
+    if (lobby.length < 2) return;
 
-    if (waitingPlayers.length < MAX_PLAYERS) return;
+    const ids = lobby.splice(0, 2);
 
-
-    const ids = waitingPlayers.splice(0, MAX_PLAYERS);
-
-    const hunter =
+    const hunterId =
         ids[Math.floor(Math.random() * ids.length)];
 
-    game.running = true;
-    game.hunterId = hunter;
-    game.startedAt = Date.now();
-
+    game = {
+        ids,
+        hunterId,
+        started: Date.now(),
+        finished: false
+    };
 
     ids.forEach((id, index) => {
 
-        if (!players[id]) return;
+        const p = players[id];
 
-        players[id].role =
-            id === hunter
-                ? "hunter"
-                : "chameleon";
+        if (!p) return;
 
-        players[id].x =
-            id === hunter ? 0 : 6;
+        p.inGame = true;
+        p.role = id === hunterId
+            ? "hunter"
+            : "chameleon";
 
-        players[id].y = 0;
-
-        players[id].z = 35;
-
-        players[id].inGame = true;
+        p.x = id === hunterId ? -7 : 7;
+        p.y = 0;
+        p.z = 35;
+        p.rotation = 0;
+        p.color = 0xff1744;
+        p.hidden = false;
     });
 
-
-    io.to(ids[0]).emit("gameStart", {
-        myId: ids[0],
-        hunterId: hunter,
-        players: getPublicPlayers(ids)
-    });
-
-    io.to(ids[1]).emit("gameStart", {
-        myId: ids[1],
-        hunterId: hunter,
-        players: getPublicPlayers(ids)
-    });
-
-
-    sendLobbyState();
-
-    console.log(
-        "GAME START:",
-        ids,
-        "Hunter:",
-        hunter
-    );
-}
-
-
-function getPublicPlayers(ids) {
-
-    const result = {};
+    const publicPlayers = {};
 
     ids.forEach(id => {
 
-        if (!players[id]) return;
+        const p = players[id];
 
-        result[id] = {
-            id,
-            x: players[id].x,
-            y: players[id].y,
-            z: players[id].z,
-            rotation: players[id].rotation,
-            color: players[id].color,
-            role: players[id].role,
-            hidden: players[id].hidden
+        publicPlayers[id] = {
+            x: p.x,
+            y: p.y,
+            z: p.z,
+            rotation: p.rotation,
+            color: p.color,
+            hidden: p.hidden
         };
     });
 
-    return result;
-}
+    ids.forEach(id => {
 
-
-/* =========================
-   NEXT ROUND
-========================= */
-
-function endGame() {
-
-    game.running = false;
-    game.hunterId = null;
-    game.startedAt = 0;
-
-
-    Object.keys(players).forEach(id => {
-
-        if (players[id]) {
-            players[id].inGame = false;
-            players[id].role = null;
-        }
-
+        io.to(id).emit("gameStart", {
+            players: publicPlayers,
+            hunterId
+        });
     });
 
-
-    /*
-    Alle Spieler, die noch verbunden sind,
-    kommen wieder in die Lobby.
-    */
-
-    waitingPlayers = Object.keys(players);
-
-
-    io.emit("returnToLobby");
-
-    sendLobbyState();
-
-    setTimeout(startGame, 300);
+    sendLobby();
 }
 
+function endGame(winner) {
 
-/* =========================
-   CONNECTION
-========================= */
+    if (!game || game.finished) return;
+
+    game.finished = true;
+
+    io.emit("roundResult", {
+        winner
+    });
+
+    setTimeout(() => {
+
+        game = null;
+
+        Object.keys(players).forEach(id => {
+
+            if (!players[id]) return;
+
+            players[id].inGame = false;
+            players[id].role = null;
+
+        });
+
+        lobby = [];
+
+        sendLobby();
+
+    }, 1000);
+}
+
+setInterval(() => {
+
+    if (!game || game.finished) return;
+
+    const elapsed = Date.now() - game.started;
+
+    const hunterRemaining =
+        Math.max(0, HUNTER_DELAY - elapsed);
+
+    io.emit("hunterTimer", {
+        remaining: hunterRemaining
+    });
+
+    if (elapsed >= ROUND_TIME) {
+        endGame("chameleon");
+    }
+
+}, 250);
 
 io.on("connection", socket => {
 
-    console.log(
-        "JOIN:",
-        socket.id
-    );
-
-
     players[socket.id] = {
-
         id: socket.id,
-
+        inGame: false,
+        role: null,
         x: 0,
         y: 0,
         z: 35,
-
         rotation: 0,
-
         color: 0xff1744,
-
-        hidden: false,
-
-        role: null,
-
-        inGame: false
+        hidden: false
     };
 
-
-    /*
-    Spieler kommt in Warteschlange.
-    */
-
-    waitingPlayers.push(socket.id);
-
-
-    /*
-    Sofort Lobby anzeigen.
-    */
-
-    socket.emit("lobbyUpdate", {
-
-        players: waitingPlayers.length,
-
-        needed:
-            Math.max(
-                0,
-                MAX_PLAYERS -
-                waitingPlayers.length
-            )
+    socket.emit("waiting", {
+        players: lobby.length
     });
 
+    socket.on("requestState", () => {
 
-    sendLobbyState();
+        if (!game && !lobby.includes(socket.id)) {
+            lobby.push(socket.id);
+        }
 
+        sendLobby();
 
-    /*
-    Wenn 2 Spieler da sind:
-    Runde starten.
-    */
+        if (lobby.length >= 2) {
+            setTimeout(startGame, 200);
+        }
+    });
 
-    if (
-        waitingPlayers.length >=
-        MAX_PLAYERS &&
-        !game.running
-    ) {
+    socket.on("joinLobby", () => {
 
-        setTimeout(
-            startGame,
-            300
-        );
-    }
+        if (!players[socket.id]) return;
+        if (players[socket.id].inGame) return;
 
+        if (!lobby.includes(socket.id)) {
+            lobby.push(socket.id);
+        }
 
-    /* =========================
-       PLAYER MOVE
-    ========================= */
+        sendLobby();
+
+        if (lobby.length >= 2 && !game) {
+            setTimeout(startGame, 200);
+        }
+    });
 
     socket.on("playerMove", data => {
 
         const p = players[socket.id];
 
-        if (!p) return;
+        if (!p || !p.inGame || !game) return;
 
-        if (!p.inGame) return;
-
-
-        if (
-            typeof data.x === "number"
-        ) p.x = data.x;
-
+        const elapsed =
+            Date.now() - game.started;
 
         if (
-            typeof data.y === "number"
-        ) p.y = data.y;
+            p.role === "hunter" &&
+            elapsed < HUNTER_DELAY
+        ) {
+            socket.emit("hunterLocked");
+            return;
+        }
 
+        if (typeof data.x === "number") p.x = data.x;
+        if (typeof data.y === "number") p.y = data.y;
+        if (typeof data.z === "number") p.z = data.z;
+        if (typeof data.rotation === "number") {
+            p.rotation = data.rotation;
+        }
 
-        if (
-            typeof data.z === "number"
-        ) p.z = data.z;
+        if (typeof data.hidden === "boolean") {
+            p.hidden = data.hidden;
+        }
 
-
-        if (
-            typeof data.rotation === "number"
-        ) p.rotation = data.rotation;
-
-
-        if (
-            typeof data.hidden === "boolean"
-        ) p.hidden = data.hidden;
-
-
-        /*
-        Bewegung nur an Spieler
-        der aktuellen Runde senden.
-        */
-
-        socket.broadcast.emit(
-            "playerUpdate",
-            {
-                id: socket.id,
-
-                x: p.x,
-                y: p.y,
-                z: p.z,
-
-                rotation: p.rotation,
-
-                color: p.color,
-
-                hidden: p.hidden
-            }
-        );
-
+        socket.broadcast.emit("playerUpdate", {
+            id: socket.id,
+            x: p.x,
+            y: p.y,
+            z: p.z,
+            rotation: p.rotation,
+            color: p.color,
+            hidden: p.hidden
+        });
     });
-
-
-    /* =========================
-       PAINT
-    ========================= */
 
     socket.on("paint", color => {
 
         const p = players[socket.id];
 
-        if (!p) return;
+        if (!p || !p.inGame) return;
+        if (p.role !== "chameleon") return;
 
-        if (
-            typeof color !== "number"
-        ) return;
-
+        if (typeof color !== "number") return;
 
         p.color = color;
 
-
-        socket.broadcast.emit(
-            "playerPaint",
-            {
-                id: socket.id,
-                color: color
-            }
-        );
-
+        socket.broadcast.emit("playerPaint", {
+            id: socket.id,
+            color
+        });
     });
-
-
-    /* =========================
-       CATCH
-    ========================= */
 
     socket.on("catchPlayer", targetId => {
 
-        if (!game.running) return;
+        if (!game || game.finished) return;
 
-        if (socket.id !== game.hunterId)
-            return;
+        const hunter = players[socket.id];
+        const target = players[targetId];
 
-        /*
-        30 Sekunden Schutzzeit.
-        */
+        if (!hunter || !target) return;
 
-        if (
-            Date.now() -
-            game.startedAt <
-            HUNTER_WAIT
-        ) {
+        if (hunter.role !== "hunter") return;
+        if (target.role !== "chameleon") return;
 
+        const elapsed =
+            Date.now() - game.started;
+
+        if (elapsed < HUNTER_DELAY) {
             socket.emit("hunterLocked");
-
             return;
         }
 
-
-        const hunter =
-            players[socket.id];
-
-        const target =
-            players[targetId];
-
-
-        if (!hunter || !target)
-            return;
-
-
-        const dx =
-            hunter.x -
-            target.x;
-
-        const dz =
-            hunter.z -
-            target.z;
-
+        const dx = hunter.x - target.x;
+        const dz = hunter.z - target.z;
 
         const distance =
-            Math.sqrt(
-                dx * dx +
-                dz * dz
-            );
+            Math.sqrt(dx * dx + dz * dz);
 
+        if (distance <= 3.5) {
 
-        if (distance <= 3.2) {
+            io.emit("playerCaught", {
+                hunterId: socket.id,
+                targetId
+            });
 
-            io.emit(
-                "playerCaught",
-                {
-                    hunterId: socket.id,
-                    targetId
-                }
-            );
-
-
-            endGame();
+            endGame("hunter");
         }
-
     });
-
-
-    /* =========================
-       STATE
-    ========================= */
-
-    socket.on(
-        "requestState",
-        () => {
-
-            socket.emit(
-                "state",
-                {
-                    lobbyPlayers:
-                        waitingPlayers.length,
-
-                    gameRunning:
-                        game.running,
-
-                    hunterId:
-                        game.hunterId
-                }
-            );
-
-        }
-    );
-
-
-    /* =========================
-       DISCONNECT
-    ========================= */
 
     socket.on("disconnect", () => {
 
-        console.log(
-            "LEAVE:",
-            socket.id
-        );
+        const wasInGame =
+            players[socket.id] &&
+            players[socket.id].inGame;
 
+        const wasHunter =
+            players[socket.id] &&
+            players[socket.id].role === "hunter";
 
-        waitingPlayers =
-            waitingPlayers.filter(
-                id => id !== socket.id
-            );
-
+        lobby =
+            lobby.filter(id => id !== socket.id);
 
         delete players[socket.id];
 
+        io.emit("playerLeft", socket.id);
 
-        /*
-        Wenn ein Spieler während
-        der Runde verschwindet,
-        Runde beenden.
-        */
+        if (wasInGame && game && !game.finished) {
 
-        if (game.running) {
-
-            const remaining =
-                Object.keys(players)
-                    .filter(
-                        id =>
-                            players[id].inGame
-                    );
-
-
-            if (remaining.length < 2) {
-
-                game.running = false;
-
-                game.hunterId = null;
-
-                io.emit(
-                    "returnToLobby"
-                );
-            }
-
-        }
-
-
-        sendLobbyState();
-
-
-        /*
-        Falls danach wieder
-        zwei Spieler warten.
-        */
-
-        if (
-            !game.running &&
-            waitingPlayers.length >= 2
-        ) {
-
-            setTimeout(
-                startGame,
-                300
+            endGame(
+                wasHunter
+                    ? "chameleon"
+                    : "hunter"
             );
+
+        } else {
+
+            sendLobby();
         }
-
     });
-
 });
 
-
-/* =========================
-   HUNTER TIMER
-========================= */
-
-setInterval(() => {
-
-    if (!game.running) return;
-
-
-    const elapsed =
-        Date.now() -
-        game.startedAt;
-
-
-    const remaining =
-        Math.max(
-            0,
-            HUNTER_WAIT -
-            elapsed
-        );
-
-
-    io.emit(
-        "hunterTimer",
-        {
-            remaining
-        }
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(
+        "MECHA CHAMELEON läuft auf Port " + PORT
     );
-
-
-}, 250);
-
-
-/* =========================
-   SERVER
-========================= */
-
-server.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-
-        console.log(
-            "MECHA CHAMELEON läuft auf Port",
-            PORT
-        );
-
-    }
-);
+});
