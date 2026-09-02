@@ -3,787 +3,923 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Mini Minecraft – Infinite World</title>
-
+<title>3D Burger Simulator</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:Arial}
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    background:#111;
+}
 canvas{display:block}
 
 #crosshair{
- position:fixed;
- left:50%;
- top:50%;
- width:18px;
- height:18px;
- transform:translate(-50%,-50%);
- pointer-events:none;
- z-index:10
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:16px;
+    height:16px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    z-index:20;
 }
-#crosshair:before,#crosshair:after{
- content:"";
- position:absolute;
- background:#fff;
- box-shadow:0 0 3px #000
+#crosshair:before,
+#crosshair:after{
+    content:"";
+    position:absolute;
+    background:#fff;
+    box-shadow:0 0 3px #000;
 }
-#crosshair:before{width:18px;height:2px;top:8px;left:0}
-#crosshair:after{width:2px;height:18px;left:8px;top:0}
+#crosshair:before{
+    width:16px;
+    height:2px;
+    top:7px;
+}
+#crosshair:after{
+    width:2px;
+    height:16px;
+    left:7px;
+}
 
-#info{
- position:fixed;
- top:10px;
- left:10px;
- color:white;
- font-weight:bold;
- text-shadow:2px 2px 3px #000;
- z-index:20;
- line-height:1.5
+#hud{
+    position:fixed;
+    top:12px;
+    left:12px;
+    color:white;
+    text-shadow:2px 2px 3px #000;
+    z-index:30;
+    line-height:1.5;
+    font-weight:bold;
 }
 
 #help{
- position:fixed;
- top:10px;
- right:10px;
- color:white;
- background:rgba(0,0,0,.4);
- padding:10px;
- border-radius:8px;
- text-align:right;
- z-index:20
-}
-
-#hotbar{
- position:fixed;
- bottom:15px;
- left:50%;
- transform:translateX(-50%);
- display:flex;
- gap:4px;
- z-index:20
-}
-
-.slot{
- width:58px;
- height:58px;
- background:rgba(25,25,25,.8);
- border:3px solid #555;
- position:relative;
- display:flex;
- align-items:center;
- justify-content:center
-}
-
-.slot.selected{
- border-color:white;
- transform:translateY(-4px)
-}
-
-.icon{
- width:34px;
- height:34px;
- border:2px solid #222
-}
-
-.number{
- position:absolute;
- top:2px;
- left:4px;
- color:white;
- text-shadow:2px 2px #000
-}
-
-.count{
- position:absolute;
- right:3px;
- bottom:1px;
- color:white;
- text-shadow:2px 2px #000;
- font-weight:bold
+    position:fixed;
+    top:12px;
+    right:12px;
+    padding:10px 14px;
+    background:rgba(0,0,0,.45);
+    color:white;
+    border-radius:8px;
+    text-align:right;
+    z-index:30;
+    line-height:1.45;
 }
 
 #start{
- position:fixed;
- inset:0;
- z-index:100;
- display:flex;
- flex-direction:column;
- justify-content:center;
- align-items:center;
- background:linear-gradient(#70c8f4,#d8f3ff)
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(#f7c46a,#fff0c7);
 }
 
 #start h1{
- font-size:54px;
- margin:0 0 20px;
- color:white;
- text-shadow:4px 4px #555
+    color:white;
+    font-size:52px;
+    margin:0 0 10px;
+    text-shadow:4px 4px #6b351b;
+}
+
+#start p{
+    font-size:19px;
+    color:#432516;
 }
 
 #start button{
- border:0;
- padding:16px 45px;
- font-size:22px;
- font-weight:bold;
- border-radius:7px;
- background:#48a63f;
- color:white;
- cursor:pointer
+    border:0;
+    border-radius:8px;
+    padding:15px 45px;
+    background:#d94a32;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-#loading{
- position:fixed;
- inset:0;
- z-index:200;
- display:none;
- align-items:center;
- justify-content:center;
- flex-direction:column;
- color:white;
- background:#222;
- font-size:25px
-}
-
-#message{
- position:fixed;
- left:50%;
- bottom:95px;
- transform:translateX(-50%);
- color:white;
- font-weight:bold;
- text-shadow:2px 2px #000;
- opacity:0;
- transition:.2s;
- z-index:30
+#area{
+    position:fixed;
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,.5);
+    color:white;
+    padding:8px 16px;
+    border-radius:20px;
+    z-index:30;
+    font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<div id="loading">
- <b>Welt wird geladen...</b>
- <span id="loadText">Chunks werden erstellt</span>
-</div>
-
 <div id="start">
- <h1>⛏️ MINECRAFT</h1>
- <p>Eine unendliche Blockwelt</p>
- <button id="startButton">SPIELEN</button>
+    <h1>🍔 BURGER SIMULATOR</h1>
+    <p>Baue deine eigene Burger-Küche</p>
+    <button id="startButton">STARTEN</button>
 </div>
 
-<div id="info">
- <div id="coords">X: 0 Y: 0 Z: 0</div>
- <div id="selectedInfo">Block: Gras</div>
- <div id="chunkInfo">Chunks: 0</div>
+<div id="hud">
+    <div id="position">X: 0 | Y: 0 | Z: 0</div>
+    <div id="areaText">Essraum</div>
 </div>
 
 <div id="help">
- WASD – Laufen<br>
- SPACE – Springen<br>
- Linksklick – Abbauen<br>
- Rechtsklick – Setzen<br>
- 1–9 – Block wählen<br>
- ESC – Maus freigeben
+    WASD – Bewegen<br>
+    SHIFT – Sprinten<br>
+    SPACE – Springen<br>
+    Maus – Umsehen<br>
+    ESC – Maus freigeben
 </div>
 
+<div id="area">ESSRAUM</div>
 <div id="crosshair"></div>
-<div id="message"></div>
-<div id="hotbar"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
 /* =========================================================
-   THREE.JS
+   SZENE
 ========================================================= */
 
-const scene=new THREE.Scene();
+const scene = new THREE.Scene();
 
-scene.background=new THREE.Color(0x78c8f5);
-scene.fog=new THREE.Fog(0x78c8f5,70,180);
+scene.background = new THREE.Color(0xbfe8ff);
 
-const camera=new THREE.PerspectiveCamera(
- 75,
- innerWidth/innerHeight,
- .05,
- 500
+scene.fog = new THREE.Fog(
+    0xbfe8ff,
+    25,
+    80
 );
 
-const renderer=new THREE.WebGLRenderer({
- antialias:false,
- powerPreference:"high-performance"
+const camera = new THREE.PerspectiveCamera(
+    75,
+    innerWidth / innerHeight,
+    0.1,
+    150
+);
+
+const renderer = new THREE.WebGLRenderer({
+    antialias:false,
+    powerPreference:"high-performance"
 });
 
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+
 document.body.appendChild(renderer.domElement);
 
-const hemi=new THREE.HemisphereLight(
- 0xbfeaff,
- 0x67503b,
- 1.15
+const controls = new THREE.PointerLockControls(
+    camera,
+    document.body
 );
-scene.add(hemi);
 
-const sun=new THREE.DirectionalLight(0xffffff,1);
-sun.position.set(100,200,100);
-scene.add(sun);
+/* Licht */
 
-const controls=new THREE.PointerLockControls(camera,document.body);
+const ambient = new THREE.HemisphereLight(
+    0xffffff,
+    0x555555,
+    1.2
+);
 
-/* =========================================================
-   BLOCKE
-========================================================= */
+scene.add(ambient);
 
-const BLOCKS=[
- {
-  id:"grass",
-  name:"Gras",
-  color:0x55a83b
- },
- {
-  id:"dirt",
-  name:"Erde",
-  color:0x79502e
- },
- {
-  id:"stone",
-  name:"Stein",
-  color:0x858585
- },
- {
-  id:"sand",
-  name:"Sand",
-  color:0xd9c27c
- },
- {
-  id:"wood",
-  name:"Holz",
-  color:0x8b5a2b
- },
- {
-  id:"leaves",
-  name:"Blätter",
-  color:0x329447
- },
- {
-  id:"cobble",
-  name:"Bruchstein",
-  color:0x696969
- },
- {
-  id:"glass",
-  name:"Glas",
-  color:0x9edbea,
-  transparent:true
- },
- {
-  id:"brick",
-  name:"Ziegel",
-  color:0xa94334
- }
-];
+const light = new THREE.DirectionalLight(
+    0xffffff,
+    1
+);
 
-const materials={};
-
-for(const block of BLOCKS){
- materials[block.id]=new THREE.MeshLambertMaterial({
-  color:block.color,
-  transparent:!!block.transparent,
-  opacity:block.transparent?.45:1,
-  depthWrite:!block.transparent
- });
-}
-
-const cubeGeo=new THREE.BoxGeometry(1,1,1);
+light.position.set(10,20,10);
+scene.add(light);
 
 /* =========================================================
-   INVENTAR
+   MATERIALIEN
 ========================================================= */
 
-const inventory={
- grass:64,
- dirt:64,
- stone:64,
- sand:32,
- wood:32,
- leaves:32,
- cobble:32,
- glass:32,
- brick:32
-};
+const floorDining = new THREE.MeshLambertMaterial({
+    color:0xd8b27c
+});
 
-let selectedSlot=0;
+const floorKitchen = new THREE.MeshLambertMaterial({
+    color:0xbfc3c7
+});
 
-function createHotbar(){
+const wallMat = new THREE.MeshLambertMaterial({
+    color:0xf1eee5
+});
 
- const bar=document.getElementById("hotbar");
- bar.innerHTML="";
+const wallAccent = new THREE.MeshLambertMaterial({
+    color:0xd84b35
+});
 
- BLOCKS.forEach((block,i)=>{
+const darkMat = new THREE.MeshLambertMaterial({
+    color:0x333333
+});
 
-  const slot=document.createElement("div");
-  slot.className="slot";
+const woodMat = new THREE.MeshLambertMaterial({
+    color:0x8b542d
+});
 
-  if(i===selectedSlot)
-   slot.classList.add("selected");
+const tableMat = new THREE.MeshLambertMaterial({
+    color:0x9a6337
+});
 
-  const num=document.createElement("div");
-  num.className="number";
-  num.textContent=i+1;
+const metalMat = new THREE.MeshLambertMaterial({
+    color:0x777b80
+});
 
-  const icon=document.createElement("div");
-  icon.className="icon";
-  icon.style.background=`
-   rgb(
-    ${(block.color>>16)&255},
-    ${(block.color>>8)&255},
-    ${block.color&255}
-   )
-  `;
+const steelMat = new THREE.MeshLambertMaterial({
+    color:0xc7cbd0
+});
 
-  const count=document.createElement("div");
-  count.className="count";
-  count.textContent=inventory[block.id]||0;
+const redMat = new THREE.MeshLambertMaterial({
+    color:0xc82d25
+});
 
-  slot.appendChild(num);
-  slot.appendChild(icon);
-  slot.appendChild(count);
+const yellowMat = new THREE.MeshLambertMaterial({
+    color:0xffd42a
+});
 
-  bar.appendChild(slot);
- });
+const greenMat = new THREE.MeshLambertMaterial({
+    color:0x48a83c
+});
+
+/* =========================================================
+   HELFER
+========================================================= */
+
+function cube(
+    x,y,z,
+    sx,sy,sz,
+    material
+){
+    const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            sx,sy,sz
+        ),
+        material
+    );
+
+    mesh.position.set(x,y,z);
+    scene.add(mesh);
+
+    return mesh;
 }
 
-createHotbar();
+function cylinder(
+    x,y,z,
+    radius,height,
+    material,
+    segments=20
+){
+    const mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            radius,
+            radius,
+            height,
+            segments
+        ),
+        material
+    );
 
-function selectBlock(index){
+    mesh.position.set(x,y,z);
+    scene.add(mesh);
 
- if(index<0||index>=BLOCKS.length)return;
-
- selectedSlot=index;
-
- createHotbar();
-
- document.getElementById("selectedInfo").textContent=
- "Block: "+BLOCKS[index].name;
+    return mesh;
 }
 
 /* =========================================================
-   INFINITE CHUNK-WELT
+   RAUM
 ========================================================= */
 
-const CHUNK_SIZE=16;
-const RENDER_DISTANCE=4;
+/*
+    Raum:
+    Länge = 48
+    Breite = 18
 
-const chunks=new Map();
+    3/4 = Essraum
+    1/4 = Küche
 
-function chunkKey(cx,cz){
- return cx+","+cz;
-}
+    Küche liegt hinten.
+*/
 
-/* deterministischer Noise */
+const ROOM_LENGTH = 48;
+const ROOM_WIDTH = 18;
 
-function hash(x,z){
+const KITCHEN_START = 36;
 
- const value=Math.sin(
-   x*127.1+
-   z*311.7+
-   17.3
- )*43758.5453123;
+/* Essraum */
 
- return value-Math.floor(value);
-}
+cube(
+    0,
+    -0.25,
+    0,
+    ROOM_LENGTH,
+    0.5,
+    ROOM_WIDTH,
+    floorDining
+);
 
-function smoothNoise(x,z){
+/* Küchenboden */
 
- const x0=Math.floor(x);
- const z0=Math.floor(z);
+cube(
+    18,
+    0.02,
+    0,
+    12,
+    0.54,
+    ROOM_WIDTH,
+    floorKitchen
+);
 
- const fx=x-x0;
- const fz=z-z0;
+/* Außenwände */
 
- const a=hash(x0,z0);
- const b=hash(x0+1,z0);
- const c=hash(x0,z0+1);
- const d=hash(x0+1,z0+1);
+cube(
+    0,
+    3,
+    -9,
+    ROOM_LENGTH,
+    6,
+    0.4,
+    wallMat
+);
 
- const sx=fx*fx*(3-2*fx);
- const sz=fz*fz*(3-2*fz);
+cube(
+    0,
+    3,
+    9,
+    ROOM_LENGTH,
+    6,
+    0.4,
+    wallMat
+);
 
- const ab=a+(b-a)*sx;
- const cd=c+(d-c)*sx;
+cube(
+    -24,
+    3,
+    0,
+    0.4,
+    6,
+    18,
+    wallMat
+);
 
- return ab+(cd-ab)*sz;
-}
+cube(
+    24,
+    3,
+    0,
+    0.4,
+    6,
+    18,
+    wallMat
+);
 
-function noise(x,z){
+/* Decke */
 
- let value=0;
- let amplitude=1;
- let frequency=.025;
- let total=0;
-
- for(let i=0;i<5;i++){
-
-  value+=smoothNoise(
-   x*frequency,
-   z*frequency
-  )*amplitude;
-
-  total+=amplitude;
-
-  amplitude*=.5;
-  frequency*=2;
- }
-
- return value/total;
-}
-
-function getHeight(x,z){
-
- let n=noise(x,z);
-
- let height=
-  5+
-  Math.floor(n*10);
-
- const mountain=noise(
-  x*.12,
-  z*.12
- );
-
- if(mountain>.62){
-  height+=Math.floor(
-   (mountain-.62)*35
-  );
- }
-
- return Math.max(
-  2,
-  Math.min(30,height)
- );
-}
+cube(
+    0,
+    6,
+    0,
+    ROOM_LENGTH,
+    0.3,
+    ROOM_WIDTH,
+    new THREE.MeshLambertMaterial({
+        color:0xffffff
+    })
+);
 
 /* =========================================================
-   BLOCK DATEN
+   TRENNWAND ZWISCHEN ESSRAUM UND KÜCHE
 ========================================================= */
 
-const worldBlocks=new Map();
+const dividerX = 12;
 
-function blockKey(x,y,z){
- return x+"|"+y+"|"+z;
+/* Linker Wandteil */
+
+cube(
+    dividerX,
+    3,
+    -6,
+    0.35,
+    6,
+    6,
+    wallMat
+);
+
+/* Rechter Wandteil */
+
+cube(
+    dividerX,
+    3,
+    6,
+    0.35,
+    6,
+    6,
+    wallMat
+);
+
+/* Öffnung zur Küche */
+
+cube(
+    dividerX,
+    5.2,
+    0,
+    0.35,
+    1.6,
+    6,
+    wallAccent
+);
+
+/* Schild */
+
+function sign(text,x,y,z){
+
+    const canvas=
+        document.createElement("canvas");
+
+    canvas.width=512;
+    canvas.height=128;
+
+    const ctx=canvas.getContext("2d");
+
+    ctx.fillStyle="#333";
+    ctx.fillRect(0,0,512,128);
+
+    ctx.fillStyle="white";
+    ctx.font="bold 52px Arial";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+        text,
+        256,
+        64
+    );
+
+    const texture=
+        new THREE.CanvasTexture(canvas);
+
+    const material=
+        new THREE.MeshBasicMaterial({
+            map:texture
+        });
+
+    const board=cube(
+        x,y,z,
+        4,.9,.12,
+        material
+    );
+
+    return board;
 }
 
-function setBlockData(x,y,z,type){
-
- const key=blockKey(x,y,z);
-
- if(type===null){
-  worldBlocks.delete(key);
- }else{
-  worldBlocks.set(key,type);
- }
-}
-
-function getBlockData(x,y,z){
-
- const key=blockKey(x,y,z);
-
- if(worldBlocks.has(key))
-  return worldBlocks.get(key);
-
- return null;
-}
+sign(
+    "KÜCHE",
+    11.7,
+    4.2,
+    0
+);
 
 /* =========================================================
-   CHUNK ERZEUGEN
+   ESSRAUM – TISCHE
 ========================================================= */
 
-function generateChunk(cx,cz){
+function table(x,z){
 
- const key=chunkKey(cx,cz);
+    cube(
+        x,
+        1.05,
+        z,
+        4.2,
+        0.25,
+        2.2,
+        tableMat
+    );
 
- if(chunks.has(key))
-  return;
-
- const group=new THREE.Group();
- group.userData.chunkKey=key;
-
- const blockData=[];
-
- const startX=cx*CHUNK_SIZE;
- const startZ=cz*CHUNK_SIZE;
-
- for(let lx=0;lx<CHUNK_SIZE;lx++){
-
-  for(let lz=0;lz<CHUNK_SIZE;lz++){
-
-   const x=startX+lx;
-   const z=startZ+lz;
-
-   const height=getHeight(x,z);
-
-   for(let y=0;y<=height;y++){
-
-    let type;
-
-    if(y===height){
-     type="grass";
-    }
-    else if(y>height-4){
-     type="dirt";
-    }
-    else{
-     type="stone";
-    }
-
-    setBlockData(x,y,z,type);
-
-    blockData.push({
-     x,y,z,type
-    });
-   }
-  }
- }
-
- /* Sandflächen */
-
- for(let lx=0;lx<CHUNK_SIZE;lx++){
-
-  for(let lz=0;lz<CHUNK_SIZE;lz++){
-
-   const x=startX+lx;
-   const z=startZ+lz;
-   const h=getHeight(x,z);
-
-   if(h<=4){
-
-    setBlockData(x,h,z,"sand");
-
-    if(h>0)
-     setBlockData(x,h-1,z,"sand");
-   }
-  }
- }
-
- /* Bäume */
-
- for(let lx=2;lx<CHUNK_SIZE-2;lx+=3){
-
-  for(let lz=2;lz<CHUNK_SIZE-2;lz+=3){
-
-   const x=startX+lx;
-   const z=startZ+lz;
-
-   const r=hash(
-    x*9+71,
-    z*13+23
-   );
-
-   if(r>.965){
-
-    const h=getHeight(x,z);
-
-    if(h>5){
-
-     for(let y=1;y<=4;y++){
-      setBlockData(x,h+y,z,"wood");
-     }
-
-     for(let dx=-2;dx<=2;dx++){
-
-      for(let dz=-2;dz<=2;dz++){
-
-       for(let dy=3;dy<=5;dy++){
-
-        if(
-         Math.abs(dx)+
-         Math.abs(dz)+
-         dy<8
-        ){
-
-         const xx=x+dx;
-         const yy=h+dy;
-         const zz=z+dz;
-
-         setBlockData(
-          xx,yy,zz,"leaves"
-         );
-        }
-       }
-      }
-     }
-    }
-   }
-  }
- }
-
- buildChunkMesh(cx,cz);
-
- chunks.set(key,group);
- scene.add(group);
-}
-
-function buildChunkMesh(cx,cz){
-
- const key=chunkKey(cx,cz);
-
- const group=new THREE.Group();
- group.userData.chunkKey=key;
-
- const startX=cx*CHUNK_SIZE;
- const startZ=cz*CHUNK_SIZE;
-
- for(let lx=0;lx<CHUNK_SIZE;lx++){
-
-  for(let lz=0;lz<CHUNK_SIZE;lz++){
-
-   const x=startX+lx;
-   const z=startZ+lz;
-
-   const maxY=35;
-
-   for(let y=0;y<=maxY;y++){
-
-    const type=getBlockData(x,y,z);
-
-    if(!type)continue;
-
-    /* Nur sichtbare Blöcke */
-
-    const neighbors=[
-     [x+1,y,z],
-     [x-1,y,z],
-     [x,y+1,z],
-     [x,y-1,z],
-     [x,y,z+1],
-     [x,y,z-1]
+    const legs=[
+        [-1.7,-.8],
+        [1.7,-.8],
+        [-1.7,.8],
+        [1.7,.8]
     ];
 
-    let visible=false;
+    for(const p of legs){
 
-    for(const n of neighbors){
-
-     if(!getBlockData(
-      n[0],n[1],n[2]
-     )){
-      visible=true;
-      break;
-     }
+        cube(
+            x+p[0],
+            .5,
+            z+p[1],
+            .25,
+            1,
+            .25,
+            darkMat
+        );
     }
+}
 
-    if(!visible)continue;
+table(-17,-4);
+table(-17,4);
 
-    const mesh=new THREE.Mesh(
-     cubeGeo,
-     materials[type]
+table(-8,-4);
+table(-8,4);
+
+table(1,-4);
+table(1,4);
+
+/* Stühle */
+
+function chair(x,z){
+
+    cube(
+        x,
+        .55,
+        z,
+        .9,
+        .15,
+        .9,
+        redMat
     );
 
-    mesh.position.set(
-     x+.5,
-     y+.5,
-     z+.5
+    cube(
+        x,
+        1.2,
+        z+.38,
+        .9,
+        1.3,
+        .15,
+        redMat
     );
+}
 
-    mesh.userData={
-     x:x,
-     y:y,
-     z:z,
-     type:type
-    };
+for(const x of [-17,-8,1]){
 
-    group.add(mesh);
-   }
-  }
- }
-
- chunks.set(key,group);
-
- scene.add(group);
+    chair(x,-6.1);
+    chair(x,6.1);
 }
 
 /* =========================================================
-   CHUNK ENTFERNEN
+   KASSE
 ========================================================= */
 
-function unloadChunk(cx,cz){
+cube(
+    7,
+    1.15,
+    0,
+    3,
+    2.3,
+    2,
+    woodMat
+);
 
- const key=chunkKey(cx,cz);
- const chunk=chunks.get(key);
+cube(
+    7,
+    2.35,
+    0,
+    2.4,
+    .15,
+    1.5,
+    darkMat
+);
 
- if(!chunk)return;
+/* Bildschirm */
 
- scene.remove(chunk);
+cube(
+    7,
+    2.8,
+    0,
+    .15,
+    .9,
+    1.2,
+    darkMat
+);
 
- chunk.traverse(obj=>{
+/* =========================================================
+   KÜCHE
+========================================================= */
 
-  if(obj.geometry){
-   // Geometry gemeinsam benutzt – nicht löschen
-  }
- });
+/* Küchenarbeitsplatte */
 
- chunks.delete(key);
+cube(
+    18,
+    1.15,
+    -5.5,
+    10,
+    2.3,
+    2.8,
+    darkMat
+);
+
+cube(
+    18,
+    2.35,
+    -5.5,
+    10.5,
+    .18,
+    3,
+    steelMat
+);
+
+/* zweite Arbeitsfläche */
+
+cube(
+    18,
+    1.15,
+    5.5,
+    10,
+    2.3,
+    2.8,
+    darkMat
+);
+
+cube(
+    18,
+    2.35,
+    5.5,
+    10.5,
+    .18,
+    3,
+    steelMat
+);
+
+/* =========================================================
+   GRILL
+========================================================= */
+
+cube(
+    17,
+    2.65,
+    -5.5,
+    4,
+    .35,
+    2,
+    metalMat
+);
+
+for(let i=0;i<7;i++){
+
+    cube(
+        15.5+i*.5,
+        2.85,
+        -5.5,
+        .12,
+        .08,
+        1.7,
+        darkMat
+    );
+}
+
+/* Grillknöpfe */
+
+for(let i=0;i<3;i++){
+
+    cylinder(
+        15.8+i*.8,
+        2.48,
+        -7,
+        .16,
+        .15,
+        redMat
+    );
+
 }
 
 /* =========================================================
-   CHUNKS AKTUALISIEREN
+   FRITÖSE
 ========================================================= */
 
-let lastCX=null;
-let lastCZ=null;
+cube(
+    22,
+    2.5,
+    -5.5,
+    3,
+    .3,
+    1.8,
+    darkMat
+);
 
-function updateChunks(){
+cube(
+    22,
+    2.7,
+    -5.5,
+    2.3,
+    .12,
+    1.2,
+    steelMat
+);
 
- const px=Math.floor(
-  camera.position.x/CHUNK_SIZE
- );
+cylinder(
+    21.2,
+    2.9,
+    -5.5,
+    .45,
+    .15,
+    darkMat
+);
 
- const pz=Math.floor(
-  camera.position.z/CHUNK_SIZE
- );
+cylinder(
+    22.7,
+    2.9,
+    -5.5,
+    .45,
+    .15,
+    darkMat
+);
 
- if(px===lastCX&&pz===lastCZ)
-  return;
+/* =========================================================
+   KÜHLSCHRANK
+========================================================= */
 
- lastCX=px;
- lastCZ=pz;
+cube(
+    14,
+    2.5,
+    5.5,
+    2.5,
+    5,
+    2.2,
+    steelMat
+);
 
- for(let dx=-RENDER_DISTANCE;dx<=RENDER_DISTANCE;dx++){
+cube(
+    14,
+    2.5,
+    4.35,
+    2.1,
+    4.7,
+    .08,
+    new THREE.MeshLambertMaterial({
+        color:0xdfe3e6
+    })
+);
 
-  for(let dz=-RENDER_DISTANCE;dz<=RENDER_DISTANCE;dz++){
+/* Griff */
 
-   if(
-    dx*dx+
-    dz*dz<=
-    RENDER_DISTANCE*RENDER_DISTANCE
-   ){
-    generateChunk(
-     px+dx,
-     pz+dz
+cube(
+    15.05,
+    2.5,
+    4.25,
+    .08,
+    2,
+    .12,
+    darkMat
+);
+
+/* =========================================================
+   BURGER-VORBEREITUNG
+========================================================= */
+
+cube(
+    18,
+    2.55,
+    5.5,
+    4,
+    .25,
+    2,
+    woodMat
+);
+
+/* Burger-Dummy */
+
+function burger(
+    x,
+    y,
+    z
+){
+
+    /* Untere Hälfte */
+
+    cylinder(
+        x,
+        y,
+        z,
+        .8,
+        .3,
+        new THREE.MeshLambertMaterial({
+            color:0xd68b3b
+        })
     );
-   }
-  }
- }
 
- for(const key of chunks.keys()){
+    /* Fleisch */
 
-  const parts=key.split(",");
-  const cx=Number(parts[0]);
-  const cz=Number(parts[1]);
+    cylinder(
+        x,
+        y+.22,
+        z,
+        .72,
+        .28,
+        new THREE.MeshLambertMaterial({
+            color:0x6d351d
+        })
+    );
 
-  const distance=Math.max(
-   Math.abs(cx-px),
-   Math.abs(cz-pz)
-  );
+    /* Käse */
 
-  if(distance>RENDER_DISTANCE+1){
-   unloadChunk(cx,cz);
-  }
- }
+    cube(
+        x,
+        y+.43,
+        z,
+        1.3,
+        .1,
+        1.3,
+        yellowMat
+    );
 
- document.getElementById("chunkInfo").textContent=
-  "Chunks: "+chunks.size;
+    /* Salat */
+
+    cylinder(
+        x,
+        y+.55,
+        z,
+        .75,
+        .12,
+        greenMat
+    );
+
+    /* Tomate */
+
+    cylinder(
+        x,
+        y+.68,
+        z,
+        .7,
+        .13,
+        redMat
+    );
+
+    /* Oberseite */
+
+    cylinder(
+        x,
+        y+.93,
+        z,
+        .82,
+        .42,
+        new THREE.MeshLambertMaterial({
+            color:0xe2a04c
+        })
+    );
+}
+
+burger(
+    18,
+    2.75,
+    5.5
+);
+
+/* =========================================================
+   DEKORATION
+========================================================= */
+
+/* Wandbilder */
+
+function picture(x,y,z,color){
+
+    cube(
+        x,y,z,
+        2.8,
+        2,
+        .08,
+        new THREE.MeshLambertMaterial({
+            color:color
+        })
+    );
+}
+
+picture(
+    -5,3,-8.75,
+    0xd84b35
+);
+
+picture(
+    -15,3,-8.75,
+    0xffc928
+);
+
+picture(
+    5,3,8.75,
+    0x48a83c
+);
+
+/* Lampen */
+
+for(const x of [-16,-7,2,18]){
+
+    cylinder(
+        x,
+        5.55,
+        0,
+        .55,
+        .1,
+        new THREE.MeshLambertMaterial({
+            color:0xffffcc
+        })
+    );
 }
 
 /* =========================================================
@@ -791,448 +927,238 @@ function updateChunks(){
 ========================================================= */
 
 camera.position.set(
- .5,
- getHeight(0,0)+2.7,
- .5
+    -18,
+    2.2,
+    0
 );
 
 const player={
- speed:5,
- sprint:8,
- velocityY:0,
- grounded:false
+    speed:4.5,
+    sprint:7,
+    velocityY:0,
+    grounded:false
 };
 
 const keys={
- w:false,
- a:false,
- s:false,
- d:false
+    w:false,
+    a:false,
+    s:false,
+    d:false,
+    shift:false
 };
 
-document.addEventListener("keydown",e=>{
-
- if(e.code==="KeyW")keys.w=true;
- if(e.code==="KeyA")keys.a=true;
- if(e.code==="KeyS")keys.s=true;
- if(e.code==="KeyD")keys.d=true;
-
- if(e.code==="Space"&&player.grounded){
-  player.velocityY=8;
-  player.grounded=false;
- }
-
- if(e.key>="1"&&e.key<="9"){
-  selectBlock(
-   Number(e.key)-1
-  );
- }
-});
-
-document.addEventListener("keyup",e=>{
-
- if(e.code==="KeyW")keys.w=false;
- if(e.code==="KeyA")keys.a=false;
- if(e.code==="KeyS")keys.s=false;
- if(e.code==="KeyD")keys.d=false;
-});
-
-/* =========================================================
-   BLOCKKOLLISION
-========================================================= */
-
-function getGroundHeight(x,z){
-
- return getHeight(
-  Math.floor(x),
-  Math.floor(z)
- )+1;
-}
-
-function updatePlayer(dt){
-
- let moveX=0;
- let moveZ=0;
-
- if(keys.w)moveZ-=1;
- if(keys.s)moveZ+=1;
- if(keys.a)moveX-=1;
- if(keys.d)moveX+=1;
-
- if(moveX||moveZ){
-
-  const length=Math.hypot(
-   moveX,moveZ
-  );
-
-  moveX/=length;
-  moveZ/=length;
-
-  const direction=new THREE.Vector3();
-
-  camera.getWorldDirection(direction);
-
-  direction.y=0;
-  direction.normalize();
-
-  const right=new THREE.Vector3()
-   .crossVectors(
-    direction,
-    new THREE.Vector3(0,1,0)
-   )
-   .normalize();
-
-  const forwardX=direction.x;
-  const forwardZ=direction.z;
-
-  const dx=
-   forwardX*moveZ+
-   right.x*moveX;
-
-  const dz=
-   forwardZ*moveZ+
-   right.z*moveX;
-
-  const speed=
-   keys.shift?player.sprint:player.speed;
-
-  camera.position.x+=dx*speed*dt;
-  camera.position.z+=dz*speed*dt;
- }
-
- /* Schwerkraft */
-
- player.velocityY-=20*dt;
-
- camera.position.y+=
-  player.velocityY*dt;
-
- const ground=
-  getGroundHeight(
-   camera.position.x,
-   camera.position.z
-  )+1.65;
-
- if(camera.position.y<=ground){
-
-  camera.position.y=ground;
-  player.velocityY=0;
-  player.grounded=true;
- }else{
-  player.grounded=false;
- }
-
- /* Welt niemals verlassen */
-
- if(camera.position.y<-20){
-  camera.position.set(
-   0,
-   getGroundHeight(0,0)+2,
-   0
-  );
-  player.velocityY=0;
- }
-}
-
-/* =========================================================
-   RAYCASTING
-========================================================= */
-
-const raycaster=new THREE.Raycaster();
-
-function getTargetBlock(){
-
- raycaster.setFromCamera(
-  new THREE.Vector2(0,0),
-  camera
- );
-
- const objects=[];
-
- for(const chunk of chunks.values()){
-
-  for(const child of chunk.children){
-
-   if(child.isMesh)
-    objects.push(child);
-  }
- }
-
- const hits=raycaster.intersectObjects(
-  objects,
-  false
- );
-
- if(!hits.length)return null;
-
- if(hits[0].distance>6)return null;
-
- return hits[0];
-}
-
-/* =========================================================
-   BLOCK ABBauen
-========================================================= */
-
-function breakBlock(){
-
- const hit=getTargetBlock();
-
- if(!hit)return;
-
- const data=hit.object.userData;
-
- if(data.y<=0)return;
-
- setBlockData(
-  data.x,
-  data.y,
-  data.z,
-  null
- );
-
- inventory[data.type]=
-  (inventory[data.type]||0)+1;
-
- rebuildAround(
-  data.x,
-  data.y,
-  data.z
- );
-
- createHotbar();
-
- showMessage(
-  "Abgebaut: "+
-  BLOCKS.find(b=>b.id===data.type).name
- );
-}
-
-/* =========================================================
-   BLOCK SETZEN
-========================================================= */
-
-function placeBlock(){
-
- const hit=getTargetBlock();
-
- if(!hit)return;
-
- const block=
-  BLOCKS[selectedSlot];
-
- if((inventory[block.id]||0)<=0){
-  showMessage("Kein Block vorhanden!");
-  return;
- }
-
- const normal=
-  hit.face.normal.clone();
-
- const pos=
-  hit.object.position.clone()
-   .subScalar(.5)
-   .add(normal);
-
- const x=Math.floor(pos.x);
- const y=Math.floor(pos.y);
- const z=Math.floor(pos.z);
-
- if(
-  x===Math.floor(camera.position.x)&&
-  z===Math.floor(camera.position.z)&&
-  y<=Math.floor(camera.position.y)
- ){
-  return;
- }
-
- if(getBlockData(x,y,z)){
-  return;
- }
-
- setBlockData(
-  x,y,z,
-  block.id
- );
-
- inventory[block.id]--;
-
- rebuildAround(x,y,z);
-
- createHotbar();
-}
-
-/* =========================================================
-   CHUNK MESH NEU BAUEN
-========================================================= */
-
-function rebuildAround(x,y,z){
-
- const c=Math.floor(x/CHUNK_SIZE);
- const d=Math.floor(z/CHUNK_SIZE);
-
- for(let dx=-1;dx<=1;dx++){
-
-  for(let dz=-1;dz<=1;dz++){
-
-   rebuildChunk(
-    c+dx,
-    d+dz
-   );
-  }
- }
-}
-
-function rebuildChunk(cx,cz){
-
- const key=chunkKey(cx,cz);
-
- const old=chunks.get(key);
-
- if(old){
-  scene.remove(old);
-  chunks.delete(key);
- }
-
- buildChunkMesh(cx,cz);
-}
-
-/* =========================================================
-   MAUS
-========================================================= */
-
-renderer.domElement.addEventListener(
- "mousedown",
- e=>{
-
-  if(!controls.isLocked)return;
-
-  if(e.button===0){
-   breakBlock();
-  }
-
-  if(e.button===2){
-   placeBlock();
-  }
- }
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        if(e.code==="KeyW")keys.w=true;
+        if(e.code==="KeyA")keys.a=true;
+        if(e.code==="KeyS")keys.s=true;
+        if(e.code==="KeyD")keys.d=true;
+
+        if(
+            e.code==="ShiftLeft"||
+            e.code==="ShiftRight"
+        ){
+            keys.shift=true;
+        }
+
+        if(
+            e.code==="Space"&&
+            player.grounded
+        ){
+            player.velocityY=7;
+            player.grounded=false;
+        }
+    }
 );
 
 document.addEventListener(
- "contextmenu",
- e=>e.preventDefault()
+    "keyup",
+    e=>{
+
+        if(e.code==="KeyW")keys.w=false;
+        if(e.code==="KeyA")keys.a=false;
+        if(e.code==="KeyS")keys.s=false;
+        if(e.code==="KeyD")keys.d=false;
+
+        if(
+            e.code==="ShiftLeft"||
+            e.code==="ShiftRight"
+        ){
+            keys.shift=false;
+        }
+    }
 );
+
+/* =========================================================
+   BEWEGUNG
+========================================================= */
+
+function updatePlayer(dt){
+
+    let mx=0;
+    let mz=0;
+
+    if(keys.w)mz-=1;
+    if(keys.s)mz+=1;
+    if(keys.a)mx-=1;
+    if(keys.d)mx+=1;
+
+    if(mx||mz){
+
+        const len=Math.hypot(mx,mz);
+
+        mx/=len;
+        mz/=len;
+
+        const direction=
+            new THREE.Vector3();
+
+        camera.getWorldDirection(
+            direction
+        );
+
+        direction.y=0;
+        direction.normalize();
+
+        const right=
+            new THREE.Vector3()
+            .crossVectors(
+                direction,
+                new THREE.Vector3(0,1,0)
+            )
+            .normalize();
+
+        const speed=
+            keys.shift?
+            player.sprint:
+            player.speed;
+
+        camera.position.x+=
+            (
+                direction.x*mz+
+                right.x*mx
+            )*speed*dt;
+
+        camera.position.z+=
+            (
+                direction.z*mz+
+                right.z*mx
+            )*speed*dt;
+    }
+
+    /* Raumbegrenzung */
+
+    camera.position.x=
+        Math.max(
+            -22.5,
+            Math.min(
+                22.5,
+                camera.position.x
+            )
+        );
+
+    camera.position.z=
+        Math.max(
+            -7.8,
+            Math.min(
+                7.8,
+                camera.position.z
+            )
+        );
+
+    /* einfache Schwerkraft */
+
+    player.velocityY-=20*dt;
+
+    camera.position.y+=
+        player.velocityY*dt;
+
+    if(camera.position.y<=2.2){
+
+        camera.position.y=2.2;
+        player.velocityY=0;
+        player.grounded=true;
+    }
+}
+
+/* =========================================================
+   BEREICH
+========================================================= */
+
+function updateArea(){
+
+    let text;
+
+    if(camera.position.x>12){
+        text="KÜCHE";
+    }else{
+        text="ESSRAUM";
+    }
+
+    document.getElementById(
+        "area"
+    ).textContent=text;
+
+    document.getElementById(
+        "areaText"
+    ).textContent=text;
+
+    document.getElementById(
+        "position"
+    ).textContent=
+        "X: "+
+        camera.position.x.toFixed(1)+
+        " | Y: "+
+        camera.position.y.toFixed(1)+
+        " | Z: "+
+        camera.position.z.toFixed(1);
+}
 
 /* =========================================================
    START
 ========================================================= */
 
 document.getElementById(
- "startButton"
+    "startButton"
 ).onclick=()=>{
 
- document.getElementById(
-  "start"
- ).style.display="none";
+    document.getElementById(
+        "start"
+    ).style.display="none";
 
- document.getElementById(
-  "loading"
- ).style.display="flex";
-
- setTimeout(()=>{
-
-  updateChunks();
-
-  document.getElementById(
-   "loading"
-  ).style.display="none";
-
-  controls.lock();
-
- },100);
-
+    controls.lock();
 };
 
-document.addEventListener(
- "click",
- ()=>{
-
-  if(
-   document.getElementById("start").style.display==="none" &&
-   !controls.isLocked
-  ){
-   controls.lock();
-  }
-
- }
-);
-
 /* =========================================================
-   NACHRICHT
+   LOOP
 ========================================================= */
 
-let messageTimer;
-
-function showMessage(text){
-
- const el=document.getElementById(
-  "message"
- );
-
- el.textContent=text;
- el.style.opacity=1;
-
- clearTimeout(messageTimer);
-
- messageTimer=setTimeout(()=>{
-  el.style.opacity=0;
- },1200);
-}
-
-/* =========================================================
-   HUD
-========================================================= */
-
-function updateHUD(){
-
- document.getElementById(
-  "coords"
- ).textContent=
- "X: "+
- Math.floor(camera.position.x)+
- " Y: "+
- Math.floor(camera.position.y)+
- " Z: "+
- Math.floor(camera.position.z);
-}
-
-/* =========================================================
-   RENDER LOOP
-========================================================= */
-
-let previous=performance.now();
+let last=performance.now();
 
 function animate(){
 
- requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 
- const now=performance.now();
+    const now=performance.now();
 
- let dt=(now-previous)/1000;
- previous=now;
+    let dt=(now-last)/1000;
 
- dt=Math.min(dt,.05);
+    last=now;
 
- if(controls.isLocked){
+    dt=Math.min(dt,.05);
 
-  updatePlayer(dt);
-  updateChunks();
-  updateHUD();
- }
+    if(controls.isLocked){
 
- renderer.render(
-  scene,
-  camera
- );
+        updatePlayer(dt);
+        updateArea();
+    }
+
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
 animate();
@@ -1241,18 +1167,21 @@ animate();
    RESIZE
 ========================================================= */
 
-addEventListener("resize",()=>{
+addEventListener(
+    "resize",
+    ()=>{
 
- camera.aspect=
-  innerWidth/innerHeight;
+        camera.aspect=
+            innerWidth/innerHeight;
 
- camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
- renderer.setSize(
-  innerWidth,
-  innerHeight
- );
-});
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+    }
+);
 </script>
 
 </body>
