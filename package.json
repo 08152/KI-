@@ -1,13 +1,13 @@
+// package.json
 {
-  "name": "mech-arena-server",
+  "name": "ghostgram",
   "version": "1.0.0",
-  "description": "Online multiplayer server for Mech Arena",
+  "description": "Ghostgram Social Media",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "express": "^4.21.2"
   }
 }
