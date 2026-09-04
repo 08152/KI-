@@ -2,1045 +2,976 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-
-<title>Monster GO – Chromebook</title>
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Monster AR</title>
 
 <style>
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
+* {
+    box-sizing: border-box;
 }
 
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#111;
-    font-family:Arial,sans-serif;
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #111;
 }
 
-#camera{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    background:#222;
+#ui {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
 }
 
-#ui{
-    position:fixed;
-    inset:0;
-    z-index:10;
-    pointer-events:none;
+#top {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.panel{
-    background:rgba(0,0,0,.72);
-    color:white;
-    border-radius:15px;
-    padding:12px 16px;
-    box-shadow:0 4px 20px rgba(0,0,0,.3);
-    backdrop-filter:blur(8px);
+.panel {
+    background: rgba(0,0,0,.65);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
 }
 
-#top{
-    position:absolute;
-    top:15px;
-    left:15px;
-    right:15px;
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
+#status {
+    position: absolute;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    text-align: center;
+    max-width: 90%;
 }
 
-#title{
-    font-size:19px;
-    font-weight:bold;
+button {
+    pointer-events: auto;
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 20px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-#status{
-    font-size:13px;
-    margin-top:4px;
+#startButton {
+    background: #35d46b;
+    color: white;
 }
 
-#counter{
-    font-weight:bold;
+#catchButton {
+    display: none;
+    background: #ffcc00;
+    color: #111;
+    margin-top: 8px;
 }
 
-#start{
-    pointer-events:auto;
-    border:0;
-    border-radius:18px;
-    padding:16px 25px;
-    background:white;
-    color:#111;
-    font-size:17px;
-    font-weight:bold;
-    cursor:pointer;
+#unsupported {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #111;
+    color: white;
+    padding: 30px;
+    text-align: center;
 }
 
-#start:active{
-    transform:scale(.96);
+#unsupported h1 {
+    margin-top: 50px;
 }
 
-#message{
-    position:absolute;
-    left:50%;
-    bottom:105px;
-    transform:translateX(-50%);
-    color:white;
-    background:rgba(0,0,0,.78);
-    padding:11px 16px;
-    border-radius:13px;
-    opacity:0;
-    transition:.25s;
-    text-align:center;
-    white-space:nowrap;
-}
-
-#message.show{
-    opacity:1;
-}
-
-
-/* ==========================================
-   MONSTER
-   ========================================== */
-
-#monsterButton{
-    position:absolute;
-
-    left:50%;
-    top:64%;
-
-    transform:translate(-50%,-50%);
-
-    width:190px;
-    height:230px;
-
-    border:0;
-    background:transparent;
-
-    display:none;
-
-    pointer-events:auto;
-
-    cursor:pointer;
-
-    filter:drop-shadow(
-        0 15px 12px rgba(0,0,0,.45)
-    );
-
-    animation:monsterAppear .5s ease-out;
-}
-
-@keyframes monsterAppear{
-
-    from{
-        opacity:0;
-        transform:
-            translate(-50%,-35%)
-            scale(.5);
-    }
-
-    to{
-        opacity:1;
-        transform:
-            translate(-50%,-50%)
-            scale(1);
-    }
-}
-
-.monsterBody{
-
-    position:absolute;
-
-    left:50%;
-    top:70px;
-
-    transform:translateX(-50%);
-
-    width:105px;
-    height:105px;
-
-    border-radius:
-        48% 48% 42% 42%;
-
-    background:
-        linear-gradient(
-            150deg,
-            #76ef91,
-            #37b95e
-        );
-
-    border:4px solid #237b3d;
-}
-
-.eye{
-
-    position:absolute;
-
-    top:105px;
-
-    width:17px;
-    height:23px;
-
-    border-radius:50%;
-
-    background:#111;
-
-    z-index:4;
-}
-
-.eye.left{
-    left:72px;
-}
-
-.eye.right{
-    left:103px;
-}
-
-.eye::after{
-
-    content:"";
-
-    position:absolute;
-
-    width:5px;
-    height:7px;
-
-    background:white;
-
-    border-radius:50%;
-
-    left:3px;
-    top:3px;
-}
-
-.ear{
-
-    position:absolute;
-
-    top:40px;
-
-    width:42px;
-    height:60px;
-
-    background:#49ca6b;
-
-    border:4px solid #237b3d;
-
-    clip-path:
-        polygon(
-            50% 0,
-            100% 100%,
-            0 100%
-        );
-
-    z-index:1;
-}
-
-.ear.left{
-
-    left:48px;
-
-    transform:rotate(-22deg);
-}
-
-.ear.right{
-
-    left:105px;
-
-    transform:rotate(22deg);
-}
-
-.mouth{
-
-    position:absolute;
-
-    left:50%;
-
-    top:150px;
-
-    transform:translateX(-50%);
-
-    width:30px;
-    height:13px;
-
-    border-bottom:4px solid #17652f;
-
-    border-radius:
-        0 0 50% 50%;
-
-    z-index:5;
-}
-
-.monsterShadow{
-
-    position:absolute;
-
-    left:50%;
-
-    bottom:15px;
-
-    transform:translateX(-50%);
-
-    width:105px;
-    height:25px;
-
-    background:rgba(0,0,0,.35);
-
-    border-radius:50%;
-
-    filter:blur(5px);
-}
-
-#monsterName{
-
-    position:absolute;
-
-    top:185px;
-
-    left:0;
-    right:0;
-
-    text-align:center;
-
-    color:white;
-
-    font-size:18px;
-
-    font-weight:bold;
-
-    text-shadow:
-        0 2px 5px #000;
-
-    z-index:10;
-}
-
-
-/* ==========================================
-   FANGEN
-   ========================================== */
-
-#monsterButton.catching{
-
-    animation:
-        catchMonster .45s ease-in forwards;
-}
-
-@keyframes catchMonster{
-
-    0%{
-        transform:
-            translate(-50%,-50%)
-            scale(1);
-    }
-
-    40%{
-        transform:
-            translate(-50%,-50%)
-            scale(1.15);
-    }
-
-    100%{
-        transform:
-            translate(-50%,-50%)
-            scale(0);
-
-        opacity:0;
-    }
-}
-
-
-/* ==========================================
-   STARTSCREEN
-   ========================================== */
-
-#permission{
-
-    position:fixed;
-
-    inset:0;
-
-    background:
-        linear-gradient(
-            #10151b,
-            #18231d
-        );
-
-    z-index:30;
-
-    color:white;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    text-align:center;
-
-    padding:25px;
-}
-
-.box{
-    max-width:500px;
-}
-
-.box h1{
-    font-size:32px;
-}
-
-.box p{
-    line-height:1.5;
-    color:#ddd;
-}
-
-.small{
-    font-size:12px;
-    color:#999 !important;
+#three {
+    position: fixed;
+    inset: 0;
 }
 </style>
 </head>
 
-
 <body>
 
-<!-- KAMERA -->
-<video
-    id="camera"
-    autoplay
-    muted
-    playsinline>
-</video>
-
+<div id="three"></div>
 
 <div id="ui">
 
-    <!-- OBERE ANZEIGE -->
     <div id="top">
-
         <div class="panel">
-
-            <div id="title">
-                👾 MONSTER GO
-            </div>
-
-            <div id="status">
-                Bereit
-            </div>
-
+            👾 Monster AR
         </div>
 
         <div class="panel">
-
-            Gefangen:
-            <span id="counter">0</span>
-
+            Gefangen: <span id="count">0</span>
         </div>
-
     </div>
 
-
-    <!-- MONSTER -->
-    <button id="monsterButton">
-
-        <div class="ear left"></div>
-        <div class="ear right"></div>
-
-        <div class="monsterBody"></div>
-
-        <div class="eye left"></div>
-        <div class="eye right"></div>
-
-        <div class="mouth"></div>
-
-        <div class="monsterShadow"></div>
-
-        <div id="monsterName">
-            Grünling
-        </div>
-
-    </button>
-
-
-    <div id="message"></div>
-
-</div>
-
-
-<!-- START -->
-<div id="permission">
-
-    <div class="box">
-
-        <h1>
-            👾 MONSTER GO
-        </h1>
-
-        <p>
-            Testversion für Chromebook
-        </p>
-
-        <p>
-            Nach dem Start erscheint sofort
-            ein Monster.
-        </p>
-
-        <button id="start">
-            📷 SPIEL STARTEN
-        </button>
-
-        <p class="small">
-            Die Kamera wird nach dem Start
-            angefragt.
-        </p>
-
+    <div id="status" class="panel">
+        <button id="startButton">AR starten</button>
+        <br>
+        <span id="message">
+            Suche danach eine echte horizontale Fläche.
+        </span>
+        <br>
+        <button id="catchButton">Monster fangen</button>
     </div>
 
 </div>
 
+<div id="unsupported">
+    <h1>AR nicht verfügbar</h1>
 
-<script>
+    <p>
+        Dieses Gerät bzw. dieser Browser unterstützt
+        kein echtes WebXR-AR.
+    </p>
 
-/* =========================================================
-   DEINE ORTE
-   =========================================================
+    <p>
+        Für ein echtes Monster auf dem Boden braucht dein Gerät
+        WebXR mit AR und Hit-Test.
+    </p>
 
-   Später einfach eine Zeile hinzufügen:
+    <p>
+        Die Seite verwendet absichtlich keine gefälschte
+        2D-Positionierung.
+    </p>
+</div>
 
-   addLocation(
-       "Park",
-       48.1234,
-       11.5678,
-       "Grünling"
-   );
+<script type="module">
 
-   ========================================================= */
-
-const LOCATIONS=[];
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
 
-function addLocation(
-    name,
-    latitude,
-    longitude,
-    monster
-){
+// ======================================================
+// EINSTELLUNGEN
+// ======================================================
 
-    LOCATIONS.push({
+const TEST_MODE = true;
 
-        name:name,
-        latitude:latitude,
-        longitude:longitude,
-        monster:monster,
-        found:false
 
+// ======================================================
+// MONSTER-ORTE
+// Nur eine Zeile pro Ort!
+// ======================================================
+
+const locations = [];
+
+function addLocation(name, latitude, longitude, monster) {
+
+    locations.push({
+        name,
+        latitude,
+        longitude,
+        monster
     });
 
 }
 
 
-/* ==========================================
-   ELEMENTE
-   ========================================== */
+// Beispiel:
+// addLocation("Park", 48.123456, 11.123456, "Grünling");
+// addLocation("Bahnhof", 48.123456, 11.123456, "Feuerling");
 
-const video =
-    document.getElementById("camera");
+addLocation(
+    "Testort",
+    48.000000,
+    11.000000,
+    "Grünling"
+);
 
-const permission =
-    document.getElementById("permission");
 
-const start =
-    document.getElementById("start");
+// ======================================================
+// HTML
+// ======================================================
 
-const status =
-    document.getElementById("status");
+const startButton =
+    document.getElementById("startButton");
 
-const counter =
-    document.getElementById("counter");
+const catchButton =
+    document.getElementById("catchButton");
 
 const message =
     document.getElementById("message");
 
-const monsterButton =
-    document.getElementById("monsterButton");
+const countText =
+    document.getElementById("count");
 
-const monsterName =
-    document.getElementById("monsterName");
-
-
-let stream=null;
-
-let caught=0;
-
-let activeLocation=null;
-
-let latitude=null;
-
-let longitude=null;
+const unsupported =
+    document.getElementById("unsupported");
 
 
-/* ==========================================
-   START
-   ========================================== */
+// ======================================================
+// THREE.JS
+// ======================================================
 
-start.addEventListener(
-    "click",
-    async()=>{
+const scene = new THREE.Scene();
 
-        permission.style.display="none";
-
-        status.textContent=
-            "Kamera wird gestartet...";
-
-        await startCamera();
-
-        /*
-           SOFORTIGES TESTMONSTER
-        */
-
-        setTimeout(
-            spawnTestMonster,
-            500
-        );
-
-    }
+const camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.01,
+    100
 );
 
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true
+});
 
-/* ==========================================
-   KAMERA
-   ========================================== */
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
 
-async function startCamera(){
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
 
-    try{
+renderer.xr.enabled = true;
 
-        if(
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia
-        ){
+renderer.xr.setReferenceSpaceType("local");
 
-            status.textContent=
-                "Kamera nicht verfügbar";
+document
+    .getElementById("three")
+    .appendChild(renderer.domElement);
 
-            return;
 
+// ======================================================
+// LICHT
+// ======================================================
+
+const ambientLight =
+    new THREE.HemisphereLight(
+        0xffffff,
+        0x555555,
+        2.5
+    );
+
+scene.add(ambientLight);
+
+
+const directionalLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
+
+directionalLight.position.set(
+    2,
+    5,
+    2
+);
+
+scene.add(directionalLight);
+
+
+// ======================================================
+// MONSTER
+// ======================================================
+
+let monster = null;
+let monsterGroup = null;
+let monsterPlaced = false;
+
+
+// Unser eigenes 3D-Monster.
+// Keine externe Modelldatei nötig.
+
+function createMonster() {
+
+    const group = new THREE.Group();
+
+    // Körper
+    const bodyGeometry =
+        new THREE.SphereGeometry(
+            0.28,
+            32,
+            32
+        );
+
+    const bodyMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x48d66d,
+            roughness: 0.75
+        });
+
+    const body =
+        new THREE.Mesh(
+            bodyGeometry,
+            bodyMaterial
+        );
+
+    body.scale.set(
+        1,
+        1.15,
+        0.9
+    );
+
+    body.position.y = 0.32;
+
+    group.add(body);
+
+
+    // Kopf
+    const headGeometry =
+        new THREE.SphereGeometry(
+            0.25,
+            32,
+            32
+        );
+
+    const headMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x5bea7b,
+            roughness: 0.7
+        });
+
+    const head =
+        new THREE.Mesh(
+            headGeometry,
+            headMaterial
+        );
+
+    head.position.y = 0.68;
+
+    group.add(head);
+
+
+    // Augen
+    const eyeGeometry =
+        new THREE.SphereGeometry(
+            0.055,
+            16,
+            16
+        );
+
+    const eyeMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0xffffff
+        });
+
+    const pupilMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x111111
+        });
+
+
+    for (const x of [-0.09, 0.09]) {
+
+        const eye =
+            new THREE.Mesh(
+                eyeGeometry,
+                eyeMaterial
+            );
+
+        eye.position.set(
+            x,
+            0.72,
+            0.215
+        );
+
+        group.add(eye);
+
+
+        const pupil =
+            new THREE.Mesh(
+                new THREE.SphereGeometry(
+                    0.025,
+                    12,
+                    12
+                ),
+                pupilMaterial
+            );
+
+        pupil.position.set(
+            x,
+            0.72,
+            0.26
+        );
+
+        group.add(pupil);
+    }
+
+
+    // Ohren
+    const earGeometry =
+        new THREE.ConeGeometry(
+            0.10,
+            0.25,
+            16
+        );
+
+    const earMaterial =
+        new THREE.MeshStandardMaterial({
+            color: 0x37bb5c
+        });
+
+
+    for (const x of [-0.16, 0.16]) {
+
+        const ear =
+            new THREE.Mesh(
+                earGeometry,
+                earMaterial
+            );
+
+        ear.position.set(
+            x,
+            0.91,
+            0
+        );
+
+        group.add(ear);
+    }
+
+
+    // Füße
+    const footGeometry =
+        new THREE.SphereGeometry(
+            0.10,
+            20,
+            20
+        );
+
+    for (const x of [-0.13, 0.13]) {
+
+        const foot =
+            new THREE.Mesh(
+                footGeometry,
+                bodyMaterial
+            );
+
+        foot.position.set(
+            x,
+            0.08,
+            0.05
+        );
+
+        foot.scale.set(
+            1.2,
+            0.7,
+            1.4
+        );
+
+        group.add(foot);
+    }
+
+
+    // Schwanz
+    const tailGeometry =
+        new THREE.ConeGeometry(
+            0.09,
+            0.35,
+            16
+        );
+
+    const tail =
+        new THREE.Mesh(
+            tailGeometry,
+            bodyMaterial
+        );
+
+    tail.rotation.z =
+        Math.PI / 2;
+
+    tail.position.set(
+        -0.27,
+        0.36,
+        -0.02
+    );
+
+    group.add(tail);
+
+
+    // Unsichtbarer Hit-Bereich
+    const hitGeometry =
+        new THREE.SphereGeometry(
+            0.55,
+            16,
+            16
+        );
+
+    const hitMaterial =
+        new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0
+        });
+
+    const hit =
+        new THREE.Mesh(
+            hitGeometry,
+            hitMaterial
+        );
+
+    hit.position.y = 0.45;
+
+    hit.userData.monsterHit = true;
+
+    group.add(hit);
+
+
+    group.userData.monster = true;
+
+    return group;
+}
+
+
+// ======================================================
+// AR VARIABLEN
+// ======================================================
+
+let xrSession = null;
+let hitTestSource = null;
+let localReferenceSpace = null;
+
+let latestHit = null;
+
+
+// ======================================================
+// AR SUPPORT PRÜFEN
+// ======================================================
+
+async function checkAR() {
+
+    if (!navigator.xr) {
+
+        unsupported.style.display = "block";
+
+        return false;
+    }
+
+
+    try {
+
+        const supported =
+            await navigator.xr.isSessionSupported(
+                "immersive-ar"
+            );
+
+        if (!supported) {
+
+            unsupported.style.display = "block";
+
+            return false;
         }
 
+        return true;
 
-        stream=
-            await navigator.mediaDevices
-            .getUserMedia({
+    } catch (error) {
 
-                video:{
-                    facingMode:{
-                        ideal:"environment"
-                    },
+        unsupported.style.display = "block";
 
-                    width:{
-                        ideal:1280
-                    },
+        return false;
+    }
+}
 
-                    height:{
-                        ideal:720
+
+// ======================================================
+// AR STARTEN
+// ======================================================
+
+async function startAR() {
+
+    const supported = await checkAR();
+
+    if (!supported) return;
+
+
+    try {
+
+        xrSession =
+            await navigator.xr.requestSession(
+                "immersive-ar",
+                {
+                    requiredFeatures: [
+                        "hit-test"
+                    ],
+
+                    optionalFeatures: [
+                        "dom-overlay"
+                    ],
+
+                    domOverlay: {
+                        root: document.body
                     }
-                },
+                }
+            );
 
-                audio:false
 
+        xrSession.addEventListener(
+            "end",
+            onSessionEnd
+        );
+
+
+        renderer.xr.setSession(
+            xrSession
+        );
+
+
+        localReferenceSpace =
+            await xrSession.requestReferenceSpace(
+                "local"
+            );
+
+
+        const viewerSpace =
+            await xrSession.requestReferenceSpace(
+                "viewer"
+            );
+
+
+        hitTestSource =
+            await xrSession.requestHitTestSource({
+                space: viewerSpace
             });
 
 
-        video.srcObject=stream;
+        startButton.style.display = "none";
 
-        await video.play();
+        message.textContent =
+            "Suche eine echte horizontale Fläche...";
 
-        status.textContent=
-            "👾 Suche nach Monstern...";
 
-        startGPS();
+        renderer.setAnimationLoop(
+            renderAR
+        );
 
-    }
-    catch(error){
+    } catch (error) {
 
         console.error(error);
 
-        status.textContent=
-            "Kamera konnte nicht gestartet werden";
+        message.textContent =
+            "AR konnte nicht gestartet werden.";
+    }
+}
 
+
+// ======================================================
+// AR BEENDET
+// ======================================================
+
+function onSessionEnd() {
+
+    xrSession = null;
+
+    hitTestSource = null;
+
+    localReferenceSpace = null;
+
+    renderer.setAnimationLoop(null);
+
+    startButton.style.display =
+        "inline-block";
+
+}
+
+
+// ======================================================
+// MONSTER AUF AR-FLÄCHE SETZEN
+// ======================================================
+
+function placeMonster(matrix) {
+
+    if (monsterPlaced) return;
+
+
+    monsterGroup =
+        createMonster();
+
+
+    scene.add(
+        monsterGroup
+    );
+
+
+    monsterGroup.matrixAutoUpdate = false;
+
+    monsterGroup.matrix.fromArray(
+        matrix
+    );
+
+
+    /*
+       Das Modell steht mit seinen Füßen
+       auf der erkannten Fläche.
+    */
+
+    monsterGroup.matrix.decompose(
+        monsterGroup.position,
+        monsterGroup.quaternion,
+        monsterGroup.scale
+    );
+
+
+    monsterGroup.userData.originalScale =
+        monsterGroup.scale.clone();
+
+
+    monsterPlaced = true;
+
+    monster = monsterGroup;
+
+
+    message.textContent =
+        "👾 Ein Monster ist auf dem Boden erschienen!";
+
+
+    catchButton.style.display =
+        "inline-block";
+}
+
+
+// ======================================================
+// AR RENDER LOOP
+// ======================================================
+
+function renderAR(
+    timestamp,
+    frame
+) {
+
+    if (!frame) return;
+
+
+    if (
+        hitTestSource &&
+        localReferenceSpace
+    ) {
+
+        const hitResults =
+            frame.getHitTestResults(
+                hitTestSource
+            );
+
+
+        if (
+            hitResults.length > 0 &&
+            !monsterPlaced
+        ) {
+
+            const hit =
+                hitResults[0];
+
+
+            const pose =
+                hit.getPose(
+                    localReferenceSpace
+                );
+
+
+            if (pose) {
+
+                latestHit =
+                    pose.transform.matrix;
+
+
+                // Automatischer Test-Spawn
+                if (TEST_MODE) {
+
+                    placeMonster(
+                        pose.transform.matrix
+                    );
+                }
+            }
+        }
     }
 
+
+    // Kleine Animation
+    if (monsterGroup) {
+
+        const time =
+            performance.now() * 0.004;
+
+        const s =
+            1 +
+            Math.sin(time) * 0.025;
+
+
+        const base =
+            monsterGroup.userData.originalScale;
+
+
+        monsterGroup.scale.set(
+            base.x * s,
+            base.y * s,
+            base.z * s
+        );
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
 }
 
 
-/* ==========================================
-   TESTMONSTER
-   ========================================== */
+// ======================================================
+// MONSTER FANGEN
+// ======================================================
 
-function spawnTestMonster(){
-
-    if(activeLocation)
-        return;
-
-
-    activeLocation={
-
-        name:"Testort",
-
-        monster:"Grünling",
-
-        found:true
-
-    };
-
-
-    monsterName.textContent=
-        activeLocation.monster;
-
-
-    monsterButton.classList.remove(
-        "catching"
-    );
-
-
-    monsterButton.style.display=
-        "block";
-
-
-    status.textContent=
-        "👾 Monster entdeckt!";
-
-
-    showMessage(
-        "👾 Ein Grünling ist aufgetaucht!"
-    );
-
-}
-
-
-/* ==========================================
-   MONSTER FANGEN
-   ========================================== */
-
-monsterButton.addEventListener(
+catchButton.addEventListener(
     "click",
     catchMonster
 );
 
 
-monsterButton.addEventListener(
-    "touchend",
-    event=>{
-
-        event.preventDefault();
-
-        catchMonster();
-
-    }
+renderer.domElement.addEventListener(
+    "click",
+    catchMonster
 );
 
 
-function catchMonster(){
+function catchMonster(event) {
 
-    if(!activeLocation)
-        return;
-
-
-    monsterButton.classList.add(
-        "catching"
-    );
+    if (!monsterGroup) return;
 
 
-    caught++;
-
-    counter.textContent=
-        caught;
-
-
-    showMessage(
-        "🎉 " +
-        activeLocation.monster +
-        " gefangen!"
-    );
-
-
-    setTimeout(
-        ()=>{
-
-            monsterButton.style.display=
-                "none";
-
-            monsterButton.classList.remove(
-                "catching"
-            );
-
-            activeLocation=null;
-
-            status.textContent=
-                "Monster gefangen!";
-
-        },
-        450
-    );
-
-}
-
-
-/* ==========================================
-   GPS
-   ========================================== */
-
-function startGPS(){
-
-    if(!navigator.geolocation){
-
-        status.textContent=
-            "Testmodus aktiv";
-
-        return;
+    // Bei UI-Klick nicht doppelt auslösen
+    if (
+        event &&
+        event.target === catchButton
+    ) {
+        // okay
     }
 
 
-    navigator.geolocation.watchPosition(
+    const raycaster =
+        new THREE.Raycaster();
 
-        position=>{
+    const pointer =
+        new THREE.Vector2(
+            0,
+            0
+        );
 
-            latitude=
-                position.coords.latitude;
 
-            longitude=
-                position.coords.longitude;
-
-            checkLocations();
-
-        },
-
-        ()=>{
-            /*
-              Kein GPS:
-              Der Testmodus funktioniert trotzdem.
-            */
-        },
-
-        {
-            enableHighAccuracy:true,
-
-            maximumAge:5000,
-
-            timeout:10000
-
-        }
-
+    raycaster.setFromCamera(
+        pointer,
+        camera
     );
 
-}
+
+    const objects =
+        monsterGroup.children;
 
 
-/* ==========================================
-   ORTE PRÜFEN
-   ========================================== */
-
-function checkLocations(){
-
-    if(
-        latitude===null ||
-        longitude===null
-    )
-        return;
+    const hits =
+        raycaster.intersectObjects(
+            objects,
+            true
+        );
 
 
-    for(
-        const location of LOCATIONS
-    ){
+    if (
+        hits.length > 0 ||
+        event?.target === catchButton
+    ) {
 
-        if(location.found)
-            continue;
-
-
-        const distance=
-            distanceMeters(
-
-                latitude,
-                longitude,
-
-                location.latitude,
-                location.longitude
-
-            );
-
-
-        /*
-           50 Meter Fangradius
-        */
-
-        if(distance<=50){
-
-            location.found=true;
-
-            activeLocation={
-                name:location.name,
-                monster:location.monster,
-                found:true
-            };
-
-
-            monsterName.textContent=
-                location.monster;
-
-
-            monsterButton.style.display=
-                "block";
-
-
-            status.textContent=
-                "👾 Monster entdeckt!";
-
-
-            showMessage(
-                "👾 " +
-                location.monster +
-                " wurde entdeckt!"
-            );
-
-
-            break;
-
-        }
-
+        catchMonsterNow();
     }
-
 }
 
 
-/* ==========================================
-   ENTFERNUNG
-   ========================================== */
+function catchMonsterNow() {
 
-function distanceMeters(
-    lat1,
-    lon1,
-    lat2,
-    lon2
-){
-
-    const R=6371000;
-
-    const p1=
-        lat1*Math.PI/180;
-
-    const p2=
-        lat2*Math.PI/180;
-
-    const dLat=
-        (lat2-lat1)*
-        Math.PI/180;
-
-    const dLon=
-        (lon2-lon1)*
-        Math.PI/180;
+    if (!monsterGroup) return;
 
 
-    const a=
-        Math.sin(dLat/2)*
-        Math.sin(dLat/2)
-
-        +
-
-        Math.cos(p1)*
-        Math.cos(p2)*
-        Math.sin(dLon/2)*
-        Math.sin(dLon/2);
+    scene.remove(
+        monsterGroup
+    );
 
 
-    return R*
-        2*
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1-a)
+    monsterGroup = null;
+    monster = null;
+    monsterPlaced = false;
+
+
+    let count =
+        Number(
+            localStorage.getItem(
+                "monsterCount"
+            ) || 0
         );
 
-}
 
+    count++;
 
-/* ==========================================
-   NACHRICHT
-   ========================================== */
-
-function showMessage(text){
-
-    message.textContent=text;
-
-    message.classList.add("show");
-
-
-    clearTimeout(
-        showMessage.timer
+    localStorage.setItem(
+        "monsterCount",
+        count
     );
 
 
-    showMessage.timer=
-        setTimeout(
-            ()=>{
+    countText.textContent =
+        count;
 
-                message.classList.remove(
-                    "show"
-                );
 
-            },
-            3000
+    catchButton.style.display =
+        "none";
+
+
+    message.textContent =
+        "🎉 Monster gefangen! Suche nach dem nächsten.";
+
+
+    // Neues Testmonster beim nächsten
+    // erkannten Boden
+}
+
+
+// ======================================================
+// START
+// ======================================================
+
+startButton.addEventListener(
+    "click",
+    startAR
+);
+
+
+// ======================================================
+// GESPEICHERTE SAMMLUNG
+// ======================================================
+
+countText.textContent =
+    localStorage.getItem(
+        "monsterCount"
+    ) || 0;
+
+
+// ======================================================
+// RESIZE
+// ======================================================
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
         );
-
-}
-
-
-/* ==========================================
-   TESTFUNKTION
-   ==========================================
-
-   In der Chrome-Konsole:
-
-   testMonster("Feufox");
-
-   ========================================== */
-
-window.testMonster=function(
-    name="Testmonster"
-){
-
-    activeLocation={
-
-        name:"Test",
-
-        monster:name,
-
-        found:true
-
-    };
-
-
-    monsterName.textContent=name;
-
-    monsterButton.classList.remove(
-        "catching"
-    );
-
-    monsterButton.style.display=
-        "block";
-
-    status.textContent=
-        "👾 Monster entdeckt!";
-
-    showMessage(
-        "👾 "+name+" ist aufgetaucht!"
-    );
-
-};
+    }
+);
 
 </script>
 
