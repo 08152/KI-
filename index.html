@@ -3,10 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
 <title>Monster GO – Chromebook</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
 html,body{
     margin:0;
     width:100%;
@@ -15,35 +20,32 @@ html,body{
     background:#111;
     font-family:Arial,sans-serif;
 }
+
 #camera{
     position:fixed;
     inset:0;
     width:100%;
     height:100%;
     object-fit:cover;
-    transform:scaleX(-1);
     background:#222;
 }
-#game{
-    position:fixed;
-    inset:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-}
+
 #ui{
     position:fixed;
     inset:0;
     z-index:10;
     pointer-events:none;
 }
+
 .panel{
     background:rgba(0,0,0,.72);
     color:white;
     border-radius:15px;
     padding:12px 16px;
-    box-shadow:0 4px 20px #0006;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+    backdrop-filter:blur(8px);
 }
+
 #top{
     position:absolute;
     top:15px;
@@ -51,16 +53,25 @@ html,body{
     right:15px;
     display:flex;
     justify-content:space-between;
+    gap:10px;
 }
-#title{font-size:19px;font-weight:bold}
-#status{font-size:13px;margin-top:4px}
-#counter{font-weight:bold}
+
+#title{
+    font-size:19px;
+    font-weight:bold;
+}
+
+#status{
+    font-size:13px;
+    margin-top:4px;
+}
+
+#counter{
+    font-weight:bold;
+}
+
 #start{
     pointer-events:auto;
-    position:absolute;
-    left:50%;
-    bottom:30px;
-    transform:translateX(-50%);
     border:0;
     border-radius:18px;
     padding:16px 25px;
@@ -70,169 +81,414 @@ html,body{
     font-weight:bold;
     cursor:pointer;
 }
+
 #start:active{
-    transform:translateX(-50%) scale(.96);
+    transform:scale(.96);
 }
+
 #message{
     position:absolute;
     left:50%;
-    bottom:100px;
+    bottom:105px;
     transform:translateX(-50%);
     color:white;
-    background:#000b;
+    background:rgba(0,0,0,.78);
     padding:11px 16px;
     border-radius:13px;
     opacity:0;
     transition:.25s;
     text-align:center;
+    white-space:nowrap;
 }
-#message.show{opacity:1}
-#crosshair{
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:40px;
-    height:40px;
-    transform:translate(-50%,-50%);
-    border:2px solid white;
-    border-radius:50%;
-    opacity:.65;
-    display:none;
+
+#message.show{
+    opacity:1;
 }
+
+
+/* ==========================================
+   MONSTER
+   ========================================== */
+
 #monsterButton{
     position:absolute;
+
     left:50%;
-    top:50%;
+    top:64%;
+
     transform:translate(-50%,-50%);
-    width:150px;
-    height:180px;
+
+    width:190px;
+    height:230px;
+
     border:0;
     background:transparent;
+
     display:none;
+
     pointer-events:auto;
+
     cursor:pointer;
+
+    filter:drop-shadow(
+        0 15px 12px rgba(0,0,0,.45)
+    );
+
+    animation:monsterAppear .5s ease-out;
 }
+
+@keyframes monsterAppear{
+
+    from{
+        opacity:0;
+        transform:
+            translate(-50%,-35%)
+            scale(.5);
+    }
+
+    to{
+        opacity:1;
+        transform:
+            translate(-50%,-50%)
+            scale(1);
+    }
+}
+
 .monsterBody{
+
     position:absolute;
-    left:35px;
-    top:45px;
-    width:80px;
-    height:90px;
-    border-radius:45% 45% 40% 40%;
-    background:#54dc75;
-    border:3px solid #238542;
-    box-shadow:0 10px 20px #0006;
-}
-.eye{
-    position:absolute;
+
+    left:50%;
     top:70px;
-    width:13px;
-    height:18px;
+
+    transform:translateX(-50%);
+
+    width:105px;
+    height:105px;
+
+    border-radius:
+        48% 48% 42% 42%;
+
+    background:
+        linear-gradient(
+            150deg,
+            #76ef91,
+            #37b95e
+        );
+
+    border:4px solid #237b3d;
+}
+
+.eye{
+
+    position:absolute;
+
+    top:105px;
+
+    width:17px;
+    height:23px;
+
     border-radius:50%;
+
     background:#111;
+
+    z-index:4;
 }
-.eye1{left:57px}
-.eye2{left:82px}
+
+.eye.left{
+    left:72px;
+}
+
+.eye.right{
+    left:103px;
+}
+
+.eye::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:5px;
+    height:7px;
+
+    background:white;
+
+    border-radius:50%;
+
+    left:3px;
+    top:3px;
+}
+
 .ear{
+
     position:absolute;
-    top:28px;
-    width:30px;
-    height:45px;
-    background:#45bd65;
-    border:3px solid #238542;
-    clip-path:polygon(50% 0,100% 100%,0 100%);
+
+    top:40px;
+
+    width:42px;
+    height:60px;
+
+    background:#49ca6b;
+
+    border:4px solid #237b3d;
+
+    clip-path:
+        polygon(
+            50% 0,
+            100% 100%,
+            0 100%
+        );
+
+    z-index:1;
 }
-.ear1{left:35px;transform:rotate(-20deg)}
-.ear2{left:90px;transform:rotate(20deg)}
-#monsterName{
+
+.ear.left{
+
+    left:48px;
+
+    transform:rotate(-22deg);
+}
+
+.ear.right{
+
+    left:105px;
+
+    transform:rotate(22deg);
+}
+
+.mouth{
+
     position:absolute;
-    top:140px;
+
+    left:50%;
+
+    top:150px;
+
+    transform:translateX(-50%);
+
+    width:30px;
+    height:13px;
+
+    border-bottom:4px solid #17652f;
+
+    border-radius:
+        0 0 50% 50%;
+
+    z-index:5;
+}
+
+.monsterShadow{
+
+    position:absolute;
+
+    left:50%;
+
+    bottom:15px;
+
+    transform:translateX(-50%);
+
+    width:105px;
+    height:25px;
+
+    background:rgba(0,0,0,.35);
+
+    border-radius:50%;
+
+    filter:blur(5px);
+}
+
+#monsterName{
+
+    position:absolute;
+
+    top:185px;
+
     left:0;
     right:0;
-    color:white;
-    font-size:16px;
-    font-weight:bold;
-    text-shadow:0 2px 4px black;
-}
-#permission{
-    position:absolute;
-    inset:0;
-    background:rgba(10,15,20,.96);
-    z-index:30;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+
     text-align:center;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    text-shadow:
+        0 2px 5px #000;
+
+    z-index:10;
+}
+
+
+/* ==========================================
+   FANGEN
+   ========================================== */
+
+#monsterButton.catching{
+
+    animation:
+        catchMonster .45s ease-in forwards;
+}
+
+@keyframes catchMonster{
+
+    0%{
+        transform:
+            translate(-50%,-50%)
+            scale(1);
+    }
+
+    40%{
+        transform:
+            translate(-50%,-50%)
+            scale(1.15);
+    }
+
+    100%{
+        transform:
+            translate(-50%,-50%)
+            scale(0);
+
+        opacity:0;
+    }
+}
+
+
+/* ==========================================
+   STARTSCREEN
+   ========================================== */
+
+#permission{
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+        linear-gradient(
+            #10151b,
+            #18231d
+        );
+
+    z-index:30;
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
     padding:25px;
 }
-.box{max-width:500px}
-.box h1{font-size:30px}
-.box p{line-height:1.5;color:#ddd}
-.small{font-size:12px;color:#aaa}
+
+.box{
+    max-width:500px;
+}
+
+.box h1{
+    font-size:32px;
+}
+
+.box p{
+    line-height:1.5;
+    color:#ddd;
+}
+
+.small{
+    font-size:12px;
+    color:#999 !important;
+}
 </style>
 </head>
 
+
 <body>
 
-<video id="camera" autoplay muted playsinline></video>
+<!-- KAMERA -->
+<video
+    id="camera"
+    autoplay
+    muted
+    playsinline>
+</video>
 
-<canvas id="game"></canvas>
 
 <div id="ui">
 
+    <!-- OBERE ANZEIGE -->
     <div id="top">
 
         <div class="panel">
-            <div id="title">👾 MONSTER GO</div>
-            <div id="status">Bereit</div>
+
+            <div id="title">
+                👾 MONSTER GO
+            </div>
+
+            <div id="status">
+                Bereit
+            </div>
+
         </div>
 
         <div class="panel">
-            Gefangen: <span id="counter">0</span>
+
+            Gefangen:
+            <span id="counter">0</span>
+
         </div>
 
     </div>
 
-    <div id="crosshair"></div>
 
+    <!-- MONSTER -->
     <button id="monsterButton">
-        <div class="ear ear1"></div>
-        <div class="ear ear2"></div>
+
+        <div class="ear left"></div>
+        <div class="ear right"></div>
+
         <div class="monsterBody"></div>
-        <div class="eye eye1"></div>
-        <div class="eye eye2"></div>
-        <div id="monsterName">Monster</div>
+
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+
+        <div class="mouth"></div>
+
+        <div class="monsterShadow"></div>
+
+        <div id="monsterName">
+            Grünling
+        </div>
+
     </button>
+
 
     <div id="message"></div>
 
 </div>
 
 
+<!-- START -->
 <div id="permission">
 
     <div class="box">
 
-        <h1>👾 Monster GO</h1>
+        <h1>
+            👾 MONSTER GO
+        </h1>
 
         <p>
-            Dein Chromebook benutzt die Kamera,
-            um die Umgebung anzuzeigen.
+            Testversion für Chromebook
         </p>
 
         <p>
-            Die Monster werden an deinen
-            programmierten Orten aktiviert.
-        </p>
-
-        <p>
-            <b>Hinweis:</b> Ein Chromebook hat
-            normalerweise keine GPS- und AR-Sensoren
-            wie ein Smartphone. Deshalb verwendet
-            diese Version Kamera + Bildschirm-
-            Orientierung und funktioniert auch ohne
-            echtes WebXR-AR.
+            Nach dem Start erscheint sofort
+            ein Monster.
         </p>
 
         <button id="start">
@@ -240,7 +496,8 @@ html,body{
         </button>
 
         <p class="small">
-            Du musst den Kamera-Zugriff erlauben.
+            Die Kamera wird nach dem Start
+            angefragt.
         </p>
 
     </div>
@@ -250,53 +507,50 @@ html,body{
 
 <script>
 
-/* ============================================================
-   DEINE FANGORTE
-   ============================================================
+/* =========================================================
+   DEINE ORTE
+   =========================================================
 
-   GENAU EINE ZEILE PRO ORT:
+   Später einfach eine Zeile hinzufügen:
 
-   addLocation("Park",48.1234,11.5678,"Grünling");
+   addLocation(
+       "Park",
+       48.1234,
+       11.5678,
+       "Grünling"
+   );
 
-   latitude  = Breitengrad
-   longitude = Längengrad
-   monster   = Name deines Monsters
+   ========================================================= */
 
-   ============================================================ */
-
-const LOCATIONS = [];
-
-// BEISPIELE:
-// addLocation("Park",48.1234,11.5678,"Grünling");
-// addLocation("See",48.1250,11.5700,"Wassaro");
-// addLocation("Wald",48.1280,11.5750,"Blattor");
+const LOCATIONS=[];
 
 
-function addLocation(name,latitude,longitude,monster){
+function addLocation(
+    name,
+    latitude,
+    longitude,
+    monster
+){
 
     LOCATIONS.push({
+
         name:name,
         latitude:latitude,
         longitude:longitude,
         monster:monster,
         found:false
+
     });
 
 }
 
 
-/* ============================================================
+/* ==========================================
    ELEMENTE
-   ============================================================ */
+   ========================================== */
 
 const video =
     document.getElementById("camera");
-
-const canvas =
-    document.getElementById("game");
-
-const ctx =
-    canvas.getContext("2d");
 
 const permission =
     document.getElementById("permission");
@@ -319,62 +573,49 @@ const monsterButton =
 const monsterName =
     document.getElementById("monsterName");
 
-const crosshair =
-    document.getElementById("crosshair");
+
+let stream=null;
+
+let caught=0;
+
+let activeLocation=null;
+
+let latitude=null;
+
+let longitude=null;
 
 
-let stream = null;
-let caught = 0;
-let activeLocation = null;
+/* ==========================================
+   START
+   ========================================== */
 
-let latitude = null;
-let longitude = null;
+start.addEventListener(
+    "click",
+    async()=>{
 
-let cameraStarted = false;
+        permission.style.display="none";
 
+        status.textContent=
+            "Kamera wird gestartet...";
 
-/* ============================================================
-   CANVAS
-   ============================================================ */
+        await startCamera();
 
-function resize(){
+        /*
+           SOFORTIGES TESTMONSTER
+        */
 
-    canvas.width =
-        window.innerWidth *
-        devicePixelRatio;
+        setTimeout(
+            spawnTestMonster,
+            500
+        );
 
-    canvas.height =
-        window.innerHeight *
-        devicePixelRatio;
-
-    canvas.style.width =
-        window.innerWidth + "px";
-
-    canvas.style.height =
-        window.innerHeight + "px";
-
-    ctx.setTransform(
-        devicePixelRatio,
-        0,
-        0,
-        devicePixelRatio,
-        0,
-        0
-    );
-
-}
-
-window.addEventListener(
-    "resize",
-    resize
+    }
 );
 
-resize();
 
-
-/* ============================================================
+/* ==========================================
    KAMERA
-   ============================================================ */
+   ========================================== */
 
 async function startCamera(){
 
@@ -385,16 +626,17 @@ async function startCamera(){
             !navigator.mediaDevices.getUserMedia
         ){
 
-            showMessage(
-                "Dein Browser erlaubt keinen Kamerazugriff."
-            );
+            status.textContent=
+                "Kamera nicht verfügbar";
 
             return;
+
         }
 
 
-        stream =
-            await navigator.mediaDevices.getUserMedia({
+        stream=
+            await navigator.mediaDevices
+            .getUserMedia({
 
                 video:{
                     facingMode:{
@@ -411,250 +653,80 @@ async function startCamera(){
                 },
 
                 audio:false
+
             });
 
 
-        video.srcObject = stream;
+        video.srcObject=stream;
 
         await video.play();
 
-        cameraStarted = true;
-
-        permission.style.display =
-            "none";
-
-        crosshair.style.display =
-            "block";
-
-        status.textContent =
-            "Kamera aktiv";
-
+        status.textContent=
+            "👾 Suche nach Monstern...";
 
         startGPS();
 
-        drawSurface();
-
-
-    }catch(error){
+    }
+    catch(error){
 
         console.error(error);
 
-        showMessage(
-            "Kamera konnte nicht gestartet werden. Bitte Kamera erlauben."
-        );
+        status.textContent=
+            "Kamera konnte nicht gestartet werden";
+
     }
 
 }
 
 
-/* ============================================================
-   GPS
-   ============================================================ */
+/* ==========================================
+   TESTMONSTER
+   ========================================== */
 
-function startGPS(){
+function spawnTestMonster(){
 
-    if(!navigator.geolocation){
-
-        status.textContent =
-            "GPS nicht verfügbar";
-
-        /*
-          Auf Chromebook ohne GPS kann der
-          Testmodus trotzdem verwendet werden.
-        */
-
+    if(activeLocation)
         return;
-    }
 
 
-    navigator.geolocation.watchPosition(
+    activeLocation={
 
-        position => {
+        name:"Testort",
 
-            latitude =
-                position.coords.latitude;
+        monster:"Grünling",
 
-            longitude =
-                position.coords.longitude;
+        found:true
 
-            checkLocations();
+    };
 
-        },
 
-        error => {
+    monsterName.textContent=
+        activeLocation.monster;
 
-            status.textContent =
-                "Kamera aktiv – GPS nicht verfügbar";
 
-        },
-
-        {
-            enableHighAccuracy:true,
-            maximumAge:5000,
-            timeout:10000
-        }
-
+    monsterButton.classList.remove(
+        "catching"
     );
 
-}
 
-
-/* ============================================================
-   DISTANZ BERECHNEN
-   ============================================================ */
-
-function distanceMeters(
-    lat1,
-    lon1,
-    lat2,
-    lon2
-){
-
-    const R = 6371000;
-
-    const p1 =
-        lat1 * Math.PI / 180;
-
-    const p2 =
-        lat2 * Math.PI / 180;
-
-    const dLat =
-        (lat2-lat1) *
-        Math.PI / 180;
-
-    const dLon =
-        (lon2-lon1) *
-        Math.PI / 180;
-
-
-    const a =
-        Math.sin(dLat/2) *
-        Math.sin(dLat/2)
-        +
-        Math.cos(p1) *
-        Math.cos(p2) *
-        Math.sin(dLon/2) *
-        Math.sin(dLon/2);
-
-
-    return R *
-        2 *
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(1-a)
-        );
-
-}
-
-
-/* ============================================================
-   ORTE PRÜFEN
-   ============================================================ */
-
-function checkLocations(){
-
-    if(
-        latitude === null ||
-        longitude === null
-    ){
-
-        status.textContent =
-            "Kamera aktiv – GPS wartet...";
-
-        return;
-    }
-
-
-    let nearest = null;
-    let nearestDistance = Infinity;
-
-
-    for(
-        const location
-        of LOCATIONS
-    ){
-
-        const d =
-            distanceMeters(
-                latitude,
-                longitude,
-                location.latitude,
-                location.longitude
-            );
-
-
-        if(d < nearestDistance){
-
-            nearestDistance = d;
-            nearest = location;
-
-        }
-
-
-        /*
-          50 Meter Fangradius
-        */
-
-        if(
-            d <= 50 &&
-            !location.found &&
-            !activeLocation
-        ){
-
-            activateMonster(
-                location
-            );
-
-            return;
-        }
-
-    }
-
-
-    if(nearest){
-
-        status.textContent =
-            "Nächster Ort: " +
-            Math.round(nearestDistance) +
-            " m";
-
-    }
-
-}
-
-
-/* ============================================================
-   MONSTER AKTIVIEREN
-   ============================================================ */
-
-function activateMonster(location){
-
-    activeLocation =
-        location;
-
-    location.found = true;
-
-    monsterName.textContent =
-        location.monster;
-
-    monsterButton.style.display =
+    monsterButton.style.display=
         "block";
 
-    status.textContent =
+
+    status.textContent=
         "👾 Monster entdeckt!";
 
+
     showMessage(
-        "👾 " +
-        location.monster +
-        " ist hier!"
+        "👾 Ein Grünling ist aufgetaucht!"
     );
 
 }
 
 
-/* ============================================================
+/* ==========================================
    MONSTER FANGEN
-   ============================================================ */
+   ========================================== */
 
 monsterButton.addEventListener(
     "click",
@@ -664,7 +736,7 @@ monsterButton.addEventListener(
 
 monsterButton.addEventListener(
     "touchend",
-    event => {
+    event=>{
 
         event.preventDefault();
 
@@ -680,9 +752,14 @@ function catchMonster(){
         return;
 
 
+    monsterButton.classList.add(
+        "catching"
+    );
+
+
     caught++;
 
-    counter.textContent =
+    counter.textContent=
         caught;
 
 
@@ -693,154 +770,213 @@ function catchMonster(){
     );
 
 
-    monsterButton.style.display =
-        "none";
+    setTimeout(
+        ()=>{
 
+            monsterButton.style.display=
+                "none";
 
-    activeLocation =
-        null;
+            monsterButton.classList.remove(
+                "catching"
+            );
 
+            activeLocation=null;
 
-    status.textContent =
-        "Monster gefangen!";
+            status.textContent=
+                "Monster gefangen!";
+
+        },
+        450
+    );
+
 }
 
 
-/* ============================================================
-   EINFACHE FLÄCHEN-ANZEIGE
-   ============================================================
+/* ==========================================
+   GPS
+   ========================================== */
 
-   Da Chromebooks normalerweise keine WebXR-
-   Boden-Erkennung besitzen, zeichnen wir eine
-   transparente Ziel-Fläche auf den Kamerabereich.
+function startGPS(){
 
-   Das Monster sitzt dadurch optisch auf
-   dieser Fläche und nicht irgendwo außerhalb
-   des sichtbaren Spiels.
+    if(!navigator.geolocation){
 
-   ============================================================ */
+        status.textContent=
+            "Testmodus aktiv";
 
-let surfaceY =
-    window.innerHeight * .72;
-
-
-function drawSurface(){
-
-    if(!cameraStarted)
         return;
-
-
-    ctx.clearRect(
-        0,
-        0,
-        window.innerWidth,
-        window.innerHeight
-    );
-
-
-    /*
-      Boden-Hilfe
-    */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        surfaceY
-    );
-
-    ctx.lineTo(
-        window.innerWidth,
-        surfaceY
-    );
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,.22)";
-
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
-
-    /*
-      Perspektivische Bodenlinien
-    */
-
-    for(
-        let i = -6;
-        i <= 6;
-        i++
-    ){
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            window.innerWidth/2,
-            surfaceY
-        );
-
-        ctx.lineTo(
-            window.innerWidth/2 +
-            i * 120,
-            window.innerHeight
-        );
-
-        ctx.strokeStyle =
-            "rgba(255,255,255,.12)";
-
-        ctx.lineWidth = 1;
-
-        ctx.stroke();
-
     }
 
 
-    requestAnimationFrame(
-        drawSurface
+    navigator.geolocation.watchPosition(
+
+        position=>{
+
+            latitude=
+                position.coords.latitude;
+
+            longitude=
+                position.coords.longitude;
+
+            checkLocations();
+
+        },
+
+        ()=>{
+            /*
+              Kein GPS:
+              Der Testmodus funktioniert trotzdem.
+            */
+        },
+
+        {
+            enableHighAccuracy:true,
+
+            maximumAge:5000,
+
+            timeout:10000
+
+        }
+
     );
 
 }
 
 
-/* ============================================================
-   MONSTER SCHWEBEN VERHINDERN
-   ============================================================ */
+/* ==========================================
+   ORTE PRÜFEN
+   ========================================== */
 
-function updateMonsterPosition(){
+function checkLocations(){
 
-    /*
-       Das Monster befindet sich bewusst
-       nahe der unteren Hälfte des Bildes,
-       also auf der simulierten Bodenebene.
+    if(
+        latitude===null ||
+        longitude===null
+    )
+        return;
 
-       Es wird nicht an der Kameraposition
-       befestigt.
-    */
 
-    monsterButton.style.top =
-        surfaceY - 80 + "px";
+    for(
+        const location of LOCATIONS
+    ){
+
+        if(location.found)
+            continue;
+
+
+        const distance=
+            distanceMeters(
+
+                latitude,
+                longitude,
+
+                location.latitude,
+                location.longitude
+
+            );
+
+
+        /*
+           50 Meter Fangradius
+        */
+
+        if(distance<=50){
+
+            location.found=true;
+
+            activeLocation={
+                name:location.name,
+                monster:location.monster,
+                found:true
+            };
+
+
+            monsterName.textContent=
+                location.monster;
+
+
+            monsterButton.style.display=
+                "block";
+
+
+            status.textContent=
+                "👾 Monster entdeckt!";
+
+
+            showMessage(
+                "👾 " +
+                location.monster +
+                " wurde entdeckt!"
+            );
+
+
+            break;
+
+        }
+
+    }
 
 }
 
 
-setInterval(
-    updateMonsterPosition,
-    30
-);
+/* ==========================================
+   ENTFERNUNG
+   ========================================== */
+
+function distanceMeters(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+){
+
+    const R=6371000;
+
+    const p1=
+        lat1*Math.PI/180;
+
+    const p2=
+        lat2*Math.PI/180;
+
+    const dLat=
+        (lat2-lat1)*
+        Math.PI/180;
+
+    const dLon=
+        (lon2-lon1)*
+        Math.PI/180;
 
 
-/* ============================================================
-   HINWEIS
-   ============================================================ */
+    const a=
+        Math.sin(dLat/2)*
+        Math.sin(dLat/2)
+
+        +
+
+        Math.cos(p1)*
+        Math.cos(p2)*
+        Math.sin(dLon/2)*
+        Math.sin(dLon/2);
+
+
+    return R*
+        2*
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1-a)
+        );
+
+}
+
+
+/* ==========================================
+   NACHRICHT
+   ========================================== */
 
 function showMessage(text){
 
-    message.textContent =
-        text;
+    message.textContent=text;
 
-    message.classList.add(
-        "show"
-    );
+    message.classList.add("show");
 
 
     clearTimeout(
@@ -848,9 +984,9 @@ function showMessage(text){
     );
 
 
-    showMessage.timer =
+    showMessage.timer=
         setTimeout(
-            () => {
+            ()=>{
 
                 message.classList.remove(
                     "show"
@@ -863,57 +999,48 @@ function showMessage(text){
 }
 
 
-/* ============================================================
-   START
-   ============================================================ */
+/* ==========================================
+   TESTFUNKTION
+   ==========================================
 
-start.addEventListener(
-    "click",
-    startCamera
-);
+   In der Chrome-Konsole:
 
+   testMonster("Feufox");
 
-/* ============================================================
-   DEMO-MODUS
-   ============================================================
+   ========================================== */
 
-   Falls das Chromebook kein GPS besitzt,
-   kannst du zum Testen diese Funktion
-   in der Browser-Konsole ausführen:
+window.testMonster=function(
+    name="Testmonster"
+){
 
-       testMonster("Testmonster");
+    activeLocation={
 
-   ============================================================ */
+        name:"Test",
 
-window.testMonster =
-    function(name="Testmonster"){
+        monster:name,
 
-        if(activeLocation)
-            return;
-
-
-        activeLocation = {
-            name:"Test",
-            monster:name,
-            found:true
-        };
-
-
-        monsterName.textContent =
-            name;
-
-        monsterButton.style.display =
-            "block";
-
-        status.textContent =
-            "👾 Testmonster entdeckt!";
-
-        showMessage(
-            "Testmodus: " + name
-        );
+        found:true
 
     };
 
+
+    monsterName.textContent=name;
+
+    monsterButton.classList.remove(
+        "catching"
+    );
+
+    monsterButton.style.display=
+        "block";
+
+    status.textContent=
+        "👾 Monster entdeckt!";
+
+    showMessage(
+        "👾 "+name+" ist aufgetaucht!"
+    );
+
+};
 
 </script>
 
