@@ -56,10 +56,11 @@ canvas{
     top:10px;
     z-index:30;
     color:white;
-    background:rgba(0,0,0,.65);
+    background:rgba(0,0,0,.7);
     padding:9px 12px;
     border-radius:7px;
     font:13px monospace;
+    max-width:80%;
 }
 
 #coords{
@@ -157,7 +158,7 @@ canvas{
    CORE ENGINE
 ========================================================= */
 
-window.scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
 scene.background =
     new THREE.Color(0x87cfff);
@@ -165,7 +166,7 @@ scene.background =
 
 /* CAMERA */
 
-window.camera =
+const camera =
     new THREE.PerspectiveCamera(
         75,
         innerWidth / innerHeight,
@@ -176,7 +177,7 @@ window.camera =
 
 /* RENDERER */
 
-window.renderer =
+const renderer =
     new THREE.WebGLRenderer({
         antialias:true
     });
@@ -202,19 +203,19 @@ document.body.appendChild(
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        1.2
+        1.4
     )
 );
 
 const sun =
     new THREE.DirectionalLight(
         0xffffff,
-        1.5
+        2
     );
 
 sun.position.set(
-    10,
     20,
+    30,
     10
 );
 
@@ -237,11 +238,11 @@ grassTexture.wrapT =
     THREE.RepeatWrapping;
 
 grassTexture.repeat.set(
-    50,
-    50
+    100,
+    100
 );
 
-window.ground =
+const ground =
     new THREE.Mesh(
         new THREE.PlaneGeometry(
             5000,
@@ -262,7 +263,7 @@ scene.add(ground);
    PLAYER
 ========================================================= */
 
-window.player =
+const player =
     new THREE.Object3D();
 
 scene.add(player);
@@ -275,9 +276,9 @@ camera.position.set(
     0
 );
 
-window.velY = 0;
-window.onGround = true;
-window.health = 100;
+let velY = 0;
+let onGround = true;
+let health = 100;
 
 
 /* =========================================================
@@ -286,13 +287,18 @@ window.health = 100;
 
 const keys = {};
 
+let yaw = 0;
+let pitch = 0;
+let chatOpen = false;
+
 window.addEventListener(
     "keydown",
-    function(e){
+    e => {
 
         keys[e.key.toLowerCase()] = true;
 
         if(e.code === "Space"){
+            e.preventDefault();
             jump();
         }
 
@@ -305,10 +311,8 @@ window.addEventListener(
 
 window.addEventListener(
     "keyup",
-    function(e){
-
+    e => {
         keys[e.key.toLowerCase()] = false;
-
     }
 );
 
@@ -319,10 +323,12 @@ window.addEventListener(
 
 document.body.addEventListener(
     "click",
-    function(){
+    () => {
 
         if(!chatOpen){
+
             document.body.requestPointerLock();
+
         }
 
     }
@@ -333,12 +339,9 @@ document.body.addEventListener(
    MOUSE LOOK
 ========================================================= */
 
-let yaw = 0;
-let pitch = 0;
-
 document.addEventListener(
     "mousemove",
-    function(e){
+    e => {
 
         if(
             document.pointerLockElement !== document.body ||
@@ -348,6 +351,7 @@ document.addEventListener(
         }
 
         yaw -= e.movementX * 0.002;
+
         pitch -= e.movementY * 0.002;
 
         pitch =
@@ -357,6 +361,7 @@ document.addEventListener(
             );
 
         player.rotation.y = yaw;
+
         camera.rotation.x = pitch;
 
     }
@@ -391,6 +396,7 @@ function move(){
 
     dir.normalize();
 
+
     const forward =
         new THREE.Vector3(
             0,
@@ -403,6 +409,7 @@ function move(){
     forward.y = 0;
     forward.normalize();
 
+
     const right =
         new THREE.Vector3()
         .crossVectors(
@@ -410,6 +417,7 @@ function move(){
             new THREE.Vector3(0,1,0)
         )
         .negate();
+
 
     player.position.addScaledVector(
         forward,
@@ -425,7 +433,7 @@ function move(){
 
 
 /* =========================================================
-   JUMP + GRAVITY
+   JUMP
 ========================================================= */
 
 function jump(){
@@ -434,10 +442,15 @@ function jump(){
         return;
 
     velY = 0.25;
+
     onGround = false;
 
 }
 
+
+/* =========================================================
+   GRAVITY
+========================================================= */
 
 function gravity(){
 
@@ -448,7 +461,9 @@ function gravity(){
     if(player.position.y <= 0){
 
         player.position.y = 0;
+
         velY = 0;
+
         onGround = true;
 
     }
@@ -465,12 +480,9 @@ const loader =
 
 let weapon = null;
 
-const weaponBasePosition =
-    new THREE.Vector3(
-        0.55,
-        -0.75,
-        -1.25
-    );
+let weaponBaseX = 0.55;
+let weaponBaseY = -0.55;
+let weaponBaseZ = -1.5;
 
 let recoil = 0;
 let shooting = false;
@@ -491,11 +503,6 @@ console.log(
     weaponURL
 );
 
-document.getElementById(
-    "status"
-).textContent =
-    "⏳ Lade: " + weaponURL;
-
 
 loader.load(
 
@@ -508,7 +515,7 @@ loader.load(
         );
 
         console.log(
-            "✅ WEAPON.GLb GELADEN"
+            "✅ weapon.glb GELADEN"
         );
 
         console.log(
@@ -519,22 +526,66 @@ loader.load(
             "================================"
         );
 
+
         weapon =
             gltf.scene;
 
-        camera.add(weapon);
+
+        /* =================================================
+           ALLE MESHES SICHTBAR MACHEN
+        ================================================= */
+
+        weapon.traverse(
+            function(obj){
+
+                if(obj.isMesh){
+
+                    obj.frustumCulled = false;
+
+                    obj.visible = true;
+
+                    if(obj.material){
+
+                        obj.material.needsUpdate = true;
+
+                    }
+
+                }
+
+            }
+        );
 
 
-        /* AUTOMATISCHE GRÖSSE */
+        /* =================================================
+           MODELL VOR DEM POSITIONIEREN ZENTRIEREN
+        ================================================= */
 
-        const box =
+        const originalBox =
             new THREE.Box3()
             .setFromObject(weapon);
+
+        const originalCenter =
+            new THREE.Vector3();
+
+        originalBox.getCenter(
+            originalCenter
+        );
+
+        weapon.position.sub(
+            originalCenter
+        );
+
+
+        /* =================================================
+           AUTOMATISCHE SKALIERUNG
+        ================================================= */
 
         const size =
             new THREE.Vector3();
 
-        box.getSize(size);
+        originalBox.getSize(
+            size
+        );
 
         const maxSize =
             Math.max(
@@ -543,9 +594,10 @@ loader.load(
                 size.z
             );
 
+
         if(maxSize > 0){
 
-            const targetSize = 2.2;
+            const targetSize = 2.0;
 
             const scale =
                 targetSize / maxSize;
@@ -559,16 +611,40 @@ loader.load(
         }
 
 
-        /* POSITION */
+        /* =================================================
+           NACH SCALE ERNEUT ZENTRIEREN
+        ================================================= */
 
-        weapon.position.set(
-            0.55,
-            -0.75,
-            -1.25
+        const scaledBox =
+            new THREE.Box3()
+            .setFromObject(weapon);
+
+        const scaledCenter =
+            new THREE.Vector3();
+
+        scaledBox.getCenter(
+            scaledCenter
+        );
+
+        weapon.position.sub(
+            scaledCenter
         );
 
 
-        /* ROTATION */
+        /* =================================================
+           FIRST PERSON POSITION
+        ================================================= */
+
+        weapon.position.set(
+            weaponBaseX,
+            weaponBaseY,
+            weaponBaseZ
+        );
+
+
+        /* =================================================
+           ROTATION
+        ================================================= */
 
         weapon.rotation.set(
             0,
@@ -577,18 +653,44 @@ loader.load(
         );
 
 
+        /* =================================================
+           KAMERA
+        ================================================= */
+
+        camera.add(
+            weapon
+        );
+
+
         document.getElementById(
             "status"
         ).textContent =
-            "✅ weapon.glb geladen";
+            "✅ weapon.glb sichtbar geladen";
+
+
+        console.log(
+            "Originalgröße:",
+            size
+        );
+
+        console.log(
+            "Scale:",
+            weapon.scale
+        );
+
+        console.log(
+            "Position:",
+            weapon.position
+        );
 
     },
 
     function(progress){
 
-        console.log(
-            "weapon.glb wird geladen..."
-        );
+        document.getElementById(
+            "status"
+        ).textContent =
+            "⏳ weapon.glb lädt...";
 
     },
 
@@ -599,7 +701,7 @@ loader.load(
         );
 
         console.error(
-            "❌ WEAPON ERROR"
+            "❌ weapon.glb FEHLER"
         );
 
         console.error(
@@ -618,7 +720,7 @@ loader.load(
         document.getElementById(
             "status"
         ).textContent =
-            "❌ weapon.glb konnte nicht geladen werden";
+            "❌ weapon.glb Fehler";
 
     }
 
@@ -626,7 +728,7 @@ loader.load(
 
 
 /* =========================================================
-   SCHUSS-ANIMATION
+   SCHUSS
 ========================================================= */
 
 function shoot(){
@@ -639,36 +741,36 @@ function shoot(){
     recoil = 0.22;
 
 
-    /* FLASH */
+    /* MUZZLE FLASH */
 
-    if(weapon){
+    const flash =
+        new THREE.PointLight(
+            0xffaa33,
+            10,
+            4
+        );
 
-        const flash =
-            new THREE.PointLight(
-                0xffaa33,
-                8,
-                3
+    flash.position.set(
+        0,
+        0,
+        -1
+    );
+
+    camera.add(flash);
+
+    setTimeout(
+        () => {
+
+            camera.remove(
+                flash
             );
 
-        flash.position.set(
-            0,
-            0,
-            -1
-        );
-
-        camera.add(flash);
-
-        setTimeout(
-            function(){
-                camera.remove(flash);
-            },
-            50
-        );
-
-    }
+        },
+        50
+    );
 
 
-    /* VISUELLER TRACER */
+    /* TRACER */
 
     const direction =
         new THREE.Vector3(
@@ -681,6 +783,7 @@ function shoot(){
         camera.quaternion
     );
 
+
     const start =
         camera.getWorldPosition(
             new THREE.Vector3()
@@ -692,6 +795,7 @@ function shoot(){
             direction.multiplyScalar(100)
         );
 
+
     const geometry =
         new THREE.BufferGeometry()
         .setFromPoints([
@@ -699,10 +803,12 @@ function shoot(){
             end
         ]);
 
+
     const material =
         new THREE.LineBasicMaterial({
             color:0xffff00
         });
+
 
     const tracer =
         new THREE.Line(
@@ -712,22 +818,31 @@ function shoot(){
 
     scene.add(tracer);
 
-    setTimeout(
-        function(){
 
-            scene.remove(tracer);
+    setTimeout(
+        () => {
+
+            scene.remove(
+                tracer
+            );
 
             geometry.dispose();
+
             material.dispose();
 
         },
-        45
+        50
     );
 
 
+    checkShoot();
+
+
     setTimeout(
-        function(){
+        () => {
+
             shooting = false;
+
         },
         100
     );
@@ -737,13 +852,15 @@ function shoot(){
 
 window.addEventListener(
     "mousedown",
-    function(e){
+    e => {
 
         if(
             e.button === 0 &&
             !chatOpen
         ){
+
             shoot();
+
         }
 
     }
@@ -751,12 +868,17 @@ window.addEventListener(
 
 
 /* =========================================================
-   TEST-ZIELE
+   ENEMIES
 ========================================================= */
 
 const enemies = [];
 
-function addEnemy(x,y,z){
+
+function addEnemy(
+    x,
+    y,
+    z
+){
 
     const enemy =
         new THREE.Mesh(
@@ -784,13 +906,28 @@ function addEnemy(x,y,z){
 
 }
 
-addEnemy(5,1,-20);
-addEnemy(-3,1,-15);
-addEnemy(8,1,-35);
+
+addEnemy(
+    5,
+    1,
+    -20
+);
+
+addEnemy(
+    -3,
+    1,
+    -15
+);
+
+addEnemy(
+    8,
+    1,
+    -35
+);
 
 
 /* =========================================================
-   SHOOT TARGET CHECK
+   HIT CHECK
 ========================================================= */
 
 const raycaster =
@@ -813,6 +950,7 @@ function checkShoot(){
     if(!hits.length)
         return;
 
+
     const enemy =
         hits[0].object;
 
@@ -828,9 +966,11 @@ function checkShoot(){
         "block";
 
     setTimeout(
-        function(){
+        () => {
+
             marker.style.display =
                 "none";
+
         },
         100
     );
@@ -844,10 +984,12 @@ function checkShoot(){
             enemies.indexOf(enemy);
 
         if(index !== -1){
+
             enemies.splice(
                 index,
                 1
             );
+
         }
 
     }
@@ -855,33 +997,18 @@ function checkShoot(){
 }
 
 
-/* Beim Schießen auch Treffer prüfen */
-
-const originalShoot =
-    shoot;
-
-shoot = function(){
-
-    originalShoot();
-
-    checkShoot();
-
-};
-
-
 /* =========================================================
    BARRIERS
 ========================================================= */
 
-window.barriers = [];
+const barriers = [];
 
 
 function addBarrier(
     x,
     y,
     z,
-    scale=1,
-    sink=0
+    scale = 1
 ){
 
     loader.load(
@@ -898,17 +1025,9 @@ function addBarrier(
                 scale
             );
 
-            const box =
-                new THREE.Box3()
-                .setFromObject(obj);
-
-            const height =
-                box.max.y -
-                box.min.y;
-
             obj.position.set(
                 x,
-                y + height/2 - sink,
+                y,
                 z
             );
 
@@ -923,7 +1042,7 @@ function addBarrier(
         function(error){
 
             console.warn(
-                "barrier.glb nicht geladen:",
+                "barrier.glb nicht geladen",
                 error
             );
 
@@ -933,69 +1052,38 @@ function addBarrier(
 }
 
 
-/* =========================================================
-   BARRIERS
-========================================================= */
+function placeBarrier(){
 
-addBarrier(
-    -10,
-    0,
-    -25,
-    1
-);
+    const direction =
+        new THREE.Vector3(
+            0,
+            0,
+            -1
+        ).applyEuler(
+            player.rotation
+        );
 
-addBarrier(
-    14,
-    0,
-    -41,
-    1
-);
 
-addBarrier(
-    27,
-    0,
-    -75,
-    1
-);
+    addBarrier(
 
-addBarrier(
-    30.23,
-    0,
-    -61.29,
-    1,
-    0.55
-);
+        player.position.x +
+        direction.x * 3,
 
-addBarrier(
-    23.95,
-    0,
-    -42.78,
-    1,
-    0.55
-);
+        0,
 
-addBarrier(
-    -21.92,
-    0,
-    -55.83,
-    1,
-    0.55
-);
+        player.position.z +
+        direction.z * 3,
 
-addBarrier(
-    -2.21,
-    0,
-    -75.71,
-    1,
-    0.55
-);
+        1
+
+    );
+
+}
 
 
 /* =========================================================
    CHAT
 ========================================================= */
-
-let chatOpen = false;
 
 const chatBox =
     document.getElementById(
@@ -1023,13 +1111,16 @@ function openChat(){
         ? "flex"
         : "none";
 
+
     if(chatOpen){
 
         document.exitPointerLock();
 
         setTimeout(
-            function(){
+            () => {
+
                 chatInput.focus();
+
             },
             50
         );
@@ -1052,7 +1143,7 @@ function log(msg){
 
 chatInput.addEventListener(
     "keydown",
-    function(e){
+    e => {
 
         if(e.key !== "Enter")
             return;
@@ -1076,6 +1167,7 @@ function handleCommand(cmd){
     cmd =
         cmd.trim()
         .toLowerCase();
+
 
     if(cmd === "/save"){
 
@@ -1122,36 +1214,6 @@ function handleCommand(cmd){
 
 
 /* =========================================================
-   PLACE BARRIER
-========================================================= */
-
-function placeBarrier(){
-
-    const direction =
-        new THREE.Vector3(
-            0,
-            0,
-            -1
-        ).applyEuler(
-            player.rotation
-        );
-
-    addBarrier(
-        player.position.x +
-        direction.x * 3,
-
-        0,
-
-        player.position.z +
-        direction.z * 3,
-
-        1
-    );
-
-}
-
-
-/* =========================================================
    SAVE
 ========================================================= */
 
@@ -1185,8 +1247,12 @@ function saveGame(){
     a.click();
 
     setTimeout(
-        function(){
-            URL.revokeObjectURL(url);
+        () => {
+
+            URL.revokeObjectURL(
+                url
+            );
+
         },
         1000
     );
@@ -1198,8 +1264,7 @@ function saveGame(){
    GAME UPDATE
 ========================================================= */
 
-window.updateGame =
-function(){
+function updateGame(){
 
     move();
 
@@ -1213,18 +1278,20 @@ function(){
         if(recoil > 0){
 
             weapon.position.z =
-                -1.25 + recoil;
+                weaponBaseZ +
+                recoil;
 
             weapon.rotation.x =
                 recoil * 0.35;
 
             recoil *= 0.72;
 
-        }else{
+        }
+        else{
 
             weapon.position.z +=
                 (
-                    -1.25 -
+                    weaponBaseZ -
                     weapon.position.z
                 ) * 0.25;
 
@@ -1260,6 +1327,7 @@ function(){
             player.rotation
         );
 
+
     document.getElementById(
         "coords"
     ).textContent =
@@ -1277,7 +1345,7 @@ DIR Z: ${dir.z.toFixed(2)}`;
     ).style.width =
         health + "%";
 
-};
+}
 
 
 /* =========================================================
@@ -1308,7 +1376,7 @@ animate();
 
 window.addEventListener(
     "resize",
-    function(){
+    () => {
 
         camera.aspect =
             innerWidth /
