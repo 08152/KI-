@@ -3,20 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GLB FPS World</title>
+<title>Simple FPS World</title>
 
 <style>
-*{
-box-sizing:border-box;
-}
-
-html,body{
+body{
 margin:0;
-width:100%;
-height:100%;
 overflow:hidden;
 background:#000;
-font-family:Arial,sans-serif;
 }
 
 canvas{
@@ -25,771 +18,302 @@ display:block;
 
 #hud{
 position:fixed;
-top:12px;
-left:12px;
+top:10px;
+left:10px;
 z-index:9999;
-
-background:#000c;
+background:rgba(0,0,0,.75);
 color:white;
-
-padding:12px 16px;
-border-radius:10px;
-
+padding:10px;
 font-family:monospace;
 font-size:14px;
-
+border-radius:6px;
 pointer-events:none;
-}
-
-#crosshair{
-position:fixed;
-left:50%;
-top:50%;
-
-width:20px;
-height:20px;
-
-transform:translate(-50%,-50%);
-
-pointer-events:none;
-
-z-index:999;
-}
-
-#crosshair::before,
-#crosshair::after{
-content:"";
-
-position:absolute;
-
-background:white;
-
-box-shadow:0 0 4px black;
-}
-
-#crosshair::before{
-width:20px;
-height:2px;
-
-left:0;
-top:9px;
-}
-
-#crosshair::after{
-width:2px;
-height:20px;
-
-left:9px;
-top:0;
-}
-
-#start{
-position:fixed;
-
-left:50%;
-top:50%;
-
-transform:translate(-50%,-50%);
-
-z-index:10000;
-
-padding:18px 30px;
-
-border:none;
-
-border-radius:12px;
-
-font-size:20px;
-font-weight:bold;
-
-cursor:pointer;
-
-background:white;
-color:black;
-}
-
-#start:hover{
-transform:translate(-50%,-50%) scale(1.05);
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">
-GLB WORLD<br>
-Lädt...
-</div>
-
-<div id="crosshair"></div>
-
-<button id="start">
-▶ SPIEL STARTEN
-</button>
+<div id="hud">Start...</div>
 
 <script type="module">
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-import {
-GLTFLoader
-} from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 
 
-/* =========================================================
-   HUD
-========================================================= */
+const hud = document.getElementById("hud");
 
-const hud =
-document.getElementById("hud");
 
-function setHUD(text){
+function log(msg){
 
-hud.innerHTML=text;
+hud.innerHTML += "<br>" + msg;
 
 }
 
 
-/* =========================================================
-   SCENE
-========================================================= */
+const scene = new THREE.Scene();
 
-const scene =
-new THREE.Scene();
-
-scene.background =
-new THREE.Color(0x87ceeb);
-
-scene.fog =
-new THREE.Fog(
-0x87ceeb,
-40,
-250
-);
+scene.background = new THREE.Color(0x87ceeb);
 
 
-/* =========================================================
-   CAMERA
-========================================================= */
-
-const camera =
-new THREE.PerspectiveCamera(
+const camera = new THREE.PerspectiveCamera(
 
 75,
-
-innerWidth / innerHeight,
-
+window.innerWidth / window.innerHeight,
 0.1,
-
-1000
+2000
 
 );
 
 camera.position.set(
+
 0,
-1.7,
-10
+8,
+20
+
+);
+
+camera.lookAt(
+
+0,
+3,
+0
+
 );
 
 
-/* =========================================================
-   RENDERER
-========================================================= */
-
-const renderer =
-new THREE.WebGLRenderer({
+const renderer = new THREE.WebGLRenderer({
 
 antialias:true
 
 });
 
 renderer.setSize(
-innerWidth,
-innerHeight
+
+window.innerWidth,
+window.innerHeight
+
 );
 
 renderer.setPixelRatio(
-Math.min(
-devicePixelRatio,
-2
-)
+
+Math.min(window.devicePixelRatio,2)
+
 );
-
-renderer.shadowMap.enabled =
-true;
-
-renderer.shadowMap.type =
-THREE.PCFSoftShadowMap;
 
 document.body.appendChild(
+
 renderer.domElement
+
 );
 
 
-/* =========================================================
-   LIGHTING
-========================================================= */
-
-const hemi =
-new THREE.HemisphereLight(
+const hemiLight = new THREE.HemisphereLight(
 
 0xffffff,
-
-0x446633,
-
+0x445544,
 2
 
 );
 
 scene.add(
-hemi
+
+hemiLight
+
 );
 
 
-const sun =
-new THREE.DirectionalLight(
+const sun = new THREE.DirectionalLight(
 
 0xffffff,
-
 3
 
 );
 
 sun.position.set(
-50,
-80,
-30
+
+20,
+30,
+20
+
 );
 
-sun.castShadow =
-true;
-
-sun.shadow.mapSize.width =
-2048;
-
-sun.shadow.mapSize.height =
-2048;
-
-sun.shadow.camera.left =
--60;
-
-sun.shadow.camera.right =
-60;
-
-sun.shadow.camera.top =
-60;
-
-sun.shadow.camera.bottom =
--60;
-
 scene.add(
+
 sun
 );
 
 
-/* =========================================================
-   GROUND
-========================================================= */
-
-const groundGeometry =
-new THREE.PlaneGeometry(
+const groundGeometry = new THREE.PlaneGeometry(
 
 500,
-
-500,
-
-50,
-
-50
+500
 
 );
 
 
-const groundMaterial =
-new THREE.MeshStandardMaterial({
+const groundMaterial = new THREE.MeshStandardMaterial({
 
-color:0x228822,
-
-roughness:1,
-
-metalness:0
+color:0x228822
 
 });
 
 
-const ground =
-new THREE.Mesh(
+const ground = new THREE.Mesh(
 
 groundGeometry,
-
 groundMaterial
 
 );
 
 
-ground.rotation.x =
--Math.PI / 2;
-
-ground.receiveShadow =
-true;
+ground.rotation.x = -Math.PI / 2;
 
 scene.add(
+
 ground
+
 );
 
 
-/* =========================================================
-   GLB LOADER
-========================================================= */
+const loader = new GLTFLoader();
 
-const loader =
-new GLTFLoader();
+let model = null;
 
 
-let model =
-null;
-
-
-/* =========================================================
-   AUTOMATISCH 1.glb LADEN
-========================================================= */
-
-setHUD(
-"🌍 GLB WORLD<br>" +
-"⏳ Lade 1.glb..."
-);
+log("Lade 1.glb ...");
 
 
 loader.load(
 
-"./1.glb",
+"1.glb",
 
+(gltf)=>{
 
-function(gltf){
-
-model =
-gltf.scene;
-
-
-/* ---------------------------------------------------------
-   GRÖSSE AUTOMATISCH ANPASSEN
---------------------------------------------------------- */
-
-const box =
-new THREE.Box3()
-.setFromObject(
-model
-);
-
-
-const size =
-new THREE.Vector3();
-
-
-box.getSize(
-size
-);
-
-
-const maxSize =
-Math.max(
-
-size.x,
-
-size.y,
-
-size.z
-
-);
-
-
-/*
-   Maximale Größe
-*/
-
-const targetSize =
-2.2;
-
-
-const scale =
-targetSize /
-maxSize;
-
-
-model.scale.setScalar(
-scale
-);
-
-
-/* ---------------------------------------------------------
-   MODELL POSITION
---------------------------------------------------------- */
-
-/*
-   Das Modell wird
-   wie eine FPS-Waffe
-   vor der Kamera platziert.
-*/
-
-camera.add(
-model
-);
+model = gltf.scene;
 
 
 model.position.set(
 
-0.65,
-
--0.55,
-
--1.25
-
-);
-
-
-/*
-   Drehen falls nötig
-*/
-
-model.rotation.set(
-
 0,
-
-Math.PI,
-
+0,
 0
 
 );
 
 
-/* ---------------------------------------------------------
-   SCHATTEN
---------------------------------------------------------- */
+model.scale.set(
 
-model.traverse(
-
-function(object){
-
-if(
-object.isMesh
-){
-
-object.castShadow =
-true;
-
-object.receiveShadow =
-true;
-
-}
-
-}
+1,
+1,
+1
 
 );
 
 
-/* ---------------------------------------------------------
-   HUD
---------------------------------------------------------- */
+scene.add(
 
-setHUD(
-
-"🌍 GLB WORLD<br>" +
-
-"✔ 1.glb geladen<br>" +
-
-"📦 Größe automatisch angepasst<br>" +
-
-"WASD = Laufen<br>" +
-
-"Maus = Umschauen<br>" +
-
-"Linksklick = Schuss"
+model
 
 );
 
 
-console.log(
-"GLB erfolgreich geladen:",
-gltf
+const box = new THREE.Box3().setFromObject(model);
+
+const size = box.getSize(
+
+new THREE.Vector3()
+
 );
+
+const center = box.getCenter(
+
+new THREE.Vector3()
+
+);
+
+
+model.position.x -= center.x;
+
+model.position.z -= center.z;
+
+model.position.y -= box.min.y;
+
+
+log("1.glb geladen");
 
 },
 
+(xhr)=>{
 
-function(progress){
+if(xhr.total){
 
-if(
-progress.total
-){
+const percent = Math.round(
 
-const percent =
-Math.round(
-
-progress.loaded /
-
-progress.total *
-
-100
+(xhr.loaded / xhr.total) * 100
 
 );
 
+hud.innerHTML =
 
-setHUD(
-
-"🌍 GLB WORLD<br>" +
-
-"⏳ Lade 1.glb... " +
-
+"Lade 1.glb: " +
 percent +
-
-"%"
-
-);
-
-}else{
-
-setHUD(
-
-"🌍 GLB WORLD<br>" +
-
-"⏳ Lade 1.glb..."
-
-);
+"%";
 
 }
 
 },
 
+(error)=>{
 
-function(error){
+log("FEHLER: 1.glb nicht geladen");
 
-console.error(
-"GLB Fehler:",
-error
-);
-
-
-setHUD(
-
-"❌ FEHLER<br>" +
-
-"1.glb konnte nicht geladen werden.<br><br>" +
-
-"Die Datei muss genau so heißen:<br>" +
-
-"<b>1.glb</b><br><br>" +
-
-"Und im selben Ordner wie index.html liegen."
-
-);
+log("Pruefe: Datei heisst exakt 1.glb");
 
 }
 
 );
-
-
-/* =========================================================
-   PLAYER
-========================================================= */
-
-let yaw =
-0;
-
-let pitch =
-0;
-
-
-let gameStarted =
-false;
 
 
 const keys = {
 
-w:false,
-
-a:false,
-
-s:false,
-
-d:false
+forward:false,
+back:false,
+left:false,
+right:false
 
 };
 
-
-/* =========================================================
-   START BUTTON
-========================================================= */
-
-const startButton =
-document.getElementById(
-"start"
-);
-
-
-startButton.addEventListener(
-
-"click",
-
-function(){
-
-gameStarted =
-true;
-
-
-renderer.domElement
-.requestPointerLock();
-
-
-startButton.style.display =
-"none";
-
-
-}
-
-);
-
-
-/* =========================================================
-   POINTER LOCK
-========================================================= */
-
-document.addEventListener(
-
-"pointerlockchange",
-
-function(){
-
-if(
-
-document.pointerLockElement ===
-renderer.domElement
-
-){
-
-gameStarted =
-true;
-
-}else{
-
-gameStarted =
-false;
-
-startButton.style.display =
-"block";
-
-}
-
-}
-
-);
-
-
-/* =========================================================
-   MOUSE LOOK
-========================================================= */
-
-document.addEventListener(
-
-"mousemove",
-
-function(event){
-
-if(
-!gameStarted
-){
-
-return;
-
-}
-
-
-yaw -=
-event.movementX *
-0.0025;
-
-
-pitch -=
-event.movementY *
-0.0025;
-
-
-/*
-   Nicht komplett
-   nach oben/unten drehen
-*/
-
-pitch =
-Math.max(
-
--1.45,
-
-Math.min(
-
-1.45,
-
-pitch
-
-)
-
-);
-
-
-}
-
-);
-
-
-/* =========================================================
-   KEYBOARD
-========================================================= */
 
 document.addEventListener(
 
 "keydown",
 
-function(event){
+(e)=>{
 
-const key =
-event.key
-.toLowerCase();
+if(e.code==="KeyW"){
 
-
-if(
-key === "w"
-){
-
-keys.w =
-true;
+keys.forward=true;
 
 }
 
+if(e.code==="KeyS"){
 
-if(
-key === "a"
-){
-
-keys.a =
-true;
+keys.back=true;
 
 }
 
+if(e.code==="KeyA"){
 
-if(
-key === "s"
-){
-
-keys.s =
-true;
+keys.left=true;
 
 }
 
+if(e.code==="KeyD"){
 
-if(
-key === "d"
-){
-
-keys.d =
-true;
+keys.right=true;
 
 }
 
@@ -802,49 +326,29 @@ document.addEventListener(
 
 "keyup",
 
-function(event){
+(e)=>{
 
-const key =
-event.key
-.toLowerCase();
+if(e.code==="KeyW"){
 
-
-if(
-key === "w"
-){
-
-keys.w =
-false;
+keys.forward=false;
 
 }
 
+if(e.code==="KeyS"){
 
-if(
-key === "a"
-){
-
-keys.a =
-false;
+keys.back=false;
 
 }
 
+if(e.code==="KeyA"){
 
-if(
-key === "s"
-){
-
-keys.s =
-false;
+keys.left=false;
 
 }
 
+if(e.code==="KeyD"){
 
-if(
-key === "d"
-){
-
-keys.d =
-false;
+keys.right=false;
 
 }
 
@@ -852,424 +356,50 @@ false;
 
 );
 
-
-/* =========================================================
-   MOVEMENT
-========================================================= */
-
-const clock =
-new THREE.Clock();
-
-
-function updatePlayer(){
-
-if(
-!gameStarted
-){
-
-return;
-
-}
-
-
-const delta =
-clock.getDelta();
-
-
-const speed =
-8;
-
-
-/*
-   Blickrichtung
-*/
-
-const forward =
-new THREE.Vector3(
-
--Math.sin(
-yaw
-),
-
-0,
-
--Math.cos(
-yaw
-)
-
-);
-
-
-const right =
-new THREE.Vector3(
-
-Math.cos(
-yaw
-),
-
-0,
-
--Math.sin(
-yaw
-)
-
-);
-
-
-/*
-   WASD
-*/
-
-if(
-keys.w
-){
-
-camera.position.addScaledVector(
-
-forward,
-
-speed *
-delta
-
-);
-
-}
-
-
-if(
-keys.s
-){
-
-camera.position.addScaledVector(
-
-forward,
-
--speed *
-delta
-
-);
-
-}
-
-
-if(
-keys.a
-){
-
-camera.position.addScaledVector(
-
-right,
-
--speed *
-delta
-
-);
-
-}
-
-
-if(
-keys.d
-){
-
-camera.position.addScaledVector(
-
-right,
-
-speed *
-delta
-
-);
-
-}
-
-
-/*
-   Kamera Rotation
-*/
-
-camera.rotation.order =
-"YXZ";
-
-
-camera.rotation.y =
-yaw;
-
-
-camera.rotation.x =
-pitch;
-
-
-/*
-   Spieler bleibt
-   auf dem Boden
-*/
-
-camera.position.y =
-1.7;
-
-}
-
-
-/* =========================================================
-   SCHUSS ANIMATION
-========================================================= */
-
-let shooting =
-false;
-
-let recoil =
-0;
-
-
-document.addEventListener(
-
-"mousedown",
-
-function(event){
-
-if(
-!gameStarted
-){
-
-return;
-
-}
-
-
-if(
-event.button !== 0
-){
-
-return;
-
-}
-
-
-shoot();
-
-}
-
-);
-
-
-function shoot(){
-
-if(
-!model
-){
-
-return;
-
-}
-
-
-if(
-shooting
-){
-
-return;
-
-}
-
-
-shooting =
-true;
-
-
-recoil =
-0.12;
-
-
-/*
-   Leichte Schussanimation
-*/
-
-setTimeout(
-
-function(){
-
-shooting =
-false;
-
-},
-
-120
-
-);
-
-}
-
-
-/* =========================================================
-   UPDATE WEAPON
-========================================================= */
-
-function updateWeapon(){
-
-if(
-!model
-){
-
-return;
-
-}
-
-
-/*
-   Rückstoß
-*/
-
-if(
-recoil > 0
-){
-
-model.position.z =
--1.25 +
-recoil;
-
-
-recoil *=
-0.65;
-
-
-if(
-recoil <
-0.005
-){
-
-recoil =
-0;
-
-}
-
-}else{
-
-model.position.z =
--1.25;
-
-}
-
-
-/*
-   Kleine Idle-Bewegung
-*/
-
-const t =
-performance.now() *
-0.001;
-
-
-model.position.y =
-
--0.55 +
-
-Math.sin(
-t * 2
-) *
-0.008;
-
-}
-
-
-/* =========================================================
-   WORLD OBJECTS
-========================================================= */
-
-const objects =
-new THREE.Group();
-
-scene.add(
-objects
-);
-
-
-/*
-   Ein paar einfache
-   Hindernisse
-*/
-
-for(
-let i = 0;
-
-i < 30;
-
-i++
-){
-
-const cube =
-new THREE.Mesh(
-
-new THREE.BoxGeometry(
-
-2,
-
-2 +
-
-Math.random() * 4,
-
-2
-
-),
-
-new THREE.MeshStandardMaterial({
-
-color:
-0x777777
-
-})
-
-);
-
-
-cube.position.set(
-
-(Math.random() - 0.5) *
-150,
-
-cube.geometry.parameters.height / 2,
-
-(Math.random() - 0.5) *
-150
-
-);
-
-
-cube.castShadow =
-true;
-
-cube.receiveShadow =
-true;
-
-
-objects.add(
-cube
-);
-
-}
-
-
-/* =========================================================
-   ANIMATION LOOP
-========================================================= */
 
 function animate(){
 
 requestAnimationFrame(
+
 animate
+
 );
 
 
-updatePlayer();
+const speed = 0.2;
 
 
-updateWeapon();
+if(keys.forward){
+
+camera.position.z -= speed;
+
+}
+
+
+if(keys.back){
+
+camera.position.z += speed;
+
+}
+
+
+if(keys.left){
+
+camera.position.x -= speed;
+
+}
+
+
+if(keys.right){
+
+camera.position.x += speed;
+
+}
 
 
 renderer.render(
 
 scene,
-
 camera
 
 );
@@ -1280,20 +410,16 @@ camera
 animate();
 
 
-/* =========================================================
-   RESIZE
-========================================================= */
-
 window.addEventListener(
 
 "resize",
 
-function(){
+()=>{
 
 camera.aspect =
 
-innerWidth /
-innerHeight;
+window.innerWidth /
+window.innerHeight;
 
 
 camera.updateProjectionMatrix();
@@ -1301,9 +427,8 @@ camera.updateProjectionMatrix();
 
 renderer.setSize(
 
-innerWidth,
-
-innerHeight
+window.innerWidth,
+window.innerHeight
 
 );
 
