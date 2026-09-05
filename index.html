@@ -2,13 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fishing Simulator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>3D TARGET TRAINING</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 html,body{
     margin:0;
@@ -16,12 +14,32 @@ html,body{
     height:100%;
     overflow:hidden;
     font-family:Arial,sans-serif;
-    background:#000;
+    background:#74b9e8;
 }
 
 #game{
     position:fixed;
     inset:0;
+}
+
+#loading{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:#101820;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+}
+
+#loading small{
+    margin-top:10px;
+    opacity:.7;
+    font-size:14px;
 }
 
 #ui{
@@ -36,9 +54,12 @@ html,body{
     top:0;
     left:0;
     right:0;
-    padding:18px;
+
+    padding:15px;
+
     display:flex;
     justify-content:space-between;
+
     background:linear-gradient(#000b,transparent);
 }
 
@@ -47,67 +68,82 @@ html,body{
     border:1px solid #ffffff33;
     padding:10px 15px;
     border-radius:10px;
+    font-weight:bold;
 }
 
 #crosshair{
     position:absolute;
     left:50%;
     top:50%;
-    width:20px;
-    height:20px;
+    width:24px;
+    height:24px;
     transform:translate(-50%,-50%);
 }
 
-#crosshair::before,
-#crosshair::after{
+#crosshair:before,
+#crosshair:after{
     content:"";
     position:absolute;
     background:white;
-    box-shadow:0 0 4px black;
+    box-shadow:0 0 5px #000;
 }
 
-#crosshair::before{
-    width:20px;
+#crosshair:before{
+    width:24px;
     height:2px;
-    top:9px;
+    top:11px;
 }
 
-#crosshair::after{
+#crosshair:after{
     width:2px;
-    height:20px;
-    left:9px;
+    height:24px;
+    left:11px;
 }
 
 #message{
     position:absolute;
     left:50%;
-    bottom:40px;
+    bottom:30px;
+
     transform:translateX(-50%);
+
     background:#000b;
+
     padding:12px 20px;
-    border-radius:10px;
+
+    border-radius:12px;
+
     font-weight:bold;
 }
 
-#loading{
-    position:fixed;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#07111a;
-    color:white;
-    font-size:22px;
+#shootButton{
+    display:none;
+    position:absolute;
+
+    right:25px;
+    bottom:25px;
+
+    pointer-events:auto;
+
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    border:2px solid white;
+
+    background:#ffffffaa;
+
     font-weight:bold;
-    z-index:100;
+    font-size:15px;
 }
 
-#loading small{
-    display:block;
-    text-align:center;
-    margin-top:12px;
-    font-size:13px;
-    opacity:.7;
+@media(max-width:700px){
+
+    #shootButton{
+        display:block;
+    }
+
 }
 
 </style>
@@ -118,10 +154,8 @@ html,body{
 <div id="game"></div>
 
 <div id="loading">
-    <div>
-        🚢 Schiff wird geladen...
-        <small>1.glb</small>
-    </div>
+    3D-Modell wird geladen...
+    <small>1.glb</small>
 </div>
 
 <div id="ui">
@@ -129,11 +163,11 @@ html,body{
     <div id="top">
 
         <div class="panel">
-            🎣 FISHING SIMULATOR
+            🎯 TARGET TRAINING
         </div>
 
         <div class="panel">
-            WASD = Bewegen · Maus = Umschauen
+            Punkte: <span id="score">0</span>
         </div>
 
     </div>
@@ -141,8 +175,10 @@ html,body{
     <div id="crosshair"></div>
 
     <div id="message">
-        Klicke auf das Spiel, um zu starten
+        Klicke auf das Spiel zum Starten
     </div>
+
+    <button id="shootButton">ACTION</button>
 
 </div>
 
@@ -152,70 +188,50 @@ html,body{
 
 <script>
 
-let scene;
-let camera;
-let renderer;
-
-let ship=null;
-
-let yaw=0;
-let pitch=0;
-
-let pointerLocked=false;
-
-const keys={
-    w:false,
-    a:false,
-    s:false,
-    d:false
-};
-
-const playerOffset=new THREE.Vector3(
-    0,
-    2.2,
-    0
-);
-
-/* =========================================
+/* =====================================================
    SZENE
-========================================= */
+===================================================== */
 
-scene=new THREE.Scene();
+const scene=new THREE.Scene();
 
-scene.background=new THREE.Color(
-    0x76b8e8
+scene.background=
+new THREE.Color(
+    0x7bc5ef
 );
 
-scene.fog=new THREE.Fog(
-    0x76b8e8,
-    80,
-    500
+scene.fog=
+new THREE.Fog(
+    0x7bc5ef,
+    100,
+    600
 );
 
 
-/* =========================================
+/* =====================================================
    KAMERA
-========================================= */
+===================================================== */
 
-camera=new THREE.PerspectiveCamera(
+const camera=
+new THREE.PerspectiveCamera(
     75,
     innerWidth/innerHeight,
     0.1,
-    2000
+    1000
 );
 
 camera.position.set(
     0,
-    3,
-    5
+    1.7,
+    0
 );
 
 
-/* =========================================
+/* =====================================================
    RENDERER
-========================================= */
+===================================================== */
 
-renderer=new THREE.WebGLRenderer({
+const renderer=
+new THREE.WebGLRenderer({
     antialias:true
 });
 
@@ -240,14 +256,14 @@ document
 );
 
 
-/* =========================================
+/* =====================================================
    LICHT
-========================================= */
+===================================================== */
 
 const skyLight=
 new THREE.HemisphereLight(
     0xffffff,
-    0x244455,
+    0x376b30,
     2
 );
 
@@ -263,9 +279,9 @@ new THREE.DirectionalLight(
 );
 
 sun.position.set(
+    50,
     100,
-    150,
-    80
+    50
 );
 
 sun.castShadow=true;
@@ -275,74 +291,174 @@ scene.add(
 );
 
 
-/* =========================================
-   OZEAN
-========================================= */
+/* =====================================================
+   GRÜNE FLÄCHE
+===================================================== */
 
-const oceanGeometry=
-new THREE.PlaneGeometry(
-    3000,
-    3000,
-    100,
-    100
-);
-
-const oceanMaterial=
-new THREE.MeshStandardMaterial({
-
-    color:0x176b9e,
-
-    roughness:.25,
-
-    metalness:.15
-
-});
-
-const ocean=
+const ground=
 new THREE.Mesh(
-    oceanGeometry,
-    oceanMaterial
+
+    new THREE.PlaneGeometry(
+        1000,
+        1000
+    ),
+
+    new THREE.MeshStandardMaterial({
+
+        color:0x3c9b45,
+
+        roughness:.9
+
+    })
+
 );
 
-ocean.rotation.x=
+ground.rotation.x=
 -Math.PI/2;
 
-ocean.position.y=
-0;
+ground.receiveShadow=true;
 
 scene.add(
-    ocean
+    ground
 );
 
 
-/* =========================================
-   WASSER-WELLEN
-========================================= */
+/* =====================================================
+   EINFACHE TRAININGSZIELE
+===================================================== */
 
-const oceanPositions=
-ocean.geometry.attributes.position;
+const targets=[];
 
-const originalOceanPositions=[];
+function createTarget(x,z){
 
-for(
-    let i=0;
-    i<oceanPositions.count;
-    i++
-){
+    const group=
+    new THREE.Group();
 
-    originalOceanPositions.push(
-        oceanPositions.getY(i)
+
+    const stand=
+    new THREE.Mesh(
+
+        new THREE.CylinderGeometry(
+            .12,
+            .12,
+            1.4,
+            10
+        ),
+
+        new THREE.MeshStandardMaterial({
+            color:0x555555
+        })
+
     );
+
+    stand.position.y=.7;
+
+
+    const target=
+    new THREE.Mesh(
+
+        new THREE.CylinderGeometry(
+            .8,
+            .8,
+            .18,
+            32
+        ),
+
+        new THREE.MeshStandardMaterial({
+
+            color:0xff5533,
+
+            emissive:0x551100
+
+        })
+
+    );
+
+    target.rotation.x=
+    Math.PI/2;
+
+    target.position.y=
+    1.6;
+
+
+    group.add(
+        stand
+    );
+
+    group.add(
+        target
+    );
+
+
+    group.position.set(
+        x,
+        0,
+        z
+    );
+
+
+    scene.add(
+        group
+    );
+
+
+    targets.push({
+
+        group:group,
+
+        target:target
+
+    });
 
 }
 
 
-/* =========================================
-   SCHIFF LADEN
-========================================= */
+createTarget(
+    -6,
+    -15
+);
+
+createTarget(
+    4,
+    -22
+);
+
+createTarget(
+    0,
+    -32
+);
+
+createTarget(
+    10,
+    -40
+);
+
+createTarget(
+    -12,
+    -45
+);
+
+
+/* =====================================================
+   1.GLB LADEN
+===================================================== */
 
 const loader=
 new THREE.GLTFLoader();
+
+
+let model=null;
+
+const modelHolder=
+new THREE.Group();
+
+camera.add(
+    modelHolder
+);
+
+scene.add(
+    camera
+);
 
 
 loader.load(
@@ -351,49 +467,79 @@ loader.load(
 
     function(gltf){
 
-        ship=
+        model=
         gltf.scene;
 
 
-        /* Schiff-Größe */
+        /*
+        AUTOMATISCHE GRÖSSENANPASSUNG
+        */
 
-        ship.scale.set(
-            1,
-            1,
-            1
+        const box=
+        new THREE.Box3()
+        .setFromObject(
+            model
         );
 
 
-        /* Startposition */
+        const size=
+        new THREE.Vector3();
 
-        ship.position.set(
+        box.getSize(
+            size
+        );
+
+
+        const maxSize=
+        Math.max(
+            size.x,
+            size.y,
+            size.z
+        );
+
+
+        const wantedSize=
+        1.5;
+
+
+        const scale=
+        wantedSize/
+        maxSize;
+
+
+        model.scale.setScalar(
+            scale
+        );
+
+
+        /*
+        POSITION IM FIRST-PERSON-BLICK
+        */
+
+        model.position.set(
+
+            .55,
+
+            -.55,
+
+            -1.1
+
+        );
+
+
+        model.rotation.set(
+
             0,
-            0,
+
+            Math.PI,
+
             0
+
         );
 
 
-        scene.add(
-            ship
-        );
-
-
-        /* Schatten */
-
-        ship.traverse(
-            function(object){
-
-                if(
-                    object.isMesh
-                ){
-
-                    object.castShadow=true;
-
-                    object.receiveShadow=true;
-
-                }
-
-            }
+        modelHolder.add(
+            model
         );
 
 
@@ -406,44 +552,17 @@ loader.load(
         document
         .getElementById("message")
         .textContent=
-        "🚢 Schiff geladen! Klicke zum Starten";
+        "Bereit · Klick zum Umschauen";
 
 
         console.log(
-            "1.glb erfolgreich geladen"
+            "1.glb geladen"
         );
 
     },
 
 
-    function(xhr){
-
-        if(
-            xhr.total
-        ){
-
-            const percent=
-            Math.round(
-                xhr.loaded/
-                xhr.total*
-                100
-            );
-
-
-            document
-            .getElementById("loading")
-            .innerHTML=
-
-            `
-            <div>
-            🚢 Schiff wird geladen...
-            <small>${percent}%</small>
-            </div>
-            `;
-
-        }
-
-    },
+    undefined,
 
 
     function(error){
@@ -456,14 +575,11 @@ loader.load(
         document
         .getElementById("loading")
         .innerHTML=
-
         `
-        <div>
         ❌ 1.glb konnte nicht geladen werden
         <small>
-        Prüfe, ob 1.glb im selben Ordner wie index.html liegt.
+        Die Datei muss im selben Ordner wie index.html liegen.
         </small>
-        </div>
         `;
 
     }
@@ -471,9 +587,16 @@ loader.load(
 );
 
 
-/* =========================================
+/* =====================================================
    POINTER LOCK
-========================================= */
+===================================================== */
+
+let locked=false;
+
+let yaw=0;
+
+let pitch=0;
+
 
 renderer.domElement
 .addEventListener(
@@ -482,8 +605,7 @@ renderer.domElement
 
     function(){
 
-        renderer
-        .domElement
+        renderer.domElement
         .requestPointerLock();
 
     }
@@ -498,31 +620,20 @@ document
 
     function(){
 
-        pointerLocked=
+        locked=
 
         document.pointerLockElement===
+
         renderer.domElement;
-
-
-        if(
-            pointerLocked
-        ){
-
-            document
-            .getElementById("message")
-            .textContent=
-            "🎣 Du bist auf dem Schiff";
-
-        }
 
     }
 
 );
 
 
-/* =========================================
+/* =====================================================
    MAUS
-========================================= */
+===================================================== */
 
 document
 .addEventListener(
@@ -532,40 +643,64 @@ document
     function(event){
 
         if(
-            !pointerLocked
+            !locked
         )return;
 
 
         yaw-=
+
         event.movementX*
-        0.0025;
+        .0025;
 
 
         pitch-=
+
         event.movementY*
-        0.0025;
+        .0025;
 
 
         pitch=
         Math.max(
 
-            -1.4,
+            -1.3,
 
             Math.min(
-                1.4,
+                1.3,
                 pitch
             )
 
         );
+
+
+        camera.rotation.order=
+        "YXZ";
+
+
+        camera.rotation.y=
+        yaw;
+
+
+        camera.rotation.x=
+        pitch;
 
     }
 
 );
 
 
-/* =========================================
-   TASTATUR
-========================================= */
+/* =====================================================
+   BEWEGUNG
+===================================================== */
+
+const keys={
+
+    w:false,
+    a:false,
+    s:false,
+    d:false
+
+};
+
 
 document
 .addEventListener(
@@ -575,7 +710,8 @@ document
     function(event){
 
         const key=
-        event.key.toLowerCase();
+        event.key
+        .toLowerCase();
 
 
         if(
@@ -599,7 +735,8 @@ document
     function(event){
 
         const key=
-        event.key.toLowerCase();
+        event.key
+        .toLowerCase();
 
 
         if(
@@ -615,26 +752,19 @@ document
 );
 
 
-/* =========================================
-   SPIELER AUF SCHIFF BEWEGEN
-========================================= */
-
 function updatePlayer(){
 
-    if(
-        !ship
-    )return;
-
-
     const speed=
-    0.045;
+    .08;
 
 
     const forward=
     new THREE.Vector3(
 
         -Math.sin(yaw),
+
         0,
+
         -Math.cos(yaw)
 
     );
@@ -644,7 +774,9 @@ function updatePlayer(){
     new THREE.Vector3(
 
         Math.cos(yaw),
+
         0,
+
         -Math.sin(yaw)
 
     );
@@ -654,7 +786,7 @@ function updatePlayer(){
         keys.w
     ){
 
-        playerOffset
+        camera.position
         .addScaledVector(
             forward,
             speed
@@ -667,7 +799,7 @@ function updatePlayer(){
         keys.s
     ){
 
-        playerOffset
+        camera.position
         .addScaledVector(
             forward,
             -speed
@@ -680,7 +812,7 @@ function updatePlayer(){
         keys.a
     ){
 
-        playerOffset
+        camera.position
         .addScaledVector(
             right,
             -speed
@@ -693,7 +825,7 @@ function updatePlayer(){
         keys.d
     ){
 
-        playerOffset
+        camera.position
         .addScaledVector(
             right,
             speed
@@ -702,187 +834,309 @@ function updatePlayer(){
     }
 
 
-    /* Spieler auf Deck begrenzen */
-
-    playerOffset.x=
-    Math.max(
-        -4,
-        Math.min(
-            4,
-            playerOffset.x
-        )
-    );
-
-
-    playerOffset.z=
-    Math.max(
-        -6,
-        Math.min(
-            6,
-            playerOffset.z
-        )
-    );
-
-
-    /*
-       Kamera ist mit dem
-       Schiff verbunden
-    */
-
-    const worldOffset=
-    playerOffset
-    .clone();
-
-
-    worldOffset.applyQuaternion(
-        ship.quaternion
-    );
-
-
-    camera.position.copy(
-        ship.position
-    );
-
-
-    camera.position.add(
-        worldOffset
-    );
-
-
-    camera.rotation.order=
-    "YXZ";
-
-
-    camera.rotation.y=
-    yaw;
-
-
-    camera.rotation.x=
-    pitch;
+    camera.position.y=
+    1.7;
 
 }
 
 
-/* =========================================
-   SCHIFF BEWEGUNG
-========================================= */
+/* =====================================================
+   SICHERE ACTION-ANIMATION
+===================================================== */
 
-function updateShip(time){
+let actionTimer=0;
+
+let actionActive=false;
+
+
+function doAction(){
 
     if(
-        !ship
+        actionActive
     )return;
 
 
-    /* Sanftes Schaukeln */
+    actionActive=true;
 
-    ship.rotation.z=
-    Math.sin(
-        time*
-        0.0007
-    )*
-    0.025;
+    actionTimer=0;
 
 
-    ship.rotation.x=
-    Math.sin(
-        time*
-        0.0005
-    )*
-    0.015;
+    /*
+    VISUELLE RÜCKSTOSS-ANIMATION
+    DES 3D-MODELLS
+    */
 
-
-    ship.position.y=
-    Math.sin(
-        time*
-        0.001
-    )*
-    0.12;
-
-}
-
-
-/* =========================================
-   WASSER ANIMIEREN
-========================================= */
-
-function updateOcean(time){
-
-    for(
-        let i=0;
-        i<oceanPositions.count;
-        i++
+    if(
+        model
     ){
 
-        const x=
-        oceanPositions.getX(i);
-
-
-        const z=
-        oceanPositions.getZ(i);
-
-
-        const wave=
-
-        Math.sin(
-            x*
-            0.015+
-            time*
-            0.001
-        )*
-
-        0.18+
-
-        Math.cos(
-            z*
-            0.02+
-            time*
-            0.0008
-        )*
-
-        0.12;
-
-
-        oceanPositions.setY(
-            i,
-            wave
-        );
+        model.position.z=
+        -.82;
 
     }
 
 
-    oceanPositions.needsUpdate=
-    true;
+    /*
+    RAYCAST NUR FÜR
+    TRAININGSZIELE
+    */
+
+    const raycaster=
+    new THREE.Raycaster();
 
 
-    ocean.geometry
-    .computeVertexNormals();
+    raycaster.setFromCamera(
+
+        new THREE.Vector2(
+            0,
+            0
+        ),
+
+        camera
+
+    );
+
+
+    const targetMeshes=
+    targets.map(
+        t=>t.target
+    );
+
+
+    const hits=
+    raycaster.intersectObjects(
+        targetMeshes
+    );
+
+
+    if(
+        hits.length>0
+    ){
+
+        const hit=
+        hits[0].object;
+
+
+        const data=
+        targets.find(
+            t=>t.target===hit
+        );
+
+
+        if(
+            data
+        ){
+
+            scene.remove(
+                data.group
+            );
+
+
+            targets.splice(
+                targets.indexOf(data),
+                1
+            );
+
+
+            score+=10;
+
+
+            document
+            .getElementById("score")
+            .textContent=
+            score;
+
+
+            document
+            .getElementById("message")
+            .textContent=
+            "🎯 Trainingsziel getroffen!";
+
+        }
+
+    }
+
+
+    /*
+    KURZER LICHTEFFEKT
+    */
+
+    const flash=
+    new THREE.PointLight(
+        0xffffff,
+        3,
+        5
+    );
+
+
+    flash.position.copy(
+        camera.position
+    );
+
+
+    scene.add(
+        flash
+    );
+
+
+    setTimeout(
+
+        ()=>{
+
+            scene.remove(
+                flash
+            );
+
+        },
+
+        70
+
+    );
 
 }
 
 
-/* =========================================
-   RENDER LOOP
-========================================= */
+let score=0;
 
-function animate(time){
+
+/* =====================================================
+   ACTION PER MAUS
+===================================================== */
+
+renderer.domElement
+.addEventListener(
+
+    "mousedown",
+
+    function(event){
+
+        if(
+            event.button===0
+        ){
+
+            doAction();
+
+        }
+
+    }
+
+);
+
+
+document
+.getElementById("shootButton")
+.addEventListener(
+
+    "click",
+
+    function(){
+
+        doAction();
+
+    }
+
+);
+
+
+/* =====================================================
+   ANIMATION
+===================================================== */
+
+function updateAction(){
+
+    if(
+        !actionActive
+    )return;
+
+
+    actionTimer++;
+
+
+    if(
+        model
+    ){
+
+        /*
+        Modell bewegt sich kurz
+        nach hinten und wieder vor.
+        */
+
+        const progress=
+        actionTimer/
+        8;
+
+
+        model.position.z=
+
+        -.82-
+
+        Math.sin(
+            progress*
+            Math.PI
+        )*
+        .18;
+
+    }
+
+
+    if(
+        actionTimer>8
+    ){
+
+        actionActive=false;
+
+
+        if(
+            model
+        ){
+
+            model.position.z=
+            -1.1;
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   RENDER LOOP
+===================================================== */
+
+function animate(){
 
     requestAnimationFrame(
         animate
     );
 
 
-    updateOcean(
-        time
-    );
-
-
-    updateShip(
-        time
-    );
-
-
     updatePlayer();
+
+
+    updateAction();
+
+
+    /*
+    Ziele bewegen sich leicht
+    */
+
+    targets.forEach(
+
+        (data,index)=>{
+
+            data.group.position.y=
+
+            Math.sin(
+                Date.now()*
+                .002+
+                index
+            )*
+            .08;
+
+        }
+
+    );
 
 
     renderer.render(
@@ -893,14 +1147,12 @@ function animate(time){
 }
 
 
-animate(
-    0
-);
+animate();
 
 
-/* =========================================
-   FENSTERGRÖSSE
-========================================= */
+/* =====================================================
+   RESIZE
+===================================================== */
 
 window
 .addEventListener(
@@ -915,13 +1167,14 @@ window
         innerHeight;
 
 
-        camera
-        .updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
 
         renderer.setSize(
+
             innerWidth,
             innerHeight
+
         );
 
     }
