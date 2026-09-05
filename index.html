@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Eigenes AR Cube Game</title>
+<title>GPS Text Position</title>
 
 <style>
 *{
@@ -16,652 +16,315 @@ width:100%;
 height:100%;
 overflow:hidden;
 font-family:Arial,sans-serif;
-background:#000;
+background:#111;
+}
+
+#world{
+position:relative;
+width:100vw;
+height:100vh;
+overflow:hidden;
+background:
+linear-gradient(45deg,#1b2730,#0d1218);
+}
+
+#player{
+position:absolute;
+left:50%;
+top:50%;
+width:18px;
+height:18px;
+border-radius:50%;
+background:#00aaff;
+transform:translate(-50%,-50%);
+box-shadow:0 0 20px #00aaff;
+z-index:5;
+}
+
+#text{
+position:absolute;
+left:50%;
+top:42%;
+transform:translate(-50%,-50%);
+color:white;
+font-size:28px;
+font-weight:bold;
+text-align:center;
+white-space:nowrap;
+text-shadow:
+0 2px 4px black,
+0 0 15px #00aaff;
 }
 
 #info{
 position:fixed;
-top:15px;
-left:50%;
-transform:translateX(-50%);
+left:10px;
+bottom:10px;
 z-index:10;
-
+background:#000c;
 color:white;
-background:#000b;
-
-padding:12px 18px;
-
-border-radius:12px;
-
-text-align:center;
-
-max-width:90%;
+padding:12px;
+border-radius:10px;
+font-family:monospace;
 }
 
 #start{
 position:fixed;
-
 left:50%;
 top:50%;
-
 transform:translate(-50%,-50%);
-
-z-index:20;
-
-border:none;
-
-border-radius:14px;
+z-index:100;
 
 padding:18px 30px;
+border:0;
+border-radius:12px;
 
 font-size:20px;
-
 font-weight:bold;
 
 cursor:pointer;
-}
-
-#gps{
-position:fixed;
-
-bottom:15px;
-left:15px;
-
-z-index:10;
-
-color:white;
-
-background:#000b;
-
-padding:10px;
-
-border-radius:10px;
-
-font-family:monospace;
-
-font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="info">
-📦 Starte AR und platziere den Würfel auf einer Fläche
+<div id="world">
+
+<div id="player"></div>
+
+<div id="text">
+📍 DEINE POSITION
+</div>
+
 </div>
 
 <button id="start">
-📷 AR STARTEN
+📍 POSITION STARTEN
 </button>
 
-<div id="gps">
-GPS wird noch nicht geladen...
+<div id="info">
+Noch nicht gestartet
 </div>
 
-<script type="module">
+<script>
 
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+let startLatitude=null;
+let startLongitude=null;
 
-import { ARButton } from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/ARButton.js";
+const info=
+document.getElementById("info");
 
+const text=
+document.getElementById("text");
 
-/* =========================================
-   THREE.JS
-========================================= */
-
-const scene =
-new THREE.Scene();
+const start=
+document.getElementById("start");
 
 
-const camera =
-new THREE.PerspectiveCamera(
-70,
-innerWidth / innerHeight,
-0.01,
-100
+start.onclick=function(){
+
+if(!navigator.geolocation){
+
+info.innerHTML=
+"❌ GPS wird nicht unterstützt";
+
+return;
+
+}
+
+
+info.innerHTML=
+"📡 Suche Position...";
+
+
+navigator.geolocation.watchPosition(
+
+function(position){
+
+const latitude=
+position.coords.latitude;
+
+const longitude=
+position.coords.longitude;
+
+const accuracy=
+position.coords.accuracy;
+
+
+/* =========================
+   ERSTE POSITION
+========================= */
+
+if(
+startLatitude===null
+){
+
+startLatitude=
+latitude;
+
+startLongitude=
+longitude;
+
+
+/*
+Der Text wird
+an deiner Startposition
+platziert.
+*/
+
+text.innerHTML=
+"📍 STARTPOSITION";
+
+
+start.style.display=
+"none";
+
+
+}
+
+
+/* =========================
+   ENTFERNUNG BERECHNEN
+========================= */
+
+const R=
+6371000;
+
+
+const lat1=
+startLatitude*Math.PI/180;
+
+const lat2=
+latitude*Math.PI/180;
+
+const deltaLat=
+(latitude-startLatitude)
+*Math.PI/180;
+
+const deltaLon=
+(longitude-startLongitude)
+*Math.PI/180;
+
+
+const a=
+
+Math.sin(deltaLat/2)*
+Math.sin(deltaLat/2)
+
++
+
+Math.cos(lat1)*
+Math.cos(lat2)
+
+*
+
+Math.sin(deltaLon/2)*
+Math.sin(deltaLon/2);
+
+
+const c=
+
+2*Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
 );
 
 
-const renderer =
-new THREE.WebGLRenderer({
-
-antialias:true,
-alpha:true
-
-});
+const distance=
+R*c;
 
 
-renderer.setSize(
-innerWidth,
-innerHeight
-);
+/* =========================
+   TEXT RELATIV BEWEGEN
+========================= */
 
 
-renderer.xr.enabled =
-true;
+/*
+Der Spieler bleibt
+in der Bildschirmmitte.
+
+Die Startposition
+wird je nach Entfernung
+verschoben dargestellt.
+*/
 
 
-document.body.appendChild(
-renderer.domElement
-);
+const scale=5;
 
 
-/* =========================================
-   LICHT
-========================================= */
+let y=
 
-const light =
-new THREE.HemisphereLight(
-
-0xffffff,
-0x444444,
-2
-
-);
+42 + distance*scale;
 
 
-scene.add(
-light
-);
+/*
+Nicht aus dem Bildschirm
+verschwinden lassen
+*/
 
-
-/* =========================================
-   WÜRFEL
-========================================= */
-
-const cube =
-new THREE.Mesh(
-
-new THREE.BoxGeometry(
-0.25,
-0.25,
-0.25
-),
-
-new THREE.MeshStandardMaterial({
-
-color:0x00ff55,
-
-metalness:0.3,
-
-roughness:0.4
-
-})
-
-);
-
-
-cube.visible =
-false;
-
-
-scene.add(
-cube
-);
-
-
-/* =========================================
-   RETICLE
-   Zeigt erkannte Fläche
-========================================= */
-
-const reticle =
-new THREE.Mesh(
-
-new THREE.RingGeometry(
-0.08,
-0.1,
-32
+y=Math.max(
+5,
+Math.min(
+95,
+y
 )
 );
 
 
-reticle.rotation.x =
--Math.PI / 2;
+text.style.top=
+y+"%";
 
 
-reticle.matrixAutoUpdate =
-false;
+info.innerHTML=
 
+"📍 AKTUELLE POSITION<br>" +
 
-reticle.visible =
-false;
+"Breite: "+
+latitude.toFixed(6)+
+"<br>" +
 
+"Länge: "+
+longitude.toFixed(6)+
+"<br>" +
 
-scene.add(
-reticle
-);
-
-
-/* =========================================
-   GPS
-========================================= */
-
-let latitude =
-null;
-
-let longitude =
-null;
-
-
-function updateGPS(){
-
-navigator.geolocation.getCurrentPosition(
-
-function(position){
-
-latitude =
-position.coords.latitude;
-
-longitude =
-position.coords.longitude;
-
-
-document
-.getElementById("gps")
-.innerHTML =
-
-"GPS<br>" +
-
-"Lat: " +
-latitude.toFixed(6) +
+"GPS Genauigkeit: "+
+accuracy.toFixed(1)+
+" m<br>" +
 
 "<br>" +
 
-"Lon: " +
-longitude.toFixed(6);
+"🚶 Entfernung vom Start:<br>" +
+
+distance.toFixed(1)+
+" m";
+
 
 },
 
 function(error){
 
-document
-.getElementById("gps")
-.innerHTML =
+info.innerHTML=
 
-"GPS nicht verfügbar";
+"❌ Position nicht verfügbar<br>" +
+
+error.message;
 
 },
 
 {
 
-enableHighAccuracy:true
+enableHighAccuracy:true,
+
+maximumAge:0,
+
+timeout:10000
 
 }
 
 );
 
-}
-
-
-updateGPS();
-
-
-setInterval(
-updateGPS,
-5000
-);
-
-
-/* =========================================
-   AR START
-========================================= */
-
-let hitTestSource =
-null;
-
-let localReferenceSpace =
-null;
-
-
-document
-.getElementById("start")
-.addEventListener(
-
-"click",
-
-async function(){
-
-if(
-!navigator.xr
-){
-
-document
-.getElementById("info")
-.textContent =
-
-"❌ WebXR wird auf diesem Gerät nicht unterstützt.";
-
-return;
-
-}
-
-
-try{
-
-
-const session =
-
-await navigator.xr.requestSession(
-
-"immersive-ar",
-
-{
-
-requiredFeatures:[
-
-"hit-test"
-
-],
-
-optionalFeatures:[
-
-"dom-overlay"
-
-],
-
-domOverlay:{
-
-root:document.body
-
-}
-
-}
-
-);
-
-
-renderer.xr.setSession(
-session
-);
-
-
-document
-.getElementById("start")
-.style.display =
-"none";
-
-
-document
-.getElementById("info")
-.textContent =
-
-"Bewege dein Handy und suche eine erkannte Fläche.";
-
-
-const viewerSpace =
-
-await session.requestReferenceSpace(
-
-"viewer"
-
-);
-
-
-hitTestSource =
-
-await session.requestHitTestSource({
-
-space:viewerSpace
-
-});
-
-
-localReferenceSpace =
-
-await session.requestReferenceSpace(
-
-"local"
-
-);
-
-
-session.addEventListener(
-
-"end",
-
-function(){
-
-hitTestSource =
-null;
-
-localReferenceSpace =
-null;
-
-cube.visible =
-false;
-
-}
-
-);
-
-
-}catch(error){
-
-console.error(error);
-
-
-document
-.getElementById("info")
-.textContent =
-
-"❌ AR konnte nicht gestartet werden.";
-
-}
-
-}
-
-);
-
-
-/* =========================================
-   WÜRFEL PLATZIEREN
-========================================= */
-
-let placed =
-false;
-
-
-renderer.domElement
-.addEventListener(
-
-"click",
-
-function(){
-
-if(
-!reticle.visible
-){
-
-return;
-
-}
-
-
-if(
-placed
-){
-
-return;
-
-}
-
-
-/*
-   Der Würfel wird
-   auf die erkannte
-   reale Fläche gesetzt
-*/
-
-cube.position.setFromMatrixPosition(
-
-reticle.matrix
-
-);
-
-
-cube.quaternion.setFromRotationMatrix(
-
-reticle.matrix
-
-);
-
-
-cube.position.y +=
-0.125;
-
-
-cube.visible =
-true;
-
-
-placed =
-true;
-
-
-document
-.getElementById("info")
-.textContent =
-
-"📦 Würfel platziert!";
-
-}
-
-);
-
-
-/* =========================================
-   AR LOOP
-========================================= */
-
-renderer.setAnimationLoop(
-
-function(
-
-time,
-frame
-
-){
-
-if(
-
-frame &&
-
-hitTestSource &&
-
-localReferenceSpace
-
-){
-
-
-const hitTestResults =
-
-frame.getHitTestResults(
-
-hitTestSource
-
-);
-
-
-if(
-
-hitTestResults.length > 0
-
-){
-
-
-const hit =
-
-hitTestResults[0];
-
-
-const pose =
-
-hit.getPose(
-
-localReferenceSpace
-
-);
-
-
-reticle.visible =
-true;
-
-
-reticle.matrix.fromArray(
-
-pose.transform.matrix
-
-);
-
-
-}else{
-
-reticle.visible =
-false;
-
-}
-
-}
-
-
-/*
-   Würfel dreht sich
-*/
-
-if(
-cube.visible
-){
-
-cube.rotation.y +=
-0.01;
-
-}
-
-
-renderer.render(
-
-scene,
-camera
-
-);
-
-}
-
-);
-
-
-/* =========================================
-   RESIZE
-========================================= */
-
-window.addEventListener(
-
-"resize",
-
-function(){
-
-camera.aspect =
-
-innerWidth /
-innerHeight;
-
-
-camera.updateProjectionMatrix();
-
-
-renderer.setSize(
-
-innerWidth,
-innerHeight
-
-);
-
-}
-
-);
+};
 
 </script>
 
