@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>FPS Weapon Fixed</title>
+<title>FPS Weapon FIX</title>
 
 <style>
 html,body{
@@ -13,7 +12,6 @@ html,body{
     height:100%;
     overflow:hidden;
     background:#87cfff;
-    font-family:Arial,sans-serif;
 }
 
 canvas{
@@ -24,10 +22,10 @@ canvas{
     position:fixed;
     left:50%;
     top:50%;
-    width:16px;
-    height:16px;
+    width:18px;
+    height:18px;
     transform:translate(-50%,-50%);
-    z-index:20;
+    z-index:10;
     pointer-events:none;
 }
 
@@ -41,56 +39,38 @@ canvas{
 
 #crosshair:before{
     width:2px;
-    height:16px;
-    left:7px;
+    height:18px;
+    left:8px;
 }
 
 #crosshair:after{
-    width:16px;
+    width:18px;
     height:2px;
-    top:7px;
+    top:8px;
 }
 
 #status{
     position:fixed;
     top:10px;
     left:10px;
-    z-index:50;
-    padding:9px 12px;
-    background:rgba(0,0,0,.7);
+    z-index:100;
+    padding:8px 12px;
     color:white;
-    border-radius:7px;
+    background:rgba(0,0,0,.7);
     font:13px monospace;
+    border-radius:6px;
 }
 
 #coords{
     position:fixed;
     right:10px;
     bottom:10px;
-    z-index:50;
+    z-index:100;
     color:white;
     background:rgba(0,0,0,.6);
     padding:8px;
-    border-radius:7px;
     font:12px monospace;
     white-space:pre;
-}
-
-#health{
-    position:fixed;
-    left:10px;
-    bottom:10px;
-    width:220px;
-    height:20px;
-    border:2px solid white;
-    background:#222;
-    z-index:50;
-}
-
-#healthFill{
-    width:100%;
-    height:100%;
-    background:#20dd50;
 }
 
 #hitmarker{
@@ -99,9 +79,26 @@ canvas{
     top:50%;
     transform:translate(-50%,-50%);
     color:white;
-    font-size:38px;
+    font:bold 36px Arial;
     display:none;
-    z-index:60;
+    z-index:100;
+}
+
+#health{
+    position:fixed;
+    left:10px;
+    bottom:10px;
+    width:220px;
+    height:18px;
+    border:2px solid white;
+    background:#222;
+    z-index:100;
+}
+
+#healthFill{
+    width:100%;
+    height:100%;
+    background:#21d94d;
 }
 </style>
 </head>
@@ -112,11 +109,11 @@ canvas{
 <div id="crosshair"></div>
 <div id="hitmarker">✖</div>
 
-<div id="coords"></div>
-
 <div id="health">
-    <div id="healthFill"></div>
+<div id="healthFill"></div>
 </div>
+
+<div id="coords"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -140,7 +137,8 @@ scene.background =
 const camera =
     new THREE.PerspectiveCamera(
         75,
-        innerWidth / innerHeight,
+        window.innerWidth /
+        window.innerHeight,
         0.01,
         5000
     );
@@ -156,12 +154,15 @@ const renderer =
     });
 
 renderer.setSize(
-    innerWidth,
-    innerHeight
+    window.innerWidth,
+    window.innerHeight
 );
 
 renderer.setPixelRatio(
-    Math.min(devicePixelRatio,2)
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
 );
 
 renderer.outputEncoding =
@@ -179,20 +180,20 @@ document.body.appendChild(
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        1.8
+        2
     )
 );
 
 const sun =
     new THREE.DirectionalLight(
         0xffffff,
-        2.5
+        3
     );
 
 sun.position.set(
-    20,
+    10,
     30,
-    10
+    20
 );
 
 scene.add(sun);
@@ -202,18 +203,18 @@ scene.add(sun);
    GROUND
 ========================================================= */
 
-const grass =
+const texture =
     new THREE.TextureLoader().load(
         "https://threejs.org/examples/textures/terrain/grasslight-big.jpg"
     );
 
-grass.wrapS =
+texture.wrapS =
     THREE.RepeatWrapping;
 
-grass.wrapT =
+texture.wrapT =
     THREE.RepeatWrapping;
 
-grass.repeat.set(
+texture.repeat.set(
     100,
     100
 );
@@ -225,7 +226,7 @@ const ground =
             5000
         ),
         new THREE.MeshStandardMaterial({
-            map:grass
+            map:texture
         })
     );
 
@@ -254,39 +255,46 @@ camera.position.set(
 
 
 /* =========================================================
-   WEAPON HOLDER
+   WEAPON ROOT
 ========================================================= */
 
 /*
-    Dieser Holder sitzt DIREKT an der Kamera.
+   WICHTIG:
 
-    Deshalb folgt die Waffe:
-    - Drehung
-    - Blickrichtung
-    - Bewegung
-    - Kamera
+   Die Waffe bekommt einen eigenen Root.
+
+   Dieser Root sitzt direkt an der Kamera.
+
+   Das GLB selbst wird DARUNTER gesetzt.
+
+   Dadurch kann die interne Position des GLB
+   nicht mehr dafür sorgen, dass die ganze
+   Waffe links außerhalb des Bildes sitzt.
 */
 
-const weaponHolder =
+const weaponRoot =
     new THREE.Object3D();
 
 camera.add(
-    weaponHolder
+    weaponRoot
 );
 
+
+/* =========================================================
+   FESTE FIRST-PERSON POSITION
+========================================================= */
 
 /*
-    NICHT seitlich verschieben.
+   Diese Werte sind RELATIV zur Kamera.
 
-    Die Position der Waffe wird
-    direkt am Holder eingestellt.
+   X = rechts
+   Y = unten
+   Z = vor der Kamera
 */
 
-weaponHolder.position.set(
-    0,
-    0,
-    0
-);
+const HAND_X = 0.65;
+const HAND_Y = -0.55;
+const HAND_Z = -1.15;
 
 
 /* =========================================================
@@ -298,36 +306,9 @@ const loader =
 
 let weapon = null;
 
-let recoil = 0;
-
-
-/*
-    First-Person Position.
-
-    X:
-    positiv = rechts
-
-    Y:
-    negativ = unten
-
-    Z:
-    negativ = vor Kamera
-*/
-
-const WEAPON_X = 0.42;
-const WEAPON_Y = -0.48;
-const WEAPON_Z = -0.95;
-
-
-/*
-    Zielgröße.
-*/
-
-const WEAPON_SIZE = 1.25;
-
 
 /* =========================================================
-   GLB LADEN
+   LOAD GLB
 ========================================================= */
 
 loader.load(
@@ -336,28 +317,59 @@ loader.load(
 
     function(gltf){
 
+        console.log(
+            "weapon.glb geladen"
+        );
+
+
+        /*
+           ================================================
+           GLB
+           ================================================
+        */
+
         weapon =
             gltf.scene;
 
 
-        console.log(
-            "weapon.glb geladen!"
+        /*
+           ================================================
+           RESET
+           ================================================
+        */
+
+        weapon.position.set(
+            0,
+            0,
+            0
+        );
+
+        weapon.rotation.set(
+            0,
+            0,
+            0
+        );
+
+        weapon.scale.set(
+            1,
+            1,
+            1
         );
 
 
-        /* ================================================
-           SICHTBARKEIT
-        ================================================ */
-
-        weapon.visible = true;
-
+        /*
+           ================================================
+           ALLE MESHES
+           ================================================
+        */
 
         weapon.traverse(
             function(obj){
 
                 if(obj.isMesh){
 
-                    obj.visible = true;
+                    obj.visible =
+                        true;
 
                     obj.frustumCulled =
                         false;
@@ -402,9 +414,12 @@ loader.load(
         );
 
 
-        /* ================================================
-           ALLES AUF URSPRUNG ZENTRIEREN
-        ================================================ */
+        /*
+           ================================================
+           SCHRITT 1:
+           ECHTE BOX DES GLB
+           ================================================
+        */
 
         let box =
             new THREE.Box3()
@@ -413,32 +428,61 @@ loader.load(
             );
 
 
-        let center =
+        let size =
             new THREE.Vector3();
 
+        box.getSize(
+            size
+        );
+
+
+        let center =
+            new THREE.Vector3();
 
         box.getCenter(
             center
         );
 
 
-        weapon.position.sub(
+        console.log(
+            "Original BOX:",
+            box
+        );
+
+        console.log(
+            "Original SIZE:",
+            size
+        );
+
+        console.log(
+            "Original CENTER:",
             center
         );
 
 
-        /* ================================================
-           GRÖSSE
-        ================================================ */
+        /*
+           ================================================
+           SCHRITT 2:
+           ALLE GLB-INTERNEN POSITIONEN ZENTRIEREN
+           ================================================
+        */
 
-        let size =
-            new THREE.Vector3();
+        weapon.position.x =
+            -center.x;
+
+        weapon.position.y =
+            -center.y;
+
+        weapon.position.z =
+            -center.z;
 
 
-        box.getSize(
-            size
-        );
-
+        /*
+           ================================================
+           SCHRITT 3:
+           SCALE
+           ================================================
+        */
 
         const largest =
             Math.max(
@@ -448,13 +492,17 @@ loader.load(
             );
 
 
+        const TARGET =
+            1.25;
+
+
         if(
             largest > 0 &&
             isFinite(largest)
         ){
 
             const scale =
-                WEAPON_SIZE /
+                TARGET /
                 largest;
 
 
@@ -467,9 +515,12 @@ loader.load(
         }
 
 
-        /* ================================================
+        /*
+           ================================================
+           SCHRITT 4:
            NACH SCALE ERNEUT ZENTRIEREN
-        ================================================ */
+           ================================================
+        */
 
         box =
             new THREE.Box3()
@@ -487,44 +538,29 @@ loader.load(
         );
 
 
-        weapon.position.sub(
-            center
-        );
+        weapon.position.x -=
+            center.x;
 
+        weapon.position.y -=
+            center.y;
 
-        /* =================================================
-           WICHTIG:
-           DAS MODELL WIRD NICHT MEHR AUF SEINEN
-           URSPRÜNGLICHEN PIVOT VERLASSEN.
-        ================================================= */
-
-
-        /*
-           ==================================================
-           WAFFENPOSITION
-           ==================================================
-        */
-
-        weapon.position.set(
-            WEAPON_X,
-            WEAPON_Y,
-            WEAPON_Z
-        );
+        weapon.position.z -=
+            center.z;
 
 
         /*
-           ==================================================
+           ================================================
+           SCHRITT 5:
            AUSRICHTUNG
-           ==================================================
+           ================================================
 
-           Viele GLBs zeigen standardmäßig
-           in eine andere Richtung.
+           Standard:
+           Die lange Seite zeigt nach vorne.
 
-           Deshalb drehen wir sie hier.
+           Wir drehen das Modell hier NICHT
+           über den Root.
 
-           Y = horizontale Drehung
-           X = hoch/runter
-           Z = seitliche Drehung
+           So bleibt die Position unabhängig.
         */
 
         weapon.rotation.set(
@@ -535,41 +571,85 @@ loader.load(
 
 
         /*
-           ==================================================
-           HOLDER
-           ==================================================
+           ================================================
+           SCHRITT 6:
+           GLB IN ROOT
+           ================================================
         */
 
-        weaponHolder.add(
+        weaponRoot.add(
             weapon
         );
 
 
         /*
-           ==================================================
+           ================================================
+           SCHRITT 7:
+           ROOT NACH RECHTS UNTEN VOR KAMERA
+           ================================================
+        */
+
+        weaponRoot.position.set(
+            HAND_X,
+            HAND_Y,
+            HAND_Z
+        );
+
+
+        /*
+           ================================================
+           ROOT ROTATION
+           ================================================
+        */
+
+        weaponRoot.rotation.set(
+            0,
+            0,
+            0
+        );
+
+
+        /*
+           ================================================
+           WICHTIG:
+           DAS GLB BLEIBT ZENTRIERT
+           ================================================
+        */
+
+        weapon.visible =
+            true;
+
+
+        /*
+           ================================================
            STATUS
-           ==================================================
+           ================================================
         */
 
         document.getElementById(
             "status"
         ).textContent =
-            "✓ weapon.glb in Hand";
+            "✓ Waffe rechts vor Kamera";
 
 
         console.log(
-            "GLB Größe:",
-            size
+            "Weapon Root:",
+            weaponRoot
         );
 
         console.log(
-            "Scale:",
+            "Weapon:",
+            weapon
+        );
+
+        console.log(
+            "Final Scale:",
             weapon.scale
         );
 
         console.log(
-            "Position:",
-            weapon.position
+            "Final Root Position:",
+            weaponRoot.position
         );
 
     },
@@ -578,15 +658,18 @@ loader.load(
 
         if(xhr.total){
 
-            document.getElementById(
-                "status"
-            ).textContent =
-                "Lade weapon.glb " +
+            const percent =
                 Math.round(
                     xhr.loaded /
                     xhr.total *
                     100
-                ) +
+                );
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "Lade weapon.glb " +
+                percent +
                 "%";
 
         }
@@ -596,7 +679,7 @@ loader.load(
     function(error){
 
         console.error(
-            "weapon.glb Fehler:",
+            "weapon.glb ERROR",
             error
         );
 
@@ -624,19 +707,14 @@ window.addEventListener(
             e.key.toLowerCase()
         ] = true;
 
-        if(e.code === "Space"){
+
+        if(
+            e.code === "Space"
+        ){
 
             e.preventDefault();
 
-            if(onGround){
-
-                velocityY =
-                    0.25;
-
-                onGround =
-                    false;
-
-            }
+            jump();
 
         }
 
@@ -656,7 +734,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   LOOK
+   MOUSE LOOK
 ========================================================= */
 
 let yaw = 0;
@@ -726,28 +804,28 @@ function move(){
         0.15;
 
 
-    let input =
+    let dir =
         new THREE.Vector3();
 
 
     if(keys["w"])
-        input.z -= 1;
+        dir.z -= 1;
 
     if(keys["s"])
-        input.z += 1;
+        dir.z += 1;
 
     if(keys["a"])
-        input.x -= 1;
+        dir.x -= 1;
 
     if(keys["d"])
-        input.x += 1;
+        dir.x += 1;
 
 
-    if(input.lengthSq() === 0)
+    if(dir.lengthSq() === 0)
         return;
 
 
-    input.normalize();
+    dir.normalize();
 
 
     const forward =
@@ -783,14 +861,14 @@ function move(){
 
     player.position.addScaledVector(
         forward,
-        input.z *
+        dir.z *
         speed
     );
 
 
     player.position.addScaledVector(
         right,
-        input.x *
+        dir.x *
         speed
     );
 
@@ -802,9 +880,7 @@ function move(){
 ========================================================= */
 
 let velocityY = 0;
-
 let onGround = true;
-
 
 function gravity(){
 
@@ -830,6 +906,26 @@ function gravity(){
             true;
 
     }
+
+}
+
+
+/* =========================================================
+   JUMP
+========================================================= */
+
+function jump(){
+
+    if(!onGround)
+        return;
+
+
+    velocityY =
+        0.25;
+
+
+    onGround =
+        false;
 
 }
 
@@ -903,23 +999,26 @@ addEnemy(
 
 
 /* =========================================================
-   SHOOTING
+   SHOOT
 ========================================================= */
 
 const raycaster =
     new THREE.Raycaster();
 
-let shooting =
+let recoil =
+    0;
+
+let cooldown =
     false;
 
 
 function shoot(){
 
-    if(shooting)
+    if(cooldown)
         return;
 
 
-    shooting =
+    cooldown =
         true;
 
 
@@ -952,20 +1051,18 @@ function shoot(){
             25;
 
 
-        const marker =
-            document.getElementById(
-                "hitmarker"
-            );
-
-
-        marker.style.display =
+        document.getElementById(
+            "hitmarker"
+        ).style.display =
             "block";
 
 
         setTimeout(
             function(){
 
-                marker.style.display =
+                document.getElementById(
+                    "hitmarker"
+                ).style.display =
                     "none";
 
             },
@@ -982,14 +1079,17 @@ function shoot(){
             );
 
 
-            const i =
+            const index =
                 enemies.indexOf(
                     enemy
                 );
 
 
-            if(i >= 0)
-                enemies.splice(i,1);
+            if(index >= 0)
+                enemies.splice(
+                    index,
+                    1
+                );
 
         }
 
@@ -999,7 +1099,7 @@ function shoot(){
     setTimeout(
         function(){
 
-            shooting =
+            cooldown =
                 false;
 
         },
@@ -1037,57 +1137,58 @@ function update(){
 
 
     /*
-       =====================================================
-       WAFFE BLEIBT IMMER VOR DER KAMERA
-       =====================================================
+       ================================================
+       WAFFE:
+       IMMER FEST RELATIV ZUR KAMERA
+       ================================================
     */
 
-    if(weapon){
+    if(weaponRoot){
 
-        /*
-           Position immer wieder festsetzen,
-           damit nichts anderes sie verschiebt.
-        */
+        weaponRoot.position.x =
+            HAND_X;
 
-        weapon.position.x =
-            WEAPON_X;
+        weaponRoot.position.y =
+            HAND_Y;
 
-        weapon.position.y =
-            WEAPON_Y;
-
-        weapon.position.z =
-            WEAPON_Z +
+        weaponRoot.position.z =
+            HAND_Z +
             recoil;
 
 
         /*
-           Rückstoß
+           leichte Schussbewegung
         */
 
-        weapon.rotation.x =
-            recoil * 0.5;
+        weaponRoot.rotation.x =
+            recoil *
+            0.3;
 
 
         recoil *=
-            0.72;
+            0.7;
 
 
         if(
             Math.abs(recoil) < 0.001
         ){
 
-            recoil = 0;
+            recoil =
+                0;
 
-            weapon.rotation.x = 0;
+            weaponRoot.rotation.x =
+                0;
 
         }
 
     }
 
 
-    /* =====================================================
+    /*
+       ================================================
        COORDS
-    ===================================================== */
+       ================================================
+    */
 
     const dir =
         new THREE.Vector3(
@@ -1109,6 +1210,12 @@ Z: ${player.position.z.toFixed(2)}
 
 DIR X: ${dir.x.toFixed(2)}
 DIR Z: ${dir.z.toFixed(2)}`;
+
+
+    document.getElementById(
+        "healthFill"
+    ).style.width =
+        "100%";
 
 }
 
