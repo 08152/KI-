@@ -2,182 +2,496 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
->
-
-<title>MONSTER AR</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GHOST ENGINE</title>
 
 <style>
-
 *{
     box-sizing:border-box;
-}
-
-html,
-body{
     margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#000;
+    padding:0;
     font-family:Arial,sans-serif;
 }
 
-canvas{
-    position:fixed;
-    inset:0;
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#0b0e13;
+    color:#fff;
 }
 
-#ui{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    z-index:10;
+button,input,select{
+    font:inherit;
 }
 
-#top{
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-
-    padding:18px;
-
-    color:white;
-
-    text-align:center;
-
-    background:
-    linear-gradient(
-        rgba(0,0,0,.75),
-        transparent
-    );
-}
-
-#title{
-    font-size:24px;
-    font-weight:900;
-    letter-spacing:3px;
-}
-
-#status{
-    margin-top:8px;
-    font-size:14px;
-    color:#d8e6ff;
-}
-
-#message{
-    position:absolute;
-
-    left:50%;
-    bottom:30px;
-
-    transform:
-    translateX(-50%);
-
-    background:
-    rgba(0,0,0,.75);
-
-    color:white;
-
-    padding:
-    12px 18px;
-
-    border-radius:14px;
-
-    text-align:center;
-
-    font-weight:bold;
-
-    max-width:90vw;
-}
-
-#monsterInfo{
-
-    position:absolute;
-
-    top:90px;
-    left:50%;
-
-    transform:
-    translateX(-50%);
-
-    width:min(
-        90vw,
-        350px
-    );
-
-    display:none;
-
-    background:
-    rgba(10,15,25,.9);
-
-    color:white;
-
-    border:
-    1px solid
-    rgba(100,180,255,.7);
-
-    border-radius:16px;
-
-    padding:15px;
-
-    text-align:center;
-}
-
-#monsterName{
-    font-size:22px;
-    font-weight:bold;
-}
-
-#monsterLevel{
-    margin-top:5px;
-    color:#9ccfff;
-}
-
-#catchButton{
-
-    pointer-events:auto;
-
-    margin-top:12px;
-
-    border:0;
-
-    border-radius:10px;
-
-    padding:
-    12px 22px;
-
-    background:#ffffff;
-
-    color:#111;
-
-    font-size:16px;
-
-    font-weight:bold;
-
+button{
     cursor:pointer;
 }
 
-#inventory{
+/* ==============================
+   APP
+============================== */
 
-    position:absolute;
+#app{
+    width:100%;
+    height:100%;
+    display:grid;
+    grid-template-rows:54px 1fr;
+}
 
-    right:15px;
-    bottom:15px;
+/* ==============================
+   TOP BAR
+============================== */
 
+#topbar{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:0 10px;
+    background:#131820;
+    border-bottom:1px solid #303947;
+    z-index:100;
+}
+
+#logo{
+    font-size:19px;
+    font-weight:900;
+    letter-spacing:2px;
+    color:#ffe600;
+    margin-right:14px;
+    white-space:nowrap;
+}
+
+.topButton{
+    border:1px solid #3a4554;
+    border-radius:7px;
+    background:#1d2631;
     color:white;
+    padding:8px 11px;
+    font-weight:bold;
+}
 
-    background:
-    rgba(0,0,0,.7);
+.topButton:hover{
+    background:#2b3745;
+}
 
-    padding:
-    10px 14px;
+#playButton{
+    background:#55c878;
+    color:#101510;
+    border-color:#55c878;
+}
 
-    border-radius:12px;
+#stopButton{
+    background:#843737;
+}
+
+#downloadButton{
+    background:#315f9c;
+}
+
+#projectName{
+    width:180px;
+    padding:8px 9px;
+    border-radius:7px;
+    border:1px solid #3a4554;
+    background:#1b232d;
+    color:white;
+}
+
+.spacer{
+    flex:1;
+}
+
+#status{
+    color:#71dc91;
+    font-size:12px;
+}
+
+/* ==============================
+   MAIN EDITOR
+============================== */
+
+#editor{
+    min-height:0;
+    display:grid;
+    grid-template-columns:270px minmax(0,1fr) 310px;
+}
+
+/* ==============================
+   LEFT
+============================== */
+
+#leftPanel{
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    background:#11171f;
+    border-right:1px solid #303947;
+}
+
+.panelHeader{
+    height:43px;
+    display:flex;
+    align-items:center;
+    padding:0 13px;
+    border-bottom:1px solid #303947;
+    color:#adb7c5;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:1px;
+}
+
+#fileList{
+    flex:1;
+    overflow:auto;
+    padding:8px;
+}
+
+.file{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px;
+    margin-bottom:3px;
+    border-radius:6px;
+    cursor:pointer;
+    user-select:none;
+    font-size:13px;
+}
+
+.file:hover{
+    background:#202a36;
+}
+
+.file.selected{
+    background:#293747;
+    outline:1px solid #6386ac;
+}
+
+.fileIcon{
+    width:22px;
+    text-align:center;
+}
+
+.fileName{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#uploadArea{
+    padding:10px;
+    border-top:1px solid #303947;
+}
+
+#uploadLabel{
+    display:block;
+    text-align:center;
+    padding:13px 8px;
+    border:2px dashed #3d4857;
+    border-radius:9px;
+    color:#9ba8b8;
+    cursor:pointer;
+    font-size:12px;
+}
+
+#uploadLabel:hover{
+    border-color:#ffe600;
+    color:white;
+}
+
+#fileUpload{
+    display:none;
+}
+
+/* ==============================
+   3D VIEW
+============================== */
+
+#viewport{
+    position:relative;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    background:#20242b;
+}
+
+#game{
+    position:absolute;
+    inset:0;
+}
+
+#sceneInfo{
+    position:absolute;
+    top:12px;
+    left:12px;
+    padding:9px 12px;
+    background:#0d1219dd;
+    border:1px solid #394657;
+    border-radius:8px;
+    color:#b8c1cc;
+    font-size:11px;
+    line-height:1.6;
+    pointer-events:none;
+}
+
+#sceneInfo b{
+    color:#ffe600;
+}
+
+#playOverlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:#0003;
+    pointer-events:none;
+}
+
+#playOverlay span{
+    background:#111821ee;
+    border:1px solid #4c5a6b;
+    padding:12px 18px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+/* ==============================
+   RIGHT INSPECTOR
+============================== */
+
+#rightPanel{
+    min-height:0;
+    overflow:auto;
+    background:#11171f;
+    border-left:1px solid #303947;
+}
+
+#inspector{
+    padding:12px;
+}
+
+#noSelection{
+    color:#8f9baa;
+    font-size:13px;
+    line-height:1.5;
+    padding-top:8px;
+}
+
+#properties{
+    display:none;
+}
+
+.sectionTitle{
+    color:#8f9baa;
+    font-size:10px;
+    font-weight:bold;
+    letter-spacing:1px;
+    margin:15px 0 7px;
+}
+
+.property{
+    margin-bottom:10px;
+}
+
+.property label{
+    display:block;
+    color:#9ba8b8;
+    font-size:11px;
+    margin-bottom:5px;
+}
+
+.property input,
+.property select{
+    width:100%;
+    padding:8px;
+    border-radius:6px;
+    border:1px solid #354150;
+    background:#1a232d;
+    color:white;
+    outline:none;
+}
+
+.property input:focus,
+.property select:focus{
+    border-color:#718ca8;
+}
+
+.vector{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:5px;
+}
+
+#deleteObject{
+    width:100%;
+    margin-top:15px;
+    padding:10px;
+    border:1px solid #9b4141;
+    border-radius:7px;
+    background:#6d2e2e;
+    color:white;
+    font-weight:bold;
+}
+
+/* ==============================
+   CONTEXT MENU
+============================== */
+
+#contextMenu{
+    position:fixed;
+    display:none;
+    z-index:9999;
+    width:245px;
+    padding:5px;
+    background:#151c25;
+    border:1px solid #465365;
+    border-radius:9px;
+    box-shadow:0 15px 50px #000b;
+}
+
+.contextItem{
+    padding:10px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+}
+
+.contextItem:hover{
+    background:#293645;
+}
+
+.contextDanger{
+    color:#ff7777;
+}
+
+/* ==============================
+   SCRIPT WINDOW
+============================== */
+
+#scriptWindow{
+    position:fixed;
+    z-index:8000;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:min(720px,90vw);
+    height:min(600px,80vh);
+    display:none;
+    flex-direction:column;
+    background:#111821;
+    border:1px solid #465366;
+    border-radius:13px;
+    box-shadow:0 25px 100px #000c;
+}
+
+#scriptHeader{
+    height:48px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    border-bottom:1px solid #34404f;
+    font-weight:bold;
+}
+
+#closeScript{
+    margin-left:auto;
+    border:0;
+    border-radius:6px;
+    background:#713434;
+    color:white;
+    padding:7px 10px;
+}
+
+#scriptBody{
+    min-height:0;
+    display:grid;
+    grid-template-columns:190px 1fr;
+    flex:1;
+}
+
+#blockPalette{
+    overflow:auto;
+    padding:10px;
+    border-right:1px solid #34404f;
+}
+
+.block{
+    padding:10px;
+    margin-bottom:7px;
+    border-radius:7px;
+    font-size:12px;
+    font-weight:bold;
+    cursor:grab;
+}
+
+.block.event{
+    background:#7142a8;
+}
+
+.block.action{
+    background:#347eb8;
+}
+
+.block.motion{
+    background:#318e66;
+}
+
+.block.control{
+    background:#a36b2b;
+}
+
+#scriptWorkspace{
+    padding:12px;
+    overflow:auto;
+}
+
+#scriptBlocks{
+    min-height:450px;
+    padding:10px;
+    border:2px dashed #394657;
+    border-radius:9px;
+}
+
+.scriptBlock{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px;
+    margin-bottom:7px;
+    border-radius:7px;
+    font-size:12px;
+}
+
+.scriptBlock button{
+    margin-left:auto;
+    border:0;
+    background:#0004;
+    color:white;
+    border-radius:5px;
+    padding:3px 7px;
+}
+
+/* ==============================
+   MOBILE
+============================== */
+
+@media(max-width:900px){
+
+    #editor{
+        grid-template-columns:200px 1fr;
+    }
+
+    #rightPanel{
+        display:none;
+    }
+
+    #projectName{
+        display:none;
+    }
+
 }
 
 </style>
@@ -185,1072 +499,2404 @@ canvas{
 
 <body>
 
-<div id="ui">
+<div id="app">
 
-    <div id="top">
+<!-- ==========================================
+     TOP BAR
+========================================== -->
 
-        <div id="title">
-            MONSTER AR
-        </div>
+<header id="topbar">
 
-        <div id="status">
-            Starte AR und tippe auf den Boden
-        </div>
+<div id="logo">
+👻 GHOST ENGINE
+</div>
 
-    </div>
+<button class="topButton" id="newButton">
+📄 Neu
+</button>
 
-    <div id="monsterInfo">
+<button class="topButton" id="saveButton">
+💾 Speichern
+</button>
 
-        <div id="monsterName">
-            Monster
-        </div>
+<button class="topButton" id="loadButton">
+📂 Laden
+</button>
 
-        <div id="monsterLevel">
-            Level 1
-        </div>
+<button class="topButton" id="downloadButton">
+⬇ Download
+</button>
 
-        <button id="catchButton">
-            🟢 FANGEN
-        </button>
+<button class="topButton" id="playButton">
+▶ Spielen
+</button>
 
-    </div>
+<button class="topButton" id="stopButton">
+■ Stop
+</button>
 
-    <div id="message">
-        AR wird vorbereitet...
-    </div>
+<div class="spacer"></div>
 
-    <div id="inventory">
-        🎒 Gefangen:
-        <span id="caught">
-            0
-        </span>
-    </div>
+<span id="status">
+● Bereit
+</span>
+
+<input
+id="projectName"
+value="Mein 3D Spiel"
+>
+
+</header>
+
+
+<!-- ==========================================
+     EDITOR
+========================================== -->
+
+<div id="editor">
+
+<!-- ==========================================
+     FILES
+========================================== -->
+
+<aside id="leftPanel">
+
+<div class="panelHeader">
+📁 DATEIEN IM 3D-GAME
+</div>
+
+<div id="fileList"></div>
+
+<div id="uploadArea">
+
+<label id="uploadLabel">
+
+⬆ DATEIEN IMPORTIEREN
+
+<input
+id="fileUpload"
+type="file"
+multiple
+accept=".glb,.gltf,.obj,.fbx,.png,.jpg,.jpeg,.webp,.json,.js"
+>
+
+</label>
+
+</div>
+
+</aside>
+
+
+<!-- ==========================================
+     3D VIEWPORT
+========================================== -->
+
+<main id="viewport">
+
+<div id="game"></div>
+
+<div id="sceneInfo">
+
+<b>3D SZENE</b>
+
+<br>
+
+Linksklick → Objekt auswählen
+
+<br>
+
+Rechtsklick → Kontextmenü
+
+<br>
+
+Maus ziehen → Kamera
+
+<br>
+
+Mausrad → Zoom
+
+</div>
+
+<div id="playOverlay">
+<span>▶ SPIELMODUS</span>
+</div>
+
+</main>
+
+
+<!-- ==========================================
+     INSPECTOR
+========================================== -->
+
+<aside id="rightPanel">
+
+<div class="panelHeader">
+🔧 INSPECTOR
+</div>
+
+<div id="inspector">
+
+<div id="noSelection">
+
+Kein Objekt ausgewählt.
+
+<br><br>
+
+Wähle links eine Datei oder klicke ein 3D-Objekt an.
 
 </div>
 
 
-<script type="importmap">
-{
-    "imports":{
-        "three":
-        "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/":
-        "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-    }
-}
-</script>
+<div id="properties">
+
+<div class="sectionTitle">
+OBJEKT
+</div>
+
+<div class="property">
+
+<label>Name</label>
+
+<input id="propName">
+
+</div>
+
+
+<div class="property">
+
+<label>Farbe</label>
+
+<input
+id="propColor"
+type="color"
+>
+
+</div>
+
+
+<div class="sectionTitle">
+POSITION
+</div>
+
+<div class="vector">
+
+<input id="posX" type="number" step=".1" placeholder="X">
+
+<input id="posY" type="number" step=".1" placeholder="Y">
+
+<input id="posZ" type="number" step=".1" placeholder="Z">
+
+</div>
+
+
+<div class="sectionTitle">
+ROTATION
+</div>
+
+<div class="vector">
+
+<input id="rotX" type="number" step="1" placeholder="X">
+
+<input id="rotY" type="number" step="1" placeholder="Y">
+
+<input id="rotZ" type="number" step="1" placeholder="Z">
+
+</div>
+
+
+<div class="sectionTitle">
+SKALIERUNG
+</div>
+
+<div class="vector">
+
+<input id="scaleX" type="number" step=".1" placeholder="X">
+
+<input id="scaleY" type="number" step=".1" placeholder="Y">
+
+<input id="scaleZ" type="number" step=".1" placeholder="Z">
+
+</div>
+
+
+<div class="sectionTitle">
+ANIMATION
+</div>
+
+<div class="property">
+
+<label>Animation</label>
+
+<select id="animation">
+
+<option value="none">
+Keine
+</option>
+
+<option value="rotate">
+Drehen
+</option>
+
+<option value="float">
+Schweben
+</option>
+
+<option value="pulse">
+Pulsieren
+</option>
+
+</select>
+
+</div>
+
+
+<div class="sectionTitle">
+PHYSIK
+</div>
+
+<div class="property">
+
+<label>
+
+<input
+type="checkbox"
+id="physics"
+style="width:auto"
+>
+
+ Physik aktivieren
+
+</label>
+
+</div>
+
+
+<button id="deleteObject">
+🗑 OBJEKT LÖSCHEN
+</button>
+
+</div>
+
+</div>
+
+</aside>
+
+</div>
+
+</div>
+
+
+<!-- ==========================================
+     CONTEXT MENU
+========================================== -->
+
+<div id="contextMenu">
+
+<div class="contextItem" id="contextScript">
+🧩 Script mit Blöcken hinzufügen
+</div>
+
+<div class="contextItem" id="contextRename">
+✏️ Namen ändern
+</div>
+
+<div class="contextItem" id="contextDuplicate">
+📋 Duplizieren
+</div>
+
+<div class="contextItem" id="contextAddCube">
+🧊 3D-Objekt erstellen
+</div>
+
+<div class="contextItem contextDanger" id="contextDelete">
+🗑 Löschen
+</div>
+
+</div>
+
+
+<!-- ==========================================
+     SCRIPT EDITOR
+========================================== -->
+
+<div id="scriptWindow">
+
+<div id="scriptHeader">
+
+🧩 Script Editor —
+<span id="scriptObjectName">
+Objekt
+</span>
+
+<button id="closeScript">
+✕
+</button>
+
+</div>
+
+<div id="scriptBody">
+
+<div id="blockPalette">
+
+<div class="sectionTitle">
+EREIGNISSE
+</div>
+
+<div
+class="block event"
+draggable="true"
+data-type="start"
+>
+🚀 Wenn Spiel startet
+</div>
+
+<div
+class="block event"
+draggable="true"
+data-type="click"
+>
+🖱 Wenn angeklickt
+</div>
+
+
+<div class="sectionTitle">
+AKTIONEN
+</div>
+
+<div
+class="block action"
+draggable="true"
+data-type="move"
+>
+➡ Bewege
+</div>
+
+<div
+class="block action"
+draggable="true"
+data-type="jump"
+>
+⬆ Springe
+</div>
+
+<div
+class="block action"
+draggable="true"
+data-type="say"
+>
+💬 Sage
+</div>
+
+
+<div class="sectionTitle">
+BEWEGUNG
+</div>
+
+<div
+class="block motion"
+draggable="true"
+data-type="rotate"
+>
+🔄 Drehe
+</div>
+
+<div
+class="block motion"
+draggable="true"
+data-type="follow"
+>
+🎯 Folge Spieler
+</div>
+
+
+<div class="sectionTitle">
+STEUERUNG
+</div>
+
+<div
+class="block control"
+draggable="true"
+data-type="wait"
+>
+⏱ Warte
+</div>
+
+<div
+class="block control"
+draggable="true"
+data-type="destroy"
+>
+💥 Lösche Objekt
+</div>
+
+</div>
+
+
+<div id="scriptWorkspace">
+
+<div class="sectionTitle">
+SCRIPT
+</div>
+
+<div id="scriptBlocks">
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 
 <script type="module">
 
-import * as THREE from "three";
+/* ==========================================
+   THREE.JS
+========================================== */
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
 import {
-    ARButton
-}
-from "three/addons/webxr/ARButton.js";
+    OrbitControls
+} from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
 
-/* =========================================
-   THREE.JS
-========================================= */
+/* ==========================================
+   SCENE
+========================================== */
 
 const scene =
 new THREE.Scene();
 
+scene.background =
+new THREE.Color(
+0x20242b
+);
+
+
+/* ==========================================
+   CAMERA
+========================================== */
 
 const camera =
 new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth /
-    window.innerHeight,
-    0.01,
-    100
+60,
+1,
+0.1,
+2000
 );
 
+camera.position.set(
+8,
+6,
+10
+);
+
+
+/* ==========================================
+   RENDERER
+========================================== */
 
 const renderer =
 new THREE.WebGLRenderer({
-    antialias:true,
-    alpha:true
+    antialias:true
 });
 
-
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
-
-
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
+Math.min(
+window.devicePixelRatio,
+2
+)
 );
 
-
-renderer.xr.enabled =
+renderer.shadowMap.enabled =
 true;
 
+renderer.shadowMap.type =
+THREE.PCFSoftShadowMap;
 
-renderer.xr.setReferenceSpaceType(
-    "local"
+document
+.getElementById("game")
+.appendChild(
+renderer.domElement
 );
 
 
-document.body.appendChild(
-    renderer.domElement
+/* ==========================================
+   CAMERA CONTROLS
+========================================== */
+
+const controls =
+new OrbitControls(
+camera,
+renderer.domElement
+);
+
+controls.enableDamping =
+true;
+
+controls.target.set(
+0,
+1,
+0
 );
 
 
-/* =========================================
-   LICHT
-========================================= */
+/* ==========================================
+   LIGHT
+========================================== */
 
-const hemi =
+const ambient =
 new THREE.HemisphereLight(
-    0xffffff,
-    0x444444,
-    2
+0xffffff,
+0x303030,
+1.8
 );
 
-
-scene.add(hemi);
+scene.add(
+ambient
+);
 
 
 const light =
 new THREE.DirectionalLight(
-    0xffffff,
-    2
+0xffffff,
+2
 );
-
 
 light.position.set(
-    2,
-    5,
-    2
+8,
+12,
+8
 );
 
+light.castShadow =
+true;
 
-scene.add(light);
+light.shadow.mapSize.width =
+2048;
 
-
-/* =========================================
-   AR BUTTON
-========================================= */
-
-const arButton =
-ARButton.createButton(
-    renderer,
-    {
-        requiredFeatures:[
-            "hit-test"
-        ],
-        optionalFeatures:[
-            "dom-overlay"
-        ],
-        domOverlay:{
-            root:
-            document.body
-        }
-    }
-);
-
-
-document.body.appendChild(
-    arButton
-);
-
-
-/* =========================================
-   UI
-========================================= */
-
-const message =
-document.getElementById(
-    "message"
-);
-
-
-const status =
-document.getElementById(
-    "status"
-);
-
-
-const monsterInfo =
-document.getElementById(
-    "monsterInfo"
-);
-
-
-const monsterName =
-document.getElementById(
-    "monsterName"
-);
-
-
-const monsterLevel =
-document.getElementById(
-    "monsterLevel"
-);
-
-
-const catchButton =
-document.getElementById(
-    "catchButton"
-);
-
-
-const caughtText =
-document.getElementById(
-    "caught"
-);
-
-
-let caught = 0;
-
-
-/* =========================================
-   HIT TEST
-========================================= */
-
-let hitTestSource =
-null;
-
-
-let hitTestSourceRequested =
-false;
-
-
-let placed =
-false;
-
-
-let currentMonster =
-null;
-
-
-const controller =
-renderer.xr.getController(
-    0
-);
-
+light.shadow.mapSize.height =
+2048;
 
 scene.add(
-    controller
+light
 );
 
 
-/* =========================================
-   MONSTER DATEN
-========================================= */
+/* ==========================================
+   EDITOR GROUND
+========================================== */
 
-const monsterData = [
+const ground =
+new THREE.Mesh(
 
-    {
-        name:"Flammi",
-        level:3,
-        type:"fire"
-    },
+new THREE.PlaneGeometry(
+200,
+200
+),
 
-    {
-        name:"Aquoro",
-        level:5,
-        type:"water"
-    },
+new THREE.MeshStandardMaterial({
+    color:0x30343b,
+    roughness:.9,
+    metalness:.1
+})
 
-    {
-        name:"Blattix",
-        level:2,
-        type:"plant"
-    },
+);
 
-    {
-        name:"Voltaro",
-        level:7,
-        type:"electric"
-    },
+ground.rotation.x =
+-Math.PI / 2;
 
-    {
-        name:"Rockon",
-        level:4,
-        type:"rock"
-    },
+ground.receiveShadow =
+true;
 
-    {
-        name:"Frosty",
-        level:6,
-        type:"ice"
-    },
+ground.userData.editorGround =
+true;
 
-    {
-        name:"Nebulon",
-        level:10,
-        type:"dark"
-    },
+scene.add(
+ground
+);
 
-    {
-        name:"Pyrix",
-        level:8,
-        type:"fire"
-    },
 
-    {
-        name:"Wavix",
-        level:9,
-        type:"water"
-    },
+/* ==========================================
+   GRID
+========================================== */
 
-    {
-        name:"Lumino",
-        level:12,
-        type:"electric"
-    }
+const grid =
+new THREE.GridHelper(
+200,
+100,
+0x626872,
+0x383d45
+);
 
-];
+grid.position.y =
+0.01;
 
+scene.add(
+grid
+);
 
-/* =========================================
-   EIGENE 3D MONSTER
-========================================= */
 
-function createMonster(
-    data
-){
+/* ==========================================
+   DATA
+========================================== */
 
-    const monster =
-    new THREE.Group();
+let objects = [];
 
+let selectedObject = null;
 
-    let bodyColor =
-    0x44aaff;
+let contextObject = null;
 
+let uploadedFiles = [];
 
-    let eyeColor =
-    0xffffff;
+let isPlaying = false;
 
+let scriptTypes = [];
 
-    if(
-        data.type ===
-        "fire"
-    ){
 
-        bodyColor =
-        0xff5522;
+/* ==========================================
+   HELPERS
+========================================== */
 
-    }
+function setStatus(text){
 
-
-    if(
-        data.type ===
-        "water"
-    ){
-
-        bodyColor =
-        0x2288ff;
-
-    }
-
-
-    if(
-        data.type ===
-        "plant"
-    ){
-
-        bodyColor =
-        0x33bb55;
-
-    }
-
-
-    if(
-        data.type ===
-        "electric"
-    ){
-
-        bodyColor =
-        0xffdd22;
-
-    }
-
-
-    if(
-        data.type ===
-        "rock"
-    ){
-
-        bodyColor =
-        0x777777;
-
-    }
-
-
-    if(
-        data.type ===
-        "ice"
-    ){
-
-        bodyColor =
-        0x99eeff;
-
-    }
-
-
-    if(
-        data.type ===
-        "dark"
-    ){
-
-        bodyColor =
-        0x663399;
-
-    }
-
-
-    /* KÖRPER */
-
-    const body =
-    new THREE.Mesh(
-
-        new THREE.SphereGeometry(
-            0.28,
-            20,
-            20
-        ),
-
-        new THREE.MeshStandardMaterial({
-
-            color:
-            bodyColor,
-
-            roughness:
-            0.5,
-
-            metalness:
-            0.1
-
-        })
-
-    );
-
-
-    body.position.y =
-    0.35;
-
-
-    monster.add(body);
-
-
-    /* KOPF */
-
-    const head =
-    new THREE.Mesh(
-
-        new THREE.SphereGeometry(
-            0.23,
-            20,
-            20
-        ),
-
-        new THREE.MeshStandardMaterial({
-
-            color:
-            bodyColor,
-
-            roughness:
-            0.45
-
-        })
-
-    );
-
-
-    head.position.y =
-    0.68;
-
-
-    monster.add(head);
-
-
-    /* AUGEN */
-
-    for(
-        const x of
-        [-0.08,0.08]
-    ){
-
-        const eye =
-        new THREE.Mesh(
-
-            new THREE.SphereGeometry(
-                0.035,
-                10,
-                10
-            ),
-
-            new THREE.MeshBasicMaterial({
-
-                color:
-                eyeColor
-
-            })
-
-        );
-
-
-        eye.position.set(
-            x,
-            0.71,
-            -0.21
-        );
-
-
-        monster.add(
-            eye
-        );
-
-    }
-
-
-    /* BEINE */
-
-    for(
-        const x of
-        [-0.16,0.16]
-    ){
-
-        const leg =
-        new THREE.Mesh(
-
-            new THREE.BoxGeometry(
-                0.09,
-                0.25,
-                0.1
-            ),
-
-            new THREE.MeshStandardMaterial({
-
-                color:
-                bodyColor
-
-            })
-
-        );
-
-
-        leg.position.set(
-            x,
-            0.12,
-            0.04
-        );
-
-
-        monster.add(
-            leg
-        );
-
-    }
-
-
-    /* ARME */
-
-    for(
-        const x of
-        [-0.32,0.32]
-    ){
-
-        const arm =
-        new THREE.Mesh(
-
-            new THREE.BoxGeometry(
-                0.1,
-                0.28,
-                0.1
-            ),
-
-            new THREE.MeshStandardMaterial({
-
-                color:
-                bodyColor
-
-            })
-
-        );
-
-
-        arm.position.set(
-            x,
-            0.42,
-            0
-        );
-
-
-        arm.rotation.z =
-        x < 0
-        ?
-        0.3
-        :
-        -0.3;
-
-
-        monster.add(
-            arm
-        );
-
-    }
-
-
-    /* NAME SPEICHERN */
-
-    monster.userData =
-    data;
-
-
-    return monster;
+document
+.getElementById("status")
+.textContent =
+"● " + text;
 
 }
 
 
-/* =========================================
-   MONSTER PLATZIEREN
-========================================= */
+/* ==========================================
+   CREATE CUBE
+========================================== */
 
-function placeMonster(
-    position
+function createCube(
+name="Würfel"
 ){
 
-    if(
-        currentMonster
-    ){
+const geometry =
+new THREE.BoxGeometry(
+1,
+1,
+1
+);
 
-        scene.remove(
-            currentMonster
-        );
+const material =
+new THREE.MeshStandardMaterial({
+    color:0x438cff,
+    roughness:.45,
+    metalness:.25
+});
 
-    }
+const cube =
+new THREE.Mesh(
+geometry,
+material
+);
 
+cube.position.set(
+0,
+0.5,
+0
+);
 
-    const data =
-    monsterData[
-        Math.floor(
-            Math.random() *
-            monsterData.length
-        )
-    ];
+cube.castShadow =
+true;
 
+cube.receiveShadow =
+true;
 
-    currentMonster =
-    createMonster(
-        data
-    );
+cube.userData = {
 
+    type:"3d-object",
 
-    currentMonster.position.copy(
-        position
-    );
+    id:
+    crypto.randomUUID(),
 
+    name:name,
 
-    currentMonster.scale.set(
-        0.8,
-        0.8,
-        0.8
-    );
+    animation:"none",
 
+    physics:false,
 
-    scene.add(
-        currentMonster
-    );
+    script:[]
 
+};
 
-    placed =
-    true;
+scene.add(
+cube
+);
 
+objects.push(
+cube
+);
 
-    monsterName.textContent =
-    data.name;
+selectObject(
+cube
+);
 
+updateFileList();
 
-    monsterLevel.textContent =
-    "Level " +
-    data.level;
+setStatus(
+"Objekt erstellt"
+);
 
-
-    monsterInfo.style.display =
-    "block";
-
-
-    message.textContent =
-    data.name +
-    " ist erschienen!";
-
-
-    status.textContent =
-    "Monster auf dem Boden";
+return cube;
 
 }
 
 
-/* =========================================
-   AR START
-========================================= */
+/* ==========================================
+   SELECT OBJECT
+========================================== */
 
-renderer.xr.addEventListener(
-    "sessionstart",
-    () => {
+function selectObject(
+object
+){
 
-        message.textContent =
-        "Bewege die Kamera langsam über den Boden";
+if(!object)
+return;
 
-        status.textContent =
-        "Suche eine Fläche";
+selectedObject =
+object;
 
-    }
+document
+.getElementById("noSelection")
+.style.display =
+"none";
+
+document
+.getElementById("properties")
+.style.display =
+"block";
+
+loadInspector();
+
+updateFileList();
+
+}
+
+
+/* ==========================================
+   INSPECTOR
+========================================== */
+
+function loadInspector(){
+
+if(!selectedObject)
+return;
+
+const d =
+selectedObject.userData;
+
+
+document.getElementById(
+"propName"
+).value =
+d.name;
+
+
+document.getElementById(
+"propColor"
+).value =
+"#" +
+selectedObject.material.color
+.getHexString();
+
+
+document.getElementById(
+"posX"
+).value =
+selectedObject.position.x;
+
+document.getElementById(
+"posY"
+).value =
+selectedObject.position.y;
+
+document.getElementById(
+"posZ"
+).value =
+selectedObject.position.z;
+
+
+document.getElementById(
+"rotX"
+).value =
+THREE.MathUtils.radToDeg(
+selectedObject.rotation.x
+);
+
+document.getElementById(
+"rotY"
+).value =
+THREE.MathUtils.radToDeg(
+selectedObject.rotation.y
+);
+
+document.getElementById(
+"rotZ"
+).value =
+THREE.MathUtils.radToDeg(
+selectedObject.rotation.z
 );
 
 
-renderer.xr.addEventListener(
-    "sessionend",
-    () => {
+document.getElementById(
+"scaleX"
+).value =
+selectedObject.scale.x;
 
-        hitTestSource =
-        null;
+document.getElementById(
+"scaleY"
+).value =
+selectedObject.scale.y;
+
+document.getElementById(
+"scaleZ"
+).value =
+selectedObject.scale.z;
 
 
-        hitTestSourceRequested =
-        false;
+document.getElementById(
+"animation"
+).value =
+d.animation ||
+"none";
+
+document.getElementById(
+"physics"
+).checked =
+!!d.physics;
+
+}
 
 
-        status.textContent =
-        "AR beendet";
+/* ==========================================
+   INSPECTOR UPDATE
+========================================== */
 
-        monsterInfo.style.display =
-        "none";
+function updateInspector(){
 
-    }
+if(!selectedObject)
+return;
+
+
+selectedObject.userData.name =
+document.getElementById(
+"propName"
+).value;
+
+
+selectedObject.material.color.set(
+document.getElementById(
+"propColor"
+).value
 );
 
 
-/* =========================================
-   TAP / KLICK
-========================================= */
+selectedObject.position.set(
 
-controller.addEventListener(
-    "select",
-    () => {
+Number(
+document.getElementById(
+"posX"
+).value
+),
 
-        if(
-            !lastHitPosition
-        ){
+Number(
+document.getElementById(
+"posY"
+).value
+),
 
-            return;
+Number(
+document.getElementById(
+"posZ"
+).value
+)
 
-        }
-
-
-        if(
-            placed
-        ){
-
-            return;
-
-        }
-
-
-        placeMonster(
-            lastHitPosition
-        );
-
-    }
 );
 
 
-/* =========================================
-   HIT POSITION
-========================================= */
+selectedObject.rotation.set(
 
-let lastHitPosition =
+THREE.MathUtils.degToRad(
+Number(
+document.getElementById(
+"rotX"
+).value
+)
+),
+
+THREE.MathUtils.degToRad(
+Number(
+document.getElementById(
+"rotY"
+).value
+)
+),
+
+THREE.MathUtils.degToRad(
+Number(
+document.getElementById(
+"rotZ"
+).value
+)
+)
+
+);
+
+
+selectedObject.scale.set(
+
+Number(
+document.getElementById(
+"scaleX"
+).value
+),
+
+Number(
+document.getElementById(
+"scaleY"
+).value
+),
+
+Number(
+document.getElementById(
+"scaleZ"
+).value
+)
+
+);
+
+
+selectedObject.userData.animation =
+document.getElementById(
+"animation"
+).value;
+
+
+selectedObject.userData.physics =
+document.getElementById(
+"physics"
+).checked;
+
+
+updateFileList();
+
+}
+
+
+/* ==========================================
+   INSPECTOR EVENTS
+========================================== */
+
+document
+.querySelectorAll(
+"#properties input,#properties select"
+)
+.forEach(
+element=>{
+
+element.addEventListener(
+"input",
+updateInspector
+);
+
+element.addEventListener(
+"change",
+updateInspector
+);
+
+}
+);
+
+
+/* ==========================================
+   FILE LIST
+========================================== */
+
+function updateFileList(){
+
+const list =
+document.getElementById(
+"fileList"
+);
+
+list.innerHTML =
+"";
+
+
+objects.forEach(
+object=>{
+
+const file =
+document.createElement(
+"div"
+);
+
+file.className =
+"file";
+
+if(
+selectedObject === object
+)
+file.classList.add(
+"selected"
+);
+
+
+file.innerHTML = `
+<div class="fileIcon">🧊</div>
+<div class="fileName">
+${escapeHTML(
+object.userData.name
+)}
+</div>
+`;
+
+
+file.onclick =
+()=>{
+selectObject(
+object
+);
+};
+
+
+file.oncontextmenu =
+event=>{
+
+event.preventDefault();
+
+contextObject =
+object;
+
+showContextMenu(
+event.clientX,
+event.clientY
+);
+
+};
+
+
+list.appendChild(
+file
+);
+
+});
+
+
+uploadedFiles.forEach(
+fileData=>{
+
+const file =
+document.createElement(
+"div"
+);
+
+file.className =
+"file";
+
+file.innerHTML = `
+<div class="fileIcon">
+${getFileIcon(fileData.file)}
+</div>
+
+<div class="fileName">
+${escapeHTML(fileData.name)}
+</div>
+`;
+
+
+file.onclick =
+()=>{
+
+setStatus(
+"Datei: " +
+fileData.name
+);
+
+};
+
+
+file.oncontextmenu =
+event=>{
+
+event.preventDefault();
+
+contextObject =
+fileData;
+
+showContextMenu(
+event.clientX,
+event.clientY
+);
+
+};
+
+
+list.appendChild(
+file
+);
+
+});
+
+}
+
+
+/* ==========================================
+   HTML ESCAPE
+========================================== */
+
+function escapeHTML(
+text
+){
+
+return String(text)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;");
+
+}
+
+
+/* ==========================================
+   FILE ICON
+========================================== */
+
+function getFileIcon(
+file
+){
+
+if(
+file.type.includes("image")
+)
+return "🖼️";
+
+if(
+file.name.endsWith(".glb") ||
+file.name.endsWith(".gltf")
+)
+return "🧊";
+
+if(
+file.name.endsWith(".js")
+)
+return "📜";
+
+if(
+file.name.endsWith(".json")
+)
+return "📋";
+
+return "📄";
+
+}
+
+
+/* ==========================================
+   FILE UPLOAD
+========================================== */
+
+document
+.getElementById(
+"fileUpload"
+)
+.addEventListener(
+"change",
+event=>{
+
+const files =
+Array.from(
+event.target.files
+);
+
+files.forEach(
+file=>{
+
+uploadedFiles.push({
+
+name:file.name,
+
+file:file
+
+});
+
+});
+
+
+updateFileList();
+
+setStatus(
+files.length +
+" Datei(en) importiert"
+);
+
+event.target.value =
+"";
+
+}
+);
+
+
+/* ==========================================
+   RAYCASTER
+========================================== */
+
+const raycaster =
+new THREE.Raycaster();
+
+const mouse =
+new THREE.Vector2();
+
+
+renderer.domElement.addEventListener(
+"pointerdown",
+event=>{
+
+if(
+event.button !== 0
+)
+return;
+
+
+const rect =
+renderer.domElement
+.getBoundingClientRect();
+
+
+mouse.x =
+(
+(event.clientX - rect.left)
+/
+rect.width
+)
+*
+2 - 1;
+
+
+mouse.y =
+-(
+(event.clientY - rect.top)
+/
+rect.height
+)
+*
+2 + 1;
+
+
+raycaster.setFromCamera(
+mouse,
+camera
+);
+
+
+const hits =
+raycaster.intersectObjects(
+objects,
+true
+);
+
+
+if(
+hits.length
+){
+
+let object =
+hits[0].object;
+
+
+while(
+object.parent &&
+!objects.includes(object)
+){
+
+object =
+object.parent;
+
+}
+
+
+if(
+objects.includes(object)
+){
+
+selectObject(
+object
+);
+
+}
+
+}
+
+}
+);
+
+
+/* ==========================================
+   CONTEXT MENU
+========================================== */
+
+function showContextMenu(
+x,
+y
+){
+
+const menu =
+document.getElementById(
+"contextMenu"
+);
+
+menu.style.left =
+x + "px";
+
+menu.style.top =
+y + "px";
+
+menu.style.display =
+"block";
+
+}
+
+
+function hideContextMenu(){
+
+document
+.getElementById(
+"contextMenu"
+)
+.style.display =
+"none";
+
+}
+
+document.addEventListener(
+"click",
+hideContextMenu
+);
+
+
+/* ==========================================
+   RENAME
+========================================== */
+
+document
+.getElementById(
+"contextRename"
+)
+.onclick =
+()=>{
+
+if(!contextObject)
+return;
+
+
+if(
+contextObject.userData
+){
+
+const name =
+prompt(
+"Neuer Name:",
+contextObject.userData.name
+);
+
+if(
+name &&
+name.trim()
+){
+
+contextObject.userData.name =
+name.trim();
+
+if(
+selectedObject ===
+contextObject
+){
+
+loadInspector();
+
+}
+
+}
+
+}else{
+
+const name =
+prompt(
+"Neuer Dateiname:",
+contextObject.name
+);
+
+if(
+name &&
+name.trim()
+){
+
+contextObject.name =
+name.trim();
+
+}
+
+}
+
+
+updateFileList();
+
+};
+
+
+/* ==========================================
+   ADD SCRIPT
+========================================== */
+
+document
+.getElementById(
+"contextScript"
+)
+.onclick =
+()=>{
+
+if(
+!contextObject ||
+!contextObject.userData
+)
+return;
+
+
+selectedObject =
+contextObject;
+
+openScriptEditor();
+
+};
+
+
+/* ==========================================
+   DUPLICATE
+========================================== */
+
+document
+.getElementById(
+"contextDuplicate"
+)
+.onclick =
+()=>{
+
+if(
+!contextObject ||
+!contextObject.userData
+)
+return;
+
+
+const copy =
+createCube(
+contextObject.userData.name +
+" Kopie"
+);
+
+copy.position.copy(
+contextObject.position
+);
+
+copy.position.x += 2;
+
+copy.rotation.copy(
+contextObject.rotation
+);
+
+copy.scale.copy(
+contextObject.scale
+);
+
+copy.material.color.copy(
+contextObject.material.color
+);
+
+};
+
+
+/* ==========================================
+   CONTEXT ADD CUBE
+========================================== */
+
+document
+.getElementById(
+"contextAddCube"
+)
+.onclick =
+()=>{
+
+createCube(
+"Neues 3D-Objekt"
+);
+
+};
+
+
+/* ==========================================
+   DELETE
+========================================== */
+
+function deleteObject(
+object
+){
+
+scene.remove(
+object
+);
+
+objects =
+objects.filter(
+o=>o!==object
+);
+
+if(
+selectedObject ===
+object
+){
+
+selectedObject =
+null;
+
+document.getElementById(
+"properties"
+).style.display =
+"none";
+
+document.getElementById(
+"noSelection"
+).style.display =
+"block";
+
+}
+
+updateFileList();
+
+setStatus(
+"Objekt gelöscht"
+);
+
+}
+
+
+document
+.getElementById(
+"contextDelete"
+)
+.onclick =
+()=>{
+
+if(
+contextObject &&
+contextObject.userData
+){
+
+deleteObject(
+contextObject
+);
+
+}
+
+};
+
+
+/* ==========================================
+   DELETE INSPECTOR
+========================================== */
+
+document
+.getElementById(
+"deleteObject"
+)
+.onclick =
+()=>{
+
+if(
+selectedObject
+){
+
+deleteObject(
+selectedObject
+);
+
+}
+
+};
+
+
+/* ==========================================
+   SCRIPT EDITOR
+========================================== */
+
+function openScriptEditor(){
+
+if(!selectedObject)
+return;
+
+
+document
+.getElementById(
+"scriptWindow"
+)
+.style.display =
+"flex";
+
+
+document
+.getElementById(
+"scriptObjectName"
+)
+.textContent =
+selectedObject.userData.name;
+
+
+loadScriptBlocks();
+
+}
+
+
+function closeScriptEditor(){
+
+document
+.getElementById(
+"scriptWindow"
+)
+.style.display =
+"none";
+
+}
+
+
+document
+.getElementById(
+"closeScript"
+)
+.onclick =
+closeScriptEditor;
+
+
+/* ==========================================
+   SCRIPT BLOCKS
+========================================== */
+
+const blocks =
+document.querySelectorAll(
+".block"
+);
+
+blocks.forEach(
+block=>{
+
+block.addEventListener(
+"dragstart",
+event=>{
+
+event.dataTransfer.setData(
+"text/plain",
+block.dataset.type
+);
+
+}
+);
+
+});
+
+
+const scriptBlocks =
+document.getElementById(
+"scriptBlocks"
+);
+
+
+scriptBlocks.addEventListener(
+"dragover",
+event=>{
+event.preventDefault();
+});
+
+
+scriptBlocks.addEventListener(
+"drop",
+event=>{
+
+event.preventDefault();
+
+if(!selectedObject)
+return;
+
+
+const type =
+event.dataTransfer.getData(
+"text/plain"
+);
+
+if(!type)
+return;
+
+
+selectedObject.userData.script.push(
+type
+);
+
+loadScriptBlocks();
+
+}
+);
+
+
+function loadScriptBlocks(){
+
+scriptBlocks.innerHTML =
+"";
+
+
+if(
+!selectedObject ||
+selectedObject.userData.script.length === 0
+){
+
+scriptBlocks.innerHTML =
+`
+<div style="color:#707b89;font-size:12px">
+Ziehe Blöcke aus der linken Seite hier hinein.
+</div>
+`;
+
+return;
+
+}
+
+
+selectedObject.userData.script
+.forEach(
+(type,index)=>{
+
+const block =
+document.createElement(
+"div"
+);
+
+block.className =
+"scriptBlock";
+
+
+block.style.background =
+getBlockColor(type);
+
+
+block.innerHTML =
+`
+<span>
+${getBlockText(type)}
+</span>
+
+<button>
+×
+</button>
+`;
+
+
+block.querySelector(
+"button"
+).onclick =
+()=>{
+
+selectedObject.userData.script
+.splice(
+index,
+1
+);
+
+loadScriptBlocks();
+
+};
+
+
+scriptBlocks.appendChild(
+block
+);
+
+});
+
+}
+
+
+function getBlockText(
+type
+){
+
+const texts={
+
+start:"🚀 Wenn Spiel startet",
+
+click:"🖱 Wenn angeklickt",
+
+move:"➡ Bewege",
+
+jump:"⬆ Springe",
+
+say:"💬 Sage",
+
+rotate:"🔄 Drehe",
+
+follow:"🎯 Folge Spieler",
+
+wait:"⏱ Warte",
+
+destroy:"💥 Lösche Objekt"
+
+};
+
+return texts[type] ||
+type;
+
+}
+
+
+function getBlockColor(
+type
+){
+
+if(
+type==="start" ||
+type==="click"
+)
+return "#7142a8";
+
+if(
+type==="move" ||
+type==="jump" ||
+type==="say"
+)
+return "#347eb8";
+
+if(
+type==="rotate" ||
+type==="follow"
+)
+return "#318e66";
+
+return "#a36b2b";
+
+}
+
+
+/* ==========================================
+   SAVE
+========================================== */
+
+function getProjectData(){
+
+return {
+
+name:
+document.getElementById(
+"projectName"
+).value,
+
+objects:
+objects.map(
+object=>({
+
+name:
+object.userData.name,
+
+position:
+object.position.toArray(),
+
+rotation:
+[
+object.rotation.x,
+object.rotation.y,
+object.rotation.z
+],
+
+scale:
+object.scale.toArray(),
+
+color:
+object.material.color.getHex(),
+
+animation:
+object.userData.animation,
+
+physics:
+object.userData.physics,
+
+script:
+object.userData.script
+
+})),
+
+files:
+uploadedFiles.map(
+file=>({
+
+name:file.name,
+
+type:file.file.type
+
+}))
+
+};
+
+}
+
+
+document
+.getElementById(
+"saveButton"
+)
+.onclick =
+()=>{
+
+localStorage.setItem(
+"ghostEngineProject",
+JSON.stringify(
+getProjectData()
+)
+);
+
+setStatus(
+"Projekt gespeichert"
+);
+
+};
+
+
+/* ==========================================
+   LOAD
+========================================== */
+
+document
+.getElementById(
+"loadButton"
+)
+.onclick =
+()=>{
+
+const raw =
+localStorage.getItem(
+"ghostEngineProject"
+);
+
+if(!raw){
+
+setStatus(
+"Kein Projekt gefunden"
+);
+
+return;
+
+}
+
+
+const data =
+JSON.parse(raw);
+
+
+objects.forEach(
+object=>
+scene.remove(
+object
+)
+);
+
+objects =
+[];
+
+selectedObject =
 null;
 
 
-const tempMatrix =
-new THREE.Matrix4();
+document.getElementById(
+"projectName"
+).value =
+data.name ||
+"Mein 3D Spiel";
 
 
-const tempPosition =
-new THREE.Vector3();
+(data.objects || [])
+.forEach(
+item=>{
+
+const object =
+createCube(
+item.name
+);
+
+object.position.fromArray(
+item.position
+);
+
+object.rotation.set(
+item.rotation[0],
+item.rotation[1],
+item.rotation[2]
+);
+
+object.scale.fromArray(
+item.scale
+);
+
+object.material.color.setHex(
+item.color
+);
+
+object.userData.animation =
+item.animation ||
+"none";
+
+object.userData.physics =
+!!item.physics;
+
+object.userData.script =
+item.script ||
+[];
+
+});
 
 
-/* =========================================
-   FANGEN
-========================================= */
+updateFileList();
 
-catchButton.addEventListener(
-    "click",
-    () => {
+setStatus(
+"Projekt geladen"
+);
 
-        if(
-            !currentMonster
-        ){
-
-            return;
-
-        }
+};
 
 
-        const monster =
-        currentMonster;
+/* ==========================================
+   NEW
+========================================== */
+
+document
+.getElementById(
+"newButton"
+)
+.onclick =
+()=>{
+
+if(
+!confirm(
+"Neue Szene erstellen?"
+)
+)
+return;
 
 
-        monsterInfo.style.display =
-        "none";
+objects.forEach(
+object=>
+scene.remove(
+object
+)
+);
+
+objects =
+[];
+
+selectedObject =
+null;
+
+document.getElementById(
+"properties"
+).style.display =
+"none";
+
+document.getElementById(
+"noSelection"
+).style.display =
+"block";
+
+updateFileList();
+
+setStatus(
+"Neue Szene"
+);
+
+};
 
 
-        message.textContent =
-        monster.userData.name +
-        " wird gefangen...";
+/* ==========================================
+   DOWNLOAD PROJECT
+========================================== */
 
+document
+.getElementById(
+"downloadButton"
+)
+.onclick =
+()=>{
 
-        let scale =
-        1;
+const data =
+getProjectData();
 
-
-        const animation =
-        setInterval(
-            () => {
-
-                scale -=
-                0.08;
-
-
-                monster.scale.set(
-                    scale,
-                    scale,
-                    scale
-                );
-
-
-                monster.rotation.y +=
-                0.4;
-
-
-                if(
-                    scale <= 0
-                ){
-
-                    clearInterval(
-                        animation
-                    );
-
-
-                    scene.remove(
-                        monster
-                    );
-
-
-                    currentMonster =
-                    null;
-
-
-                    placed =
-                    false;
-
-
-                    caught++;
-
-
-                    caughtText.textContent =
-                    caught;
-
-
-                    message.textContent =
-                    "🎉 Monster gefangen!";
-
-                    status.textContent =
-                    "Tippe auf den Boden für ein neues Monster";
-
-                }
-
-            },
-
-            30
-        );
-
-    }
+const blob =
+new Blob(
+[
+JSON.stringify(
+data,
+null,
+2
+)
+],
+{
+type:
+"application/json"
+}
 );
 
 
-/* =========================================
+const url =
+URL.createObjectURL(
+blob
+);
+
+
+const a =
+document.createElement(
+"a"
+);
+
+a.href =
+url;
+
+a.download =
+(
+data.name ||
+"ghost-project"
+)
++
+".ghost";
+
+
+a.click();
+
+URL.revokeObjectURL(
+url
+);
+
+setStatus(
+"Projekt heruntergeladen"
+);
+
+};
+
+
+/* ==========================================
+   PLAY
+========================================== */
+
+document
+.getElementById(
+"playButton"
+)
+.onclick =
+()=>{
+
+isPlaying =
+true;
+
+document.getElementById(
+"playOverlay"
+)
+.style.display =
+"flex";
+
+setStatus(
+"Spiel läuft"
+);
+
+};
+
+
+document
+.getElementById(
+"stopButton"
+)
+.onclick =
+()=>{
+
+isPlaying =
+false;
+
+document.getElementById(
+"playOverlay"
+)
+.style.display =
+"none";
+
+setStatus(
+"Editor bereit"
+);
+
+};
+
+
+/* ==========================================
+   ANIMATION
+========================================== */
+
+const clock =
+new THREE.Clock();
+
+
+function updateAnimations(){
+
+const time =
+clock.getElapsedTime();
+
+
+objects.forEach(
+object=>{
+
+if(
+!isPlaying
+)
+return;
+
+
+const animation =
+object.userData.animation;
+
+
+if(
+animation ===
+"rotate"
+){
+
+object.rotation.y +=
+0.02;
+
+}
+
+
+if(
+animation ===
+"float"
+){
+
+object.position.y =
+0.5 +
+Math.sin(
+time * 3
+) *
+0.5;
+
+}
+
+
+if(
+animation ===
+"pulse"
+){
+
+const s =
+1 +
+Math.sin(
+time * 4
+) *
+0.1;
+
+object.scale.set(
+s,
+s,
+s
+);
+
+}
+
+});
+
+}
+
+
+/* ==========================================
    RENDER LOOP
-========================================= */
+========================================== */
 
-renderer.setAnimationLoop(
-    (time,frame) => {
+function animate(){
 
-        if(
-            frame
-        ){
-
-            const session =
-            renderer.xr.getSession();
-
-
-            if(
-                !hitTestSourceRequested
-            ){
-
-                const referenceSpace =
-                renderer.xr
-                .getReferenceSpace();
-
-
-                session.requestReferenceSpace(
-                    "viewer"
-                )
-                .then(
-                    viewerSpace => {
-
-                        return session.requestHitTestSource({
-
-                            space:
-                            viewerSpace
-
-                        });
-
-                    }
-                )
-                .then(
-                    source => {
-
-                        hitTestSource =
-                        source;
-
-                    }
-                );
-
-
-                hitTestSourceRequested =
-                true;
-
-            }
-
-
-            if(
-                hitTestSource
-            ){
-
-                const referenceSpace =
-                renderer.xr
-                .getReferenceSpace();
-
-
-                const hitResults =
-                frame.getHitTestResults(
-                    hitTestSource
-                );
-
-
-                if(
-                    hitResults.length > 0
-                ){
-
-                    const hit =
-                    hitResults[0];
-
-
-                    const pose =
-                    hit.getPose(
-                        referenceSpace
-                    );
-
-
-                    if(
-                        pose
-                    ){
-
-                        tempMatrix.fromArray(
-                            pose.transform.matrix
-                        );
-
-
-                        tempPosition.setFromMatrixPosition(
-                            tempMatrix
-                        );
-
-
-                        lastHitPosition =
-                        tempPosition.clone();
-
-
-                        if(
-                            !placed
-                        ){
-
-                            status.textContent =
-                            "Boden erkannt – Tippe zum Platzieren";
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-
-        /* MONSTER IDLE ANIMATION */
-
-        if(
-            currentMonster
-        ){
-
-            currentMonster.position.y +=
-            Math.sin(
-                time * 0.004
-            ) *
-            0.0008;
-
-
-            currentMonster.rotation.y +=
-            0.01;
-
-        }
-
-
-        renderer.render(
-            scene,
-            camera
-        );
-
-    }
+requestAnimationFrame(
+animate
 );
 
+updateAnimations();
 
-/* =========================================
+controls.update();
+
+renderer.render(
+scene,
+camera
+);
+
+}
+
+animate();
+
+
+/* ==========================================
    RESIZE
-========================================= */
+========================================== */
+
+function resize(){
+
+const container =
+document.getElementById(
+"game"
+);
+
+const width =
+container.clientWidth;
+
+const height =
+container.clientHeight;
+
+
+if(
+width <= 0 ||
+height <= 0
+)
+return;
+
+
+camera.aspect =
+width / height;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(
+width,
+height,
+false
+);
+
+}
+
 
 window.addEventListener(
-    "resize",
-    () => {
+"resize",
+resize
+);
 
-        camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
-
-
-        camera.updateProjectionMatrix();
+resize();
 
 
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
+/* ==========================================
+   START SCENE
+========================================== */
 
-    }
+createCube(
+"Cube"
 );
 
 </script>
