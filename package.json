@@ -1,16 +1,15 @@
 {
-  "name": "ghostgram",
+  "name": "monster-ar-world",
   "version": "1.0.0",
-  "description": "Ghostgram Social Media",
+  "description": "Kostenloses WebXR AR Monster-Spiel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {
-    "express": "^4.21.2",
-    "multer": "^2.0.2"
-  },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
   }
 }
