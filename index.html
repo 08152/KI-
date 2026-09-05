@@ -2,68 +2,49 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>FPS ENGINE - 1.glb</title>
+<title>FPS ENGINE GITHUB FIXED</title>
 
 <style>
-body{
-margin:0;
-overflow:hidden;
-background:#87cfff;
-font-family:Arial
-}
+body{margin:0;overflow:hidden;background:#87cfff;font-family:Arial}
 
 #crosshair{
-position:absolute;
-top:50%;
-left:50%;
-width:10px;
-height:10px;
+position:absolute;top:50%;left:50%;
+width:10px;height:10px;
 transform:translate(-50%,-50%);
 z-index:10;
 }
-
-#crosshair:before,
-#crosshair:after{
-content:"";
-position:absolute;
-background:white
-}
-
-#crosshair:before{
-width:2px;
-height:10px;
-left:4px
-}
-
-#crosshair:after{
-width:10px;
-height:2px;
-top:4px
-}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:white}
+#crosshair:before{width:2px;height:10px;left:4px}
+#crosshair:after{width:10px;height:2px;top:4px}
 
 #coords{
-position:absolute;
-bottom:10px;
-right:10px;
-color:white;
-font-size:13px;
+position:absolute;bottom:10px;right:10px;
+color:white;font-size:13px;
 background:rgba(0,0,0,0.4);
-padding:6px;
-border-radius:6px;
+padding:6px;border-radius:6px;
 white-space:pre;
-z-index:20;
 }
 
-#status{
-position:absolute;
-top:10px;
-left:10px;
+#chatBox{
+position:absolute;bottom:50px;left:10px;
+width:300px;display:none;flex-direction:column;
+}
+
+#chatLog{
+background:rgba(0,0,0,0.5);
 color:white;
-background:rgba(0,0,0,.6);
-padding:8px 12px;
-border-radius:7px;
-z-index:20;
-font-family:monospace;
+font-size:12px;
+height:120px;
+overflow:auto;
+padding:5px;
+}
+
+#chatInput{padding:5px;border:none;outline:none}
+
+#hitmarker{
+position:absolute;top:50%;left:50%;
+transform:translate(-50%,-50%);
+font-size:40px;color:red;display:none;
 }
 </style>
 </head>
@@ -72,7 +53,12 @@ font-family:monospace;
 
 <div id="crosshair"></div>
 <div id="coords"></div>
-<div id="status">Lade 1.glb...</div>
+<div id="hitmarker">✖</div>
+
+<div id="chatBox">
+<div id="chatLog"></div>
+<input id="chatInput" placeholder="Command..." />
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -82,442 +68,294 @@ font-family:monospace;
 /* ================= SCENE ================= */
 
 const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87cfff);
 
-scene.background=
-new THREE.Color(0x87cfff);
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,5000);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
 
+/* LIGHT */
+scene.add(new THREE.AmbientLight(0xffffff,1.2));
 
-/* ================= CAMERA ================= */
-
-const camera=
-new THREE.PerspectiveCamera(
-75,
-innerWidth/innerHeight,
-0.1,
-5000
-);
-
-
-/* ================= RENDERER ================= */
-
-const renderer=
-new THREE.WebGLRenderer({
-antialias:true
-});
-
-renderer.setSize(
-innerWidth,
-innerHeight
-);
-
-renderer.setPixelRatio(
-Math.min(devicePixelRatio,2)
-);
-
-document.body.appendChild(
-renderer.domElement
-);
-
-
-/* ================= LIGHT ================= */
-
-scene.add(
-new THREE.AmbientLight(
-0xffffff,
-1.2
-)
-);
-
-const sun=
-new THREE.DirectionalLight(
-0xffffff,
-1.5
-);
-
-sun.position.set(
-10,
-20,
-10
-);
-
+const sun=new THREE.DirectionalLight(0xffffff,1.5);
+sun.position.set(10,20,10);
 scene.add(sun);
-
 
 /* ================= GROUND ================= */
 
-const ground=
-new THREE.Mesh(
-
-new THREE.PlaneGeometry(
-5000,
-5000
-),
-
-new THREE.MeshStandardMaterial({
-color:0x228822
-})
-
+const ground=new THREE.Mesh(
+new THREE.PlaneGeometry(5000,5000),
+new THREE.MeshStandardMaterial({color:0x228822})
 );
-
-ground.rotation.x=
--Math.PI/2;
-
+ground.rotation.x=-Math.PI/2;
 scene.add(ground);
-
 
 /* ================= PLAYER ================= */
 
-const player=
-new THREE.Object3D();
-
+const player=new THREE.Object3D();
 scene.add(player);
-
 player.add(camera);
+camera.position.set(0,2,0);
 
-camera.position.set(
-0,
-2,
-0
-);
-
-let yaw=0;
-let pitch=0;
-
+let yaw=0,pitch=0;
 let velY=0;
 let onGround=true;
-
 
 /* ================= INPUT ================= */
 
 const keys={};
 
-window.addEventListener(
-"keydown",
-e=>{
+window.addEventListener("keydown",(e)=>{
 keys[e.key.toLowerCase()]=true;
 
-if(e.code==="Space"){
-jump();
-e.preventDefault();
-}
+if(e.key==="t") openChat();
+if(e.code==="Space") jump();
 });
 
-window.addEventListener(
-"keyup",
-e=>{
+window.addEventListener("keyup",(e)=>{
 keys[e.key.toLowerCase()]=false;
 });
 
-
-/* ================= POINTER LOCK ================= */
-
-document.body.addEventListener(
-"click",
-()=>{
+document.body.addEventListener("click",()=>{
 document.body.requestPointerLock();
+});
+
+/* ================= CHAT ================= */
+
+let chatOpen=false;
+
+const chatBox=document.getElementById("chatBox");
+const chatInput=document.getElementById("chatInput");
+const chatLog=document.getElementById("chatLog");
+
+function openChat(){
+chatOpen=!chatOpen;
+chatBox.style.display=chatOpen?"flex":"none";
+
+if(chatOpen){
+chatInput.focus();
+document.exitPointerLock();
 }
-);
+}
 
+chatInput.addEventListener("keydown",(e)=>{
+if(e.key==="Enter"){
+handleCommand(chatInput.value);
+chatInput.value="";
+}
+});
 
-/* ================= MOUSE ================= */
+function log(msg){
+chatLog.innerHTML+=msg+"<br>";
+}
 
-document.addEventListener(
-"mousemove",
-e=>{
+/* ================= COMMANDS ================= */
 
-if(
-document.pointerLockElement!==document.body
-)return;
+function handleCommand(cmd){
+
+cmd=cmd.trim();
+
+if(cmd==="/save"){
+saveGame();
+log("Saved ✔");
+return;
+}
+
+if(cmd==="/place barrier"){
+placeBarrier();
+log("Barrier placed ✔");
+return;
+}
+
+log("Unknown: "+cmd);
+}
+
+function saveGame(){
+const blob=new Blob([document.documentElement.outerHTML],{type:"text/html"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fps_game.html";
+a.click();
+}
+
+/* ================= MOVEMENT ================= */
+
+document.addEventListener("mousemove",(e)=>{
+if(document.pointerLockElement!==document.body || chatOpen)return;
 
 yaw-=e.movementX*0.002;
 pitch-=e.movementY*0.002;
 
-pitch=Math.max(
--1.2,
-Math.min(1.2,pitch)
-);
+pitch=Math.max(-1.2,Math.min(1.2,pitch));
 
 player.rotation.y=yaw;
 camera.rotation.x=pitch;
-
-}
-);
-
-
-/* ================= JUMP ================= */
+});
 
 function jump(){
-
-if(!onGround)
-return;
-
-velY=.25;
+if(onGround){
+velY=0.25;
 onGround=false;
-
+}
 }
 
-
-/* ================= GRAVITY ================= */
-
 function gravity(){
-
-velY-=.015;
-
+velY-=0.015;
 player.position.y+=velY;
 
 if(player.position.y<=0){
-
 player.position.y=0;
 velY=0;
 onGround=true;
-
 }
-
 }
-
-
-/* ================= MOVEMENT ================= */
 
 function move(){
 
-let dir=
-new THREE.Vector3();
+let dir=new THREE.Vector3();
 
-if(keys["w"])
-dir.z-=1;
+if(keys["w"])dir.z-=1;
+if(keys["s"])dir.z+=1;
+if(keys["a"])dir.x-=1;
+if(keys["d"])dir.x+=1;
 
-if(keys["s"])
-dir.z+=1;
-
-if(keys["a"])
-dir.x-=1;
-
-if(keys["d"])
-dir.x+=1;
-
-if(dir.length()>0)
 dir.normalize();
 
-const forward=
-new THREE.Vector3(
-0,
-0,
--1
-).applyEuler(
-player.rotation
-);
+const forward=new THREE.Vector3(0,0,-1).applyEuler(player.rotation);
+forward.y=0;forward.normalize();
 
-forward.y=0;
-forward.normalize();
+const right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,1,0)).negate();
 
-const right=
-new THREE.Vector3()
-.crossVectors(
-forward,
-new THREE.Vector3(0,1,0)
-)
-.negate();
-
-player.position.addScaledVector(
-forward,
-dir.z*.15
-);
-
-player.position.addScaledVector(
-right,
-dir.x*.15
-);
-
+player.position.addScaledVector(forward,dir.z*0.15);
+player.position.addScaledVector(right,dir.x*0.15);
 }
-
 
 /* ================= MODELS ================= */
 
-const loader=
-new THREE.GLTFLoader();
-
+const loader=new THREE.GLTFLoader();
 let weapon=null;
+let barriers=[];
 
+/* DEBUG LOADER (GITHUB SAFE) */
 
-/* ================= GLB IMPORT ================= */
-/*
-   GENAU DER IMPORT AUS DEINEM CODE.
-   NUR DER DATEINAME IST 1.glb.
-*/
-
-loader.load(
-"./1.glb",
-
+loader.load("./weapon.glb",
 (gltf)=>{
-
-console.log(
-"WEAPON LOADED"
-);
-
-weapon=
-gltf.scene;
-
-camera.add(
-weapon
-);
-
-weapon.position.set(
-0.5,
--0.8,
--1.2
-);
-
-document.getElementById(
-"status"
-).textContent=
-"✔ 1.glb geladen";
-
+console.log("WEAPON LOADED");
+weapon=gltf.scene;
+camera.add(weapon);
+weapon.position.set(0.5,-0.8,-1.2);
 },
-
 undefined,
-
-(err)=>{
-
-console.error(
-"WEAPON ERROR",
-err
+(err)=>console.error("WEAPON ERROR",err)
 );
 
-document.getElementById(
-"status"
-).textContent=
-"❌ 1.glb Fehler";
+/* fallback barrier (no GLB crash) */
+function addBarrier(x,y,z){
 
+const b=new THREE.Mesh(
+new THREE.BoxGeometry(1,2,1),
+new THREE.MeshStandardMaterial({color:0x444444})
+);
+
+b.position.set(x,y,z);
+scene.add(b);
+barriers.push(b);
 }
+
+function placeBarrier(){
+
+const dir=new THREE.Vector3(0,0,-1).applyEuler(player.rotation);
+
+addBarrier(
+player.position.x+dir.x*3,
+0,
+player.position.z+dir.z*3
+);
+}
+
+/* ================= ENEMIES ================= */
+
+let enemies=[];
+
+function addEnemy(x,y,z){
+const e=new THREE.Mesh(
+new THREE.BoxGeometry(1,2,1),
+new THREE.MeshStandardMaterial({color:0xff0000})
 );
 
+e.position.set(x,y,z);
+e.health=100;
+scene.add(e);
+enemies.push(e);
+}
+
+addEnemy(5,1,-20);
 
 /* ================= SHOOT ================= */
 
-let shooting=false;
+const raycaster=new THREE.Raycaster();
+
+const shootSound=new Audio();
+shootSound.src="./shoot.mp3";
+
+function hitmarker(){
+const h=document.getElementById("hitmarker");
+h.style.display="block";
+setTimeout(()=>h.style.display="none",100);
+}
 
 function shoot(){
 
-if(shooting)
-return;
+raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
 
-shooting=true;
+const hits=raycaster.intersectObjects(enemies,false);
 
+if(hits.length){
 
-/* Rückstoß */
+const e=hits[0].object;
+e.health-=25;
 
-if(weapon){
+hitmarker();
 
-weapon.position.z=
--1.08;
-
-setTimeout(()=>{
-
-weapon.position.z=
--1.2;
-
-},70);
-
+if(e.health<=0){
+scene.remove(e);
+enemies=enemies.filter(x=>x!==e);
+}
 }
 
-
-/* Mündungsblitz */
-
-const flash=
-new THREE.PointLight(
-0xffaa33,
-5,
-4
-);
-
-flash.position.set(
-0,
-0,
--2
-);
-
-camera.add(flash);
-
-setTimeout(()=>{
-
-camera.remove(flash);
-
-},60);
-
-
-setTimeout(()=>{
-
-shooting=false;
-
-},120);
-
+shootSound.currentTime=0;
+shootSound.play().catch(()=>{});
 }
-
-
-/* ================= MOUSE SHOOT ================= */
-
-window.addEventListener(
-"mousedown",
-e=>{
-
-if(e.button===0)
-shoot();
-
-}
-);
-
 
 /* ================= LOOP ================= */
 
 function animate(){
-
-requestAnimationFrame(
-animate
-);
+requestAnimationFrame(animate);
 
 move();
-
 gravity();
 
+camera.position.y+=(2-player.position.y-camera.position.y)*0.15;
 
-document.getElementById(
-"coords"
-).innerHTML=
-`X: ${player.position.x.toFixed(2)}
-Y: ${player.position.y.toFixed(2)}
-Z: ${player.position.z.toFixed(2)}`;
+document.getElementById("coords").innerHTML=
+`X:${player.position.x.toFixed(2)}
+Y:${player.position.y.toFixed(2)}
+Z:${player.position.z.toFixed(2)}`;
 
-
-renderer.render(
-scene,
-camera
-);
-
+renderer.render(scene,camera);
 }
 
 animate();
 
-
 /* ================= RESIZE ================= */
 
-window.addEventListener(
-"resize",
-()=>{
-
-camera.aspect=
-innerWidth/innerHeight;
-
+window.addEventListener("resize",()=>{
+camera.aspect=innerWidth/innerHeight;
 camera.updateProjectionMatrix();
-
-renderer.setSize(
-innerWidth,
-innerHeight
-);
-
-}
-);
+renderer.setSize(innerWidth,innerHeight);
+});
 
 </script>
-
 </body>
 </html>
