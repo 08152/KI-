@@ -2,176 +2,476 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Voxel World + GLB Fix</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GLB FPS</title>
 
 <style>
-body { margin:0; overflow:hidden; }
-canvas { display:block; }
+body{
+margin:0;
+overflow:hidden;
+background:#87cfff;
+font-family:Arial
+}
+
+#hud{
+position:fixed;
+top:10px;
+left:10px;
+z-index:10;
+background:#000b;
+color:white;
+padding:10px;
+font-family:monospace;
+border-radius:8px
+}
+
+#crosshair{
+position:fixed;
+top:50%;
+left:50%;
+width:16px;
+height:16px;
+transform:translate(-50%,-50%);
+z-index:10;
+pointer-events:none
+}
+
+#crosshair:before,
+#crosshair:after{
+content:"";
+position:absolute;
+background:white
+}
+
+#crosshair:before{
+width:2px;
+height:16px;
+left:7px
+}
+
+#crosshair:after{
+width:16px;
+height:2px;
+top:7px
+}
 </style>
 </head>
 
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+<div id="hud">Lade 1.glb...</div>
+<div id="crosshair"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
 
-let scene, camera, renderer, loader;
-let treeModel = null;
+/* =========================
+   SCENE
+========================= */
 
-init();
-animate();
+const scene=new THREE.Scene();
 
-function init() {
+scene.background=
+new THREE.Color(0x87cfff);
 
-scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
 
-camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
-camera.position.set(0, 8, 15);
+/* =========================
+   CAMERA
+========================= */
 
-renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
+const camera=
+new THREE.PerspectiveCamera(
+75,
+innerWidth/innerHeight,
+0.1,
+5000
+);
 
-// LIGHT
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 20, 10);
-scene.add(light);
+camera.position.set(
+0,
+2,
+5
+);
 
-loader = new THREE.GLTFLoader();
 
-// ===================== FIX: LOAD GLB ONCE =====================
-loader.load("baum.glb",
-(gltf) => {
-treeModel = gltf.scene;
-console.log("GLB loaded ✔");
-},
-undefined,
-(err) => {
-console.error("GLB ERROR:", err);
+/* =========================
+   RENDERER
+========================= */
+
+const renderer=
+new THREE.WebGLRenderer({
+antialias:true
+});
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+renderer.setPixelRatio(
+Math.min(devicePixelRatio,2)
+);
+
+document.body.appendChild(
+renderer.domElement
+);
+
+
+/* =========================
+   LIGHT
+========================= */
+
+scene.add(
+new THREE.HemisphereLight(
+0xffffff,
+0x444444,
+1.5
+)
+);
+
+const sun=
+new THREE.DirectionalLight(
+0xffffff,
+2
+);
+
+sun.position.set(
+10,
+20,
+10
+);
+
+scene.add(sun);
+
+
+/* =========================
+   GROUND
+========================= */
+
+const ground=
+new THREE.Mesh(
+
+new THREE.PlaneGeometry(
+5000,
+5000
+),
+
+new THREE.MeshStandardMaterial({
+color:0x228822
+})
+
+);
+
+ground.rotation.x=
+-Math.PI/2;
+
+scene.add(ground);
+
+
+/* =========================
+   PLAYER
+========================= */
+
+const player=
+new THREE.Object3D();
+
+scene.add(player);
+
+player.add(camera);
+
+camera.position.set(
+0,
+2,
+5
+);
+
+let yaw=0;
+let pitch=0;
+
+const keys={};
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+window.addEventListener(
+"keydown",
+e=>{
+keys[e.key.toLowerCase()]=true;
 }
 );
 
-// ===================== GRASS TEXTURE =====================
-const tex = createGrass();
-const mat = new THREE.MeshLambertMaterial({ map: tex });
-const geo = new THREE.BoxGeometry(1,1,1);
-
-// ===================== WORLD =====================
-for (let x = -20; x < 20; x++) {
-for (let z = -20; z < 20; z++) {
-
-const h =
-Math.floor(Math.sin(x * 0.2) * 2 +
-Math.cos(z * 0.2) * 2);
-
-for (let y = 0; y <= h; y++) {
-const cube = new THREE.Mesh(geo, mat);
-cube.position.set(x, y, z);
-scene.add(cube);
+window.addEventListener(
+"keyup",
+e=>{
+keys[e.key.toLowerCase()]=false;
 }
+);
 
-// trees
-if (Math.random() < 0.03) {
-spawnTree(x, h + 1, z);
-}
 
-}
-}
+/* =========================
+   MOUSE
+========================= */
 
-// ===================== CONTROLS =====================
-document.body.addEventListener("click", () => {
+document.body.addEventListener(
+"click",
+()=>{
 document.body.requestPointerLock();
-});
-
-let rotX = 0, rotY = 0;
-
-document.addEventListener("mousemove", (e) => {
-if (document.pointerLockElement !== document.body) return;
-
-rotY -= e.movementX * 0.002;
-rotX -= e.movementY * 0.002;
-
-rotX = Math.max(-1.5, Math.min(1.5, rotX));
-
-camera.rotation.x = rotX;
-camera.rotation.y = rotY;
-});
-
-// ===================== MOVEMENT =====================
-let keys = {};
-
-document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
-
-function move() {
-requestAnimationFrame(move);
-
-let speed = 0.2;
-
-let forward = new THREE.Vector3(
-Math.sin(camera.rotation.y),
-0,
-Math.cos(camera.rotation.y)
-);
-
-let right = new THREE.Vector3(
-Math.sin(camera.rotation.y + Math.PI/2),
-0,
-Math.cos(camera.rotation.y + Math.PI/2)
-);
-
-if (keys["w"]) camera.position.addScaledVector(forward, -speed);
-if (keys["s"]) camera.position.addScaledVector(forward, speed);
-if (keys["a"]) camera.position.addScaledVector(right, -speed);
-if (keys["d"]) camera.position.addScaledVector(right, speed);
-
-renderer.render(scene, camera);
 }
+);
+
+document.addEventListener(
+"mousemove",
+e=>{
+
+if(
+document.pointerLockElement!==document.body
+)return;
+
+yaw-=e.movementX*0.002;
+
+pitch-=e.movementY*0.002;
+
+pitch=Math.max(
+-1.2,
+Math.min(1.2,pitch)
+);
+
+player.rotation.y=yaw;
+
+camera.rotation.x=pitch;
+
+}
+);
+
+
+/* =========================
+   GLB IMPORT
+   GENAU WIE DEIN CODE
+========================= */
+
+const loader=
+new THREE.GLTFLoader();
+
+let model=null;
+
+loader.load(
+"./1.glb",
+
+function(gltf){
+
+model=gltf.scene;
+
+scene.add(model);
+
+console.log(
+"GLB erfolgreich geladen!",
+gltf
+);
+
+
+/* =========================
+   AUTOMATISCHE GRÖSSE
+========================= */
+
+const box=
+new THREE.Box3().setFromObject(model);
+
+const size=
+new THREE.Vector3();
+
+box.getSize(size);
+
+const maxSize=
+Math.max(
+size.x,
+size.y,
+size.z
+);
+
+if(maxSize>0){
+
+const targetSize=4;
+
+const scale=
+targetSize/maxSize;
+
+model.scale.set(
+scale,
+scale,
+scale
+);
+
+}
+
+
+/* =========================
+   AUF BODEN SETZEN
+========================= */
+
+const newBox=
+new THREE.Box3().setFromObject(model);
+
+model.position.y-=newBox.min.y;
+
+
+/* =========================
+   POSITION
+========================= */
+
+model.position.set(
+0,
+model.position.y,
+-3
+);
+
+
+document.getElementById(
+"hud"
+).textContent=
+"✔ 1.glb geladen";
+
+},
+
+function(progress){
+
+console.log(
+"Lädt 1.glb..."
+);
+
+document.getElementById(
+"hud"
+).textContent=
+"⏳ 1.glb wird geladen...";
+
+},
+
+function(error){
+
+console.error(
+"Fehler beim GLB-Import:",
+error
+);
+
+document.getElementById(
+"hud"
+).textContent=
+"❌ Fehler beim Laden von 1.glb";
+
+}
+);
+
+
+/* =========================
+   MOVEMENT
+========================= */
+
+function move(){
+
+const speed=0.12;
+
+const forward=
+new THREE.Vector3(
+0,
+0,
+-1
+);
+
+forward.applyEuler(
+player.rotation
+);
+
+forward.y=0;
+forward.normalize();
+
+
+const right=
+new THREE.Vector3(
+1,
+0,
+0
+);
+
+right.applyEuler(
+player.rotation
+);
+
+right.y=0;
+right.normalize();
+
+
+if(keys["w"])
+player.position.addScaledVector(
+forward,
+speed
+);
+
+if(keys["s"])
+player.position.addScaledVector(
+forward,
+-speed
+);
+
+if(keys["a"])
+player.position.addScaledVector(
+right,
+-speed
+);
+
+if(keys["d"])
+player.position.addScaledVector(
+right,
+speed
+);
+
+}
+
+
+/* =========================
+   LOOP
+========================= */
+
+function animate(){
+
+requestAnimationFrame(
+animate
+);
 
 move();
 
-window.addEventListener("resize", () => {
-camera.aspect = innerWidth/innerHeight;
+renderer.render(
+scene,
+camera
+);
+
+}
+
+animate();
+
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+"resize",
+()=>{
+
+camera.aspect=
+innerWidth/innerHeight;
+
 camera.updateProjectionMatrix();
-renderer.setSize(innerWidth, innerHeight);
-});
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
 
 }
-
-// ===================== FIXED TREE SPAWN =====================
-function spawnTree(x, y, z) {
-
-if (!treeModel) return; // IMPORTANT FIX
-
-const tree = treeModel.clone();
-
-tree.position.set(x, y, z);
-tree.scale.set(1,1,1);
-
-scene.add(tree);
-}
-
-// ===================== GRASS TEXTURE =====================
-function createGrass() {
-const c = document.createElement("canvas");
-c.width = 64;
-c.height = 64;
-const ctx = c.getContext("2d");
-
-ctx.fillStyle = "#3cb043";
-ctx.fillRect(0,0,64,64);
-
-for (let i=0;i<400;i++) {
-ctx.fillStyle = `rgb(0,${100+Math.random()*100},0)`;
-ctx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
-}
-
-return new THREE.CanvasTexture(c);
-}
+);
 
 </script>
 
