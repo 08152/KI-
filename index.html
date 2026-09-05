@@ -2,762 +2,176 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GLB 3D World</title>
+<title>Voxel World + GLB Fix</title>
 
 <style>
-*{box-sizing:border-box}
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#000;
-    font-family:Arial,sans-serif;
-}
-canvas{
-    display:block;
-    width:100%;
-    height:100%;
-}
-#overlay{
-    position:fixed;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,.55);
-    color:white;
-    z-index:20;
-    cursor:pointer;
-    font-size:24px;
-}
-#buttons{
-    position:fixed;
-    top:15px;
-    right:15px;
-    z-index:30;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-}
-button{
-    border:1px solid rgba(255,255,255,.3);
-    background:rgba(0,0,0,.7);
-    color:white;
-    padding:11px 16px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:15px;
-}
-button:hover{
-    background:rgba(60,60,60,.9);
-}
-#info{
-    position:fixed;
-    left:15px;
-    bottom:15px;
-    z-index:30;
-    color:white;
-    background:rgba(0,0,0,.65);
-    padding:10px;
-    border-radius:8px;
-    font-family:monospace;
-}
-#crosshair{
-    position:fixed;
-    left:50%;
-    top:50%;
-    width:12px;
-    height:12px;
-    margin-left:-6px;
-    margin-top:-6px;
-    z-index:10;
-    pointer-events:none;
-}
-#crosshair:before,
-#crosshair:after{
-    content:"";
-    position:absolute;
-    background:white;
-}
-#crosshair:before{
-    width:12px;
-    height:2px;
-    top:5px;
-    left:0;
-}
-#crosshair:after{
-    width:2px;
-    height:12px;
-    top:0;
-    left:5px;
-}
+body { margin:0; overflow:hidden; }
+canvas { display:block; }
 </style>
 </head>
 
 <body>
 
-<div id="overlay">KLICKEN ZUM STARTEN</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
 
-<div id="buttons">
-    <button id="up">▲ Modell hoch</button>
-    <button id="down">▼ Modell runter</button>
-    <button id="left">◀ Modell links</button>
-    <button id="right">▶ Modell rechts</button>
-    <button id="rotL">⟲ Drehen links</button>
-    <button id="rotR">⟳ Drehen rechts</button>
-    <button id="bigger">＋ Größer</button>
-    <button id="smaller">− Kleiner</button>
-    <button id="reset">↻ Zurücksetzen</button>
-</div>
+<script>
 
-<div id="crosshair"></div>
+let scene, camera, renderer, loader;
+let treeModel = null;
 
-<div id="info">
-    WASD = Bewegen<br>
-    Maus = Umschauen<br>
-    SPACE = Springen<br>
-    Modell: 1.glb
-</div>
+init();
+animate();
 
-<script type="module">
-
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-
-import {GLTFLoader} from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
-
-
-/* =========================
-   GRUNDLAGEN
-========================= */
-
-let scene;
-let camera;
-let renderer;
-
-let model = null;
-
-let velocity = new THREE.Vector3();
-
-let keys = {
-    w:false,
-    s:false,
-    a:false,
-    d:false
-};
-
-let canJump = false;
-
-const GRAVITY = 0.015;
-const JUMP = 0.35;
-const SPEED = 0.25;
-
-
-/* =========================
-   SZENE
-========================= */
+function init() {
 
 scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87CEEB);
 
-scene.background = new THREE.Color(0x4aa3ff);
+camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(0, 8, 15);
 
+renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
 
-/* =========================
-   KAMERA
-========================= */
+// LIGHT
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 20, 10);
+scene.add(light);
 
-camera = new THREE.PerspectiveCamera(
-    75,
-    innerWidth / innerHeight,
-    0.1,
-    2000
+loader = new THREE.GLTFLoader();
+
+// ===================== FIX: LOAD GLB ONCE =====================
+loader.load("baum.glb",
+(gltf) => {
+treeModel = gltf.scene;
+console.log("GLB loaded ✔");
+},
+undefined,
+(err) => {
+console.error("GLB ERROR:", err);
+}
 );
 
-camera.position.set(0,5,10);
+// ===================== GRASS TEXTURE =====================
+const tex = createGrass();
+const mat = new THREE.MeshLambertMaterial({ map: tex });
+const geo = new THREE.BoxGeometry(1,1,1);
 
+// ===================== WORLD =====================
+for (let x = -20; x < 20; x++) {
+for (let z = -20; z < 20; z++) {
 
-/* =========================
-   RENDERER
-========================= */
+const h =
+Math.floor(Math.sin(x * 0.2) * 2 +
+Math.cos(z * 0.2) * 2);
 
-renderer = new THREE.WebGLRenderer({
-    antialias:true
-});
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
-);
-
-renderer.setPixelRatio(
-    Math.min(devicePixelRatio,2)
-);
-
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-document.body.appendChild(
-    renderer.domElement
-);
-
-
-/* =========================
-   LICHT
-========================= */
-
-const hemi =
-new THREE.HemisphereLight(
-    0xffffff,
-    0x444444,
-    1.5
-);
-
-scene.add(hemi);
-
-
-const sun =
-new THREE.DirectionalLight(
-    0xffffff,
-    2
-);
-
-sun.position.set(
-    50,
-    100,
-    50
-);
-
-scene.add(sun);
-
-
-const ambient =
-new THREE.AmbientLight(
-    0xffffff,
-    0.25
-);
-
-scene.add(ambient);
-
-
-/* =========================
-   BODEN
-========================= */
-
-const groundGeometry =
-new THREE.PlaneGeometry(
-    2000,
-    2000,
-    100,
-    100
-);
-
-groundGeometry.rotateX(-Math.PI/2);
-
-const groundPosition =
-groundGeometry.attributes.position;
-
-for(let i=0;i<groundPosition.count;i++){
-
-    const x =
-        groundPosition.getX(i);
-
-    const z =
-        groundPosition.getZ(i);
-
-    groundPosition.setY(
-        i,
-        getHeight(x,z)
-    );
+for (let y = 0; y <= h; y++) {
+const cube = new THREE.Mesh(geo, mat);
+cube.position.set(x, y, z);
+scene.add(cube);
 }
 
-groundGeometry.computeVertexNormals();
-
-
-const groundMaterial =
-new THREE.MeshStandardMaterial({
-    color:0x229922,
-    roughness:0.9
-});
-
-
-const ground =
-new THREE.Mesh(
-    groundGeometry,
-    groundMaterial
-);
-
-scene.add(ground);
-
-
-/* =========================
-   GELÄNDE
-========================= */
-
-function getHeight(x,z){
-
-    return (
-        Math.sin(x*0.02)*2 +
-        Math.cos(z*0.02)*2 +
-        Math.sin((x+z)*0.01)*3
-    );
+// trees
+if (Math.random() < 0.03) {
+spawnTree(x, h + 1, z);
 }
 
-
-/* =========================
-   1.GLB LADEN
-========================= */
-
-const loader =
-new GLTFLoader();
-
-loader.load(
-    "./1.glb",
-
-    function(gltf){
-
-        model = gltf.scene;
-
-        model.position.set(
-            0,
-            getHeight(0,0),
-            0
-        );
-
-        model.scale.set(
-            2,
-            2,
-            2
-        );
-
-        scene.add(model);
-
-        console.log("1.glb geladen");
-
-        /*
-         * Animationen des GLB abspielen
-         */
-
-        if(gltf.animations.length > 0){
-
-            const mixer =
-                new THREE.AnimationMixer(model);
-
-            gltf.animations.forEach(
-                animation => {
-
-                    const action =
-                        mixer.clipAction(animation);
-
-                    action.play();
-
-                }
-            );
-
-            model.userData.mixer =
-                mixer;
-        }
-    },
-
-    function(xhr){
-
-        if(xhr.total){
-
-            console.log(
-                "1.glb: "+
-                Math.round(
-                    xhr.loaded /
-                    xhr.total *
-                    100
-                )+"%"
-            );
-        }
-    },
-
-    function(error){
-
-        console.error(
-            "Fehler beim Laden von 1.glb:",
-            error
-        );
-    }
-);
-
-
-/* =========================
-   POINTER LOCK
-========================= */
-
-const overlay =
-document.getElementById("overlay");
-
-overlay.addEventListener(
-    "click",
-    function(){
-
-        renderer.domElement.requestPointerLock();
-
-    }
-);
-
-
-document.addEventListener(
-    "pointerlockchange",
-    function(){
-
-        if(
-            document.pointerLockElement ===
-            renderer.domElement
-        ){
-
-            overlay.style.display="none";
-
-        }else{
-
-            overlay.style.display="flex";
-
-        }
-
-    }
-);
-
-
-/* =========================
-   KAMERA STEUERN
-========================= */
-
-let yaw = 0;
-let pitch = 0;
-
-document.addEventListener(
-    "mousemove",
-    function(e){
-
-        if(
-            document.pointerLockElement !==
-            renderer.domElement
-        ) return;
-
-        yaw -=
-            e.movementX * 0.002;
-
-        pitch -=
-            e.movementY * 0.002;
-
-        pitch =
-            Math.max(
-                -1.5,
-                Math.min(1.5,pitch)
-            );
-
-        camera.rotation.x =
-            pitch;
-
-        camera.rotation.y =
-            yaw;
-    }
-);
-
-
-/* =========================
-   TASTATUR
-========================= */
-
-document.addEventListener(
-    "keydown",
-    function(e){
-
-        if(e.code==="KeyW")
-            keys.w=true;
-
-        if(e.code==="KeyS")
-            keys.s=true;
-
-        if(e.code==="KeyA")
-            keys.a=true;
-
-        if(e.code==="KeyD")
-            keys.d=true;
-
-        if(
-            e.code==="Space" &&
-            canJump
-        ){
-
-            velocity.y=JUMP;
-
-            canJump=false;
-
-        }
-    }
-);
-
-
-document.addEventListener(
-    "keyup",
-    function(e){
-
-        if(e.code==="KeyW")
-            keys.w=false;
-
-        if(e.code==="KeyS")
-            keys.s=false;
-
-        if(e.code==="KeyA")
-            keys.a=false;
-
-        if(e.code==="KeyD")
-            keys.d=false;
-
-    }
-);
-
-
-/* =========================
-   BUTTONEN
-========================= */
-
-function button(id,action){
-
-    document
-        .getElementById(id)
-        .addEventListener(
-            "click",
-            function(e){
-
-                e.stopPropagation();
-
-                if(model)
-                    action();
-
-            }
-        );
+}
 }
 
-
-button("up",()=>{
-    model.position.y += 0.5;
+// ===================== CONTROLS =====================
+document.body.addEventListener("click", () => {
+document.body.requestPointerLock();
 });
 
-button("down",()=>{
-    model.position.y -= 0.5;
+let rotX = 0, rotY = 0;
+
+document.addEventListener("mousemove", (e) => {
+if (document.pointerLockElement !== document.body) return;
+
+rotY -= e.movementX * 0.002;
+rotX -= e.movementY * 0.002;
+
+rotX = Math.max(-1.5, Math.min(1.5, rotX));
+
+camera.rotation.x = rotX;
+camera.rotation.y = rotY;
 });
 
-button("left",()=>{
-    model.position.x -= 0.5;
-});
+// ===================== MOVEMENT =====================
+let keys = {};
 
-button("right",()=>{
-    model.position.x += 0.5;
-});
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-button("rotL",()=>{
-    model.rotation.y += 0.2;
-});
+function move() {
+requestAnimationFrame(move);
 
-button("rotR",()=>{
-    model.rotation.y -= 0.2;
-});
+let speed = 0.2;
 
-button("bigger",()=>{
-    model.scale.multiplyScalar(1.2);
-});
-
-button("smaller",()=>{
-    model.scale.multiplyScalar(0.8);
-});
-
-button("reset",()=>{
-
-    model.position.set(
-        0,
-        getHeight(0,0),
-        0
-    );
-
-    model.rotation.set(
-        0,
-        0,
-        0
-    );
-
-    model.scale.set(
-        2,
-        2,
-        2
-    );
-
-});
-
-
-/* =========================
-   FENSTERGRÖSSE
-========================= */
-
-window.addEventListener(
-    "resize",
-    function(){
-
-        camera.aspect =
-            innerWidth / innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-
-    }
+let forward = new THREE.Vector3(
+Math.sin(camera.rotation.y),
+0,
+Math.cos(camera.rotation.y)
 );
 
+let right = new THREE.Vector3(
+Math.sin(camera.rotation.y + Math.PI/2),
+0,
+Math.cos(camera.rotation.y + Math.PI/2)
+);
 
-/* =========================
-   GAME LOOP
-========================= */
+if (keys["w"]) camera.position.addScaledVector(forward, -speed);
+if (keys["s"]) camera.position.addScaledVector(forward, speed);
+if (keys["a"]) camera.position.addScaledVector(right, -speed);
+if (keys["d"]) camera.position.addScaledVector(right, speed);
 
-const clock =
-new THREE.Clock();
+renderer.render(scene, camera);
+}
 
+move();
 
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    const delta =
-        clock.getDelta();
-
-
-    /* ANIMATIONEN */
-
-    if(
-        model &&
-        model.userData.mixer
-    ){
-
-        model.userData.mixer.update(
-            delta
-        );
-
-    }
-
-
-    /* BEWEGUNG */
-
-    let direction =
-        new THREE.Vector3();
-
-
-    if(keys.w)
-        direction.z -= 1;
-
-    if(keys.s)
-        direction.z += 1;
-
-    if(keys.a)
-        direction.x -= 1;
-
-    if(keys.d)
-        direction.x += 1;
-
-
-    if(direction.length()>0)
-        direction.normalize();
-
-
-    const forward =
-        new THREE.Vector3();
-
-    camera.getWorldDirection(
-        forward
-    );
-
-    forward.y=0;
-
-    forward.normalize();
-
-
-    const right =
-        new THREE.Vector3();
-
-    right.crossVectors(
-        forward,
-        camera.up
-    );
-
-    right.normalize();
-
-
-    const movement =
-        new THREE.Vector3();
-
-
-    movement.addScaledVector(
-        forward,
-        -direction.z
-    );
-
-    movement.addScaledVector(
-        right,
-        direction.x
-    );
-
-
-    movement.multiplyScalar(
-        SPEED
-    );
-
-
-    camera.position.add(
-        movement
-    );
-
-
-    /* GRAVITATION */
-
-    velocity.y -= GRAVITY;
-
-    camera.position.y +=
-        velocity.y;
-
-
-    /* BODEN */
-
-    const groundY =
-        getHeight(
-            camera.position.x,
-            camera.position.z
-        ) + 2;
-
-
-    if(
-        camera.position.y <
-        groundY
-    ){
-
-        camera.position.y =
-            groundY;
-
-        velocity.y=0;
-
-        canJump=true;
-
-    }
-
-
-    renderer.render(
-        scene,
-        camera
-    );
+window.addEventListener("resize", () => {
+camera.aspect = innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth, innerHeight);
+});
 
 }
 
+// ===================== FIXED TREE SPAWN =====================
+function spawnTree(x, y, z) {
 
-animate();
+if (!treeModel) return; // IMPORTANT FIX
+
+const tree = treeModel.clone();
+
+tree.position.set(x, y, z);
+tree.scale.set(1,1,1);
+
+scene.add(tree);
+}
+
+// ===================== GRASS TEXTURE =====================
+function createGrass() {
+const c = document.createElement("canvas");
+c.width = 64;
+c.height = 64;
+const ctx = c.getContext("2d");
+
+ctx.fillStyle = "#3cb043";
+ctx.fillRect(0,0,64,64);
+
+for (let i=0;i<400;i++) {
+ctx.fillStyle = `rgb(0,${100+Math.random()*100},0)`;
+ctx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
+}
+
+return new THREE.CanvasTexture(c);
+}
 
 </script>
 
