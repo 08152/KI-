@@ -2,1674 +2,693 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>MECHA HIDEOUT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Lokaler Video Maler</title>
 
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06100d;font-family:Arial,sans-serif}
-canvas{display:block}
-
-#hud,#rightHud{
- position:fixed;top:18px;z-index:10;color:#fff;
- background:rgba(4,12,10,.8);
- border:1px solid rgba(110,255,180,.35);
- border-radius:12px;padding:14px 18px;
- backdrop-filter:blur(10px)
-}
-#hud{left:18px}
-#rightHud{right:18px;text-align:right}
-
-#title{
- font-size:20px;font-weight:900;
- letter-spacing:2px;color:#8cffbd
+*{
+    box-sizing:border-box;
 }
 
-#status{margin-top:8px;font-size:13px;color:#d5eee0}
-#timer{margin-top:6px;font-size:16px;font-weight:bold}
-
-#crosshair{
- position:fixed;left:50%;top:50%;
- transform:translate(-50%,-50%);
- width:18px;height:18px;z-index:12;
- pointer-events:none
-}
-#crosshair:before,#crosshair:after{
- content:"";position:absolute;background:#fff;
- box-shadow:0 0 5px #000
-}
-#crosshair:before{width:2px;height:18px;left:8px}
-#crosshair:after{width:18px;height:2px;top:8px}
-
-#help{
- position:fixed;left:50%;bottom:25px;
- transform:translateX(-50%);
- color:#d8eee0;font-size:12px;z-index:10;
- text-align:center;text-shadow:0 2px 5px black
+body{
+    margin:0;
+    min-height:100vh;
+    background:#181818;
+    color:white;
+    font-family:Arial,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 }
 
-#message{
- position:fixed;left:50%;top:42%;
- transform:translate(-50%,-50%);
- color:#fff;font-size:clamp(22px,4vw,42px);
- font-weight:900;letter-spacing:2px;
- text-align:center;z-index:20;
- pointer-events:none;text-shadow:0 0 20px #000;
- opacity:0;transition:opacity .25s
+header{
+    width:100%;
+    padding:20px;
+    text-align:center;
+    background:#242424;
+    border-bottom:1px solid #444;
 }
 
-/* START */
-
-#start{
- position:fixed;inset:0;z-index:100;
- display:flex;align-items:center;justify-content:center;
- background:rgba(2,8,6,.9);
- backdrop-filter:blur(10px)
+h1{
+    margin:0;
+    font-size:24px;
 }
 
-#startBox{
- width:min(520px,90vw);
- padding:32px;text-align:center;color:white;
- background:rgba(8,20,15,.95);
- border:1px solid rgba(100,255,170,.35);
- border-radius:18px;
- box-shadow:0 20px 80px #000
+p{
+    color:#aaa;
 }
 
-#startBox h1{
- margin:0 0 12px;
- color:#81ffb6;
- letter-spacing:4px
+#container{
+    width:min(95vw,900px);
+    margin-top:20px;
 }
 
-#startBox p{color:#c8d8cf;line-height:1.6}
+#cameraBox{
+    position:relative;
+    width:100%;
+    background:#000;
+    border-radius:15px;
+    overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+
+canvas{
+    width:100%;
+    display:block;
+}
+
+video{
+    display:none;
+}
+
+#controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    padding:20px;
+}
 
 button{
- border:0;border-radius:10px;
- padding:14px 26px;
- font-size:16px;font-weight:bold;
- cursor:pointer;color:#041009;
- background:#7dffb2;margin-top:15px
+    border:none;
+    padding:13px 18px;
+    border-radius:10px;
+    font-size:16px;
+    cursor:pointer;
+    background:#444;
+    color:white;
 }
 
-/* PAINT MENU */
-
-#paintMenu{
- position:fixed;
- inset:0;
- z-index:80;
- display:none;
- align-items:center;
- justify-content:center;
- background:rgba(0,0,0,.55);
- backdrop-filter:blur(7px);
+button:hover{
+    background:#666;
 }
 
-#paintBox{
- width:min(430px,92vw);
- background:rgba(7,18,13,.97);
- border:1px solid rgba(100,255,170,.4);
- border-radius:18px;
- padding:25px;
- color:white;
- box-shadow:0 20px 90px #000;
+.start{
+    background:#1685ff;
 }
 
-#paintBox h2{
- margin:0 0 8px;
- color:#8cffbd;
- letter-spacing:2px;
- text-align:center;
+.start:hover{
+    background:#006fe8;
 }
 
-.paintHint{
- text-align:center;
- color:#a9c2b2;
- font-size:13px;
- margin-bottom:18px;
+.record{
+    background:#d92525;
 }
 
-.paintRow{
- display:flex;
- align-items:center;
- justify-content:space-between;
- padding:11px 0;
- border-bottom:1px solid rgba(255,255,255,.08);
+.recording{
+    animation:pulse 1s infinite;
 }
 
-.paintRow label{
- font-weight:bold;
+@keyframes pulse{
+    50%{
+        opacity:.5;
+    }
 }
 
-.paintRow input{
- width:60px;
- height:35px;
- border:none;
- background:none;
- cursor:pointer;
+.download{
+    background:#18a84c;
 }
 
-#closePaint{
- width:100%;
- margin-top:20px;
+#settings{
+    margin:10px 0 30px 0;
+    padding:20px;
+    background:#242424;
+    border-radius:15px;
 }
 
-/* COLOR PRESETS */
-
-#presets{
- display:grid;
- grid-template-columns:repeat(6,1fr);
- gap:9px;
- margin-top:16px;
+.setting{
+    margin:15px 0;
 }
 
-.colorPreset{
- width:100%;
- aspect-ratio:1;
- border-radius:8px;
- border:2px solid rgba(255,255,255,.2);
- cursor:pointer;
+label{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:8px;
 }
 
-.colorPreset:hover{
- transform:scale(1.08);
- border-color:white;
+input[type="range"]{
+    width:100%;
 }
 
-#selectedPart{
- color:#8cffbd;
- font-weight:bold;
+select{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    background:#333;
+    color:white;
+    border:1px solid #555;
 }
 
+#status{
+    text-align:center;
+    min-height:25px;
+    color:#aaa;
+}
+
+#recordDot{
+    position:absolute;
+    top:15px;
+    left:15px;
+    width:15px;
+    height:15px;
+    background:red;
+    border-radius:50%;
+    display:none;
+    box-shadow:0 0 15px red;
+}
+
+#recordTime{
+    position:absolute;
+    top:12px;
+    left:42px;
+    display:none;
+    font-size:18px;
+    text-shadow:0 2px 5px black;
+}
 </style>
 </head>
 
 <body>
 
-<div id="hud">
- <div id="title">MECHA HIDEOUT</div>
- <div id="status">MODUS: VERSTECKEN</div>
- <div id="timer">ZEIT: 60</div>
+<header>
+    <h1>🎨 Lokaler Video Maler</h1>
+    <p>Echte Kamera → gemalter Effekt → Videoaufnahme</p>
+</header>
+
+<div id="container">
+
+    <div id="cameraBox">
+        <video id="video" autoplay playsinline muted></video>
+
+        <canvas id="canvas"></canvas>
+
+        <div id="recordDot"></div>
+        <div id="recordTime">00:00</div>
+    </div>
+
+    <div id="controls">
+        <button class="start" id="startCamera">
+            📷 Kamera starten
+        </button>
+
+        <button class="record" id="recordButton" disabled>
+            ⏺ Aufnahme starten
+        </button>
+
+        <button class="download" id="downloadButton" disabled>
+            ⬇ Video herunterladen
+        </button>
+    </div>
+
+    <div id="settings">
+
+        <div class="setting">
+            <label>
+                Effekt
+            </label>
+
+            <select id="effect">
+                <option value="paint">Gemalt</option>
+                <option value="watercolor">Aquarell</option>
+                <option value="sketch">Bleistiftzeichnung</option>
+                <option value="cartoon">Comic</option>
+                <option value="soft">Weich gemalt</option>
+            </select>
+        </div>
+
+        <div class="setting">
+            <label>
+                <span>Farbstärke</span>
+                <span id="saturationValue">140%</span>
+            </label>
+
+            <input
+                type="range"
+                id="saturation"
+                min="0"
+                max="250"
+                value="140"
+            >
+        </div>
+
+        <div class="setting">
+            <label>
+                <span>Kontrast</span>
+                <span id="contrastValue">120%</span>
+            </label>
+
+            <input
+                type="range"
+                id="contrast"
+                min="50"
+                max="250"
+                value="120"
+            >
+        </div>
+
+        <div class="setting">
+            <label>
+                <span>Helligkeit</span>
+                <span id="brightnessValue">100%</span>
+            </label>
+
+            <input
+                type="range"
+                id="brightness"
+                min="50"
+                max="180"
+                value="100"
+            >
+        </div>
+
+    </div>
+
+    <div id="status">
+        Kamera noch nicht gestartet.
+    </div>
+
 </div>
-
-<div id="rightHud">
- <b>SUCHER</b><br>
- <span id="found">0 / 5</span>
-</div>
-
-<div id="crosshair"></div>
-
-<div id="help">
- WASD = Bewegen · MAUS = Umschauen · E = Mecha anmalen · SHIFT = Rennen
-</div>
-
-<div id="message"></div>
-
-
-<!-- START -->
-
-<div id="start">
- <div id="startBox">
-  <h1>MECHA HIDEOUT</h1>
-  <p>
-   Verstecke dich in der Arena.<br><br>
-   Drücke <b>E</b>, um deinen Mecha selbst an die Umgebung anzumalen.
-  </p>
-  <button id="startButton">SPIEL STARTEN</button>
- </div>
-</div>
-
-
-<!-- PAINT MENU -->
-
-<div id="paintMenu">
-
- <div id="paintBox">
-
-  <h2>🎨 MECHA ANMALEN</h2>
-
-  <div class="paintHint">
-   Wähle einen Bereich und anschließend eine Farbe.
-  </div>
-
-  <div class="paintRow">
-   <label>Körper</label>
-   <input type="color" id="bodyColor" value="#1c9f5a">
-  </div>
-
-  <div class="paintRow">
-   <label>Kopf</label>
-   <input type="color" id="headColor" value="#263b32">
-  </div>
-
-  <div class="paintRow">
-   <label>Beine</label>
-   <input type="color" id="legColor" value="#263b32">
-  </div>
-
-  <div class="paintRow">
-   <label>Schwanz</label>
-   <input type="color" id="tailColor" value="#263b32">
-  </div>
-
-  <div id="presets"></div>
-
-  <button id="closePaint">FERTIG</button>
-
- </div>
-
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
 <script>
 
-/* =========================================================
-   SCENE
-========================================================= */
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d", {
+    willReadFrequently:true
+});
 
-const scene=new THREE.Scene();
+const startCamera = document.getElementById("startCamera");
+const recordButton = document.getElementById("recordButton");
+const downloadButton = document.getElementById("downloadButton");
 
-scene.background=
- new THREE.Color(0x0a1c14);
+const effectSelect = document.getElementById("effect");
 
-scene.fog=
- new THREE.Fog(
-  0x0a1c14,
-  30,
-  110
- );
+const saturation = document.getElementById("saturation");
+const contrast = document.getElementById("contrast");
+const brightness = document.getElementById("brightness");
 
+const saturationValue = document.getElementById("saturationValue");
+const contrastValue = document.getElementById("contrastValue");
+const brightnessValue = document.getElementById("brightnessValue");
 
-const camera=
- new THREE.PerspectiveCamera(
-  75,
-  innerWidth/innerHeight,
-  .1,
-  300
- );
+const status = document.getElementById("status");
 
-
-const renderer=
- new THREE.WebGLRenderer({
-  antialias:true
- });
-
-renderer.setSize(
- innerWidth,
- innerHeight
-);
-
-renderer.setPixelRatio(
- Math.min(
-  devicePixelRatio,
-  2
- )
-);
-
-renderer.shadowMap.enabled=true;
-
-document.body.appendChild(
- renderer.domElement
-);
+const recordDot = document.getElementById("recordDot");
+const recordTime = document.getElementById("recordTime");
 
 
-/* =========================================================
-   LIGHT
-========================================================= */
+let stream = null;
+let recorder = null;
+let chunks = [];
 
-scene.add(
- new THREE.HemisphereLight(
-  0xbfffe1,
-  0x102016,
-  1.4
- )
-);
+let recording = false;
+let recordingStart = 0;
+let animationFrame = null;
 
 
-const sun=
- new THREE.DirectionalLight(
-  0xffffff,
-  1.6
- );
+saturation.addEventListener("input",()=>{
+    saturationValue.textContent =
+        saturation.value + "%";
+});
 
-sun.position.set(
- 25,
- 35,
- 20
-);
+contrast.addEventListener("input",()=>{
+    contrastValue.textContent =
+        contrast.value + "%";
+});
 
-sun.castShadow=true;
-
-scene.add(sun);
-
-
-/* =========================================================
-   FLOOR
-========================================================= */
-
-const floorMat=
- new THREE.MeshStandardMaterial({
-  color:0x315c3a,
-  roughness:.95
- });
+brightness.addEventListener("input",()=>{
+    brightnessValue.textContent =
+        brightness.value + "%";
+});
 
 
-const floor=
- new THREE.Mesh(
-  new THREE.PlaneGeometry(
-   160,
-   160
-  ),
-  floorMat
- );
+startCamera.addEventListener("click",async()=>{
 
-floor.rotation.x=
- -Math.PI/2;
+    try{
 
-floor.receiveShadow=true;
+        stream = await navigator.mediaDevices.getUserMedia({
 
-scene.add(floor);
+            video:{
+                facingMode:"environment",
+                width:{ideal:1280},
+                height:{ideal:720}
+            },
 
+            audio:true
 
-/* =========================================================
-   OBSTACLES
-========================================================= */
+        });
 
-const obstacles=[];
+        video.srcObject = stream;
 
+        await video.play();
 
-const treeMat=
- new THREE.MeshStandardMaterial({
-  color:0x5b3a20
- });
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-const leavesMat=
- new THREE.MeshStandardMaterial({
-  color:0x1f6b35
- });
+        recordButton.disabled = false;
 
-const rockMat=
- new THREE.MeshStandardMaterial({
-  color:0x4a514d,
-  roughness:.95
- });
+        status.textContent =
+            "Kamera läuft. Wähle einen Effekt.";
 
-const crateMat=
- new THREE.MeshStandardMaterial({
-  color:0x77512d
- });
+        draw();
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        status.textContent =
+            "Kamera konnte nicht gestartet werden.";
+
+    }
+
+});
 
 
-function createTree(
- x,
- z,
- scale
-){
+function draw(){
 
- const tree=
-  new THREE.Group();
-
- const trunk=
-  new THREE.Mesh(
-   new THREE.CylinderGeometry(
-    .45*scale,
-    .65*scale,
-    5*scale,
-    10
-   ),
-   treeMat
-  );
-
- trunk.position.y=
- 2.5*scale;
-
- trunk.castShadow=true;
-
- tree.add(trunk);
+    if(!video.videoWidth){
+        animationFrame = requestAnimationFrame(draw);
+        return;
+    }
 
 
- for(let i=0;i<3;i++){
-
-  const leaves=
-   new THREE.Mesh(
-    new THREE.ConeGeometry(
-     2.2*scale,
-     3.5*scale,
-     10
-    ),
-    leavesMat
-   );
-
-  leaves.position.y=
-   4*scale+
-   i*1.4*scale;
-
-  leaves.castShadow=true;
-
-  tree.add(leaves);
-
- }
+    const w = canvas.width;
+    const h = canvas.height;
 
 
- tree.position.set(
-  x,
-  0,
-  z
- );
-
- scene.add(tree);
+    const sat = saturation.value;
+    const con = contrast.value;
+    const bri = brightness.value;
 
 
- obstacles.push({
-  x,
-  z,
-  radius:
-   1.5*scale
- });
+    ctx.clearRect(0,0,w,h);
+
+
+    const effect = effectSelect.value;
+
+
+    if(effect === "paint"){
+
+        ctx.filter =
+            `brightness(${bri}%)
+             contrast(${con + 20}%)
+             saturate(${sat + 30}%)
+             blur(0.6px)`;
+
+        ctx.drawImage(video,0,0,w,h);
+
+        ctx.globalAlpha = 0.25;
+
+        ctx.filter =
+            "blur(2px) saturate(180%)";
+
+        ctx.drawImage(video,0,0,w,h);
+
+        ctx.globalAlpha = 1;
+
+    }
+
+
+    else if(effect === "watercolor"){
+
+        ctx.filter =
+            `brightness(${bri + 5}%)
+             contrast(${con - 10}%)
+             saturate(${sat + 50}%)
+             blur(1.2px)`;
+
+        ctx.drawImage(video,0,0,w,h);
+
+        ctx.globalAlpha = 0.3;
+
+        ctx.filter =
+            "blur(4px) saturate(180%)";
+
+        ctx.drawImage(video,0,0,w,h);
+
+        ctx.globalAlpha = 1;
+
+    }
+
+
+    else if(effect === "soft"){
+
+        ctx.filter =
+            `brightness(${bri + 10}%)
+             contrast(${con - 10}%)
+             saturate(${sat + 20}%)
+             blur(1px)`;
+
+        ctx.drawImage(video,0,0,w,h);
+
+    }
+
+
+    else if(effect === "cartoon"){
+
+        ctx.filter =
+            `brightness(${bri}%)
+             contrast(${con + 60}%)
+             saturate(${sat + 70}%)`;
+
+        ctx.drawImage(video,0,0,w,h);
+
+    }
+
+
+    else if(effect === "sketch"){
+
+        ctx.filter =
+            "grayscale(100%) contrast(250%) invert(100%)";
+
+        ctx.drawImage(video,0,0,w,h);
+
+        ctx.globalCompositeOperation = "multiply";
+
+        ctx.filter =
+            "grayscale(100%) contrast(250%)";
+
+        ctx.drawImage(video,2,0,w,h);
+
+        ctx.globalCompositeOperation = "source-over";
+
+    }
+
+
+    if(recording){
+
+        const seconds =
+            Math.floor(
+                (Date.now() - recordingStart) / 1000
+            );
+
+        const min =
+            String(Math.floor(seconds / 60))
+            .padStart(2,"0");
+
+        const sec =
+            String(seconds % 60)
+            .padStart(2,"0");
+
+        recordTime.textContent =
+            min + ":" + sec;
+
+    }
+
+
+    animationFrame =
+        requestAnimationFrame(draw);
 
 }
 
 
-function createRock(
- x,
- z,
- size
-){
+recordButton.addEventListener("click",()=>{
 
- const rock=
-  new THREE.Mesh(
-   new THREE.DodecahedronGeometry(
-    size,
-    0
-   ),
-   rockMat
-  );
+    if(!recording){
 
- rock.position.set(
-  x,
-  size*.6,
-  z
- );
+        chunks = [];
 
- rock.scale.y=.7;
 
- rock.castShadow=true;
+        const canvasStream =
+            canvas.captureStream(30);
 
- scene.add(rock);
 
+        if(stream && stream.getAudioTracks().length > 0){
 
- obstacles.push({
-  x,
-  z,
-  radius:
-   size*.8
- });
+            stream.getAudioTracks().forEach(track=>{
 
-}
+                canvasStream.addTrack(
+                    track
+                );
 
+            });
 
-function createCrate(
- x,
- z,
- size
-){
+        }
 
- const crate=
-  new THREE.Mesh(
-   new THREE.BoxGeometry(
-    size,
-    size,
-    size
-   ),
-   crateMat
-  );
 
- crate.position.set(
-  x,
-  size/2,
-  z
- );
+        let mimeType =
+            "video/webm;codecs=vp9,opus";
 
- crate.castShadow=true;
 
- scene.add(crate);
+        if(!MediaRecorder.isTypeSupported(mimeType)){
 
+            mimeType =
+                "video/webm";
 
- obstacles.push({
-  x,
-  z,
-  radius:
-   size*.75
- });
+        }
 
-}
 
+        recorder =
+            new MediaRecorder(
+                canvasStream,
+                {
+                    mimeType:mimeType,
+                    videoBitsPerSecond:8000000
+                }
+            );
 
-/* MAP */
 
-for(let i=0;i<45;i++){
+        recorder.ondataavailable = event=>{
 
- let x=
-  (Math.random()-.5)*130;
+            if(event.data.size > 0){
 
- let z=
-  (Math.random()-.5)*130;
+                chunks.push(event.data);
 
- if(
-  Math.abs(x)<10 &&
-  Math.abs(z)<10
- )continue;
+            }
 
- createTree(
-  x,
-  z,
-  .7+Math.random()*1.1
- );
+        };
 
-}
 
+        recorder.onstop = ()=>{
 
-for(let i=0;i<30;i++){
+            const blob =
+                new Blob(
+                    chunks,
+                    {
+                        type:"video/webm"
+                    }
+                );
 
- createRock(
-  (Math.random()-.5)*130,
-  (Math.random()-.5)*130,
-  1+Math.random()*2
- );
 
-}
+            window.recordedVideo =
+                URL.createObjectURL(blob);
 
 
-for(let i=0;i<22;i++){
+            downloadButton.disabled = false;
 
- createCrate(
-  (Math.random()-.5)*110,
-  (Math.random()-.5)*110,
-  2+Math.random()*1.5
- );
+            status.textContent =
+                "Aufnahme fertig!";
 
-}
+        };
 
 
-/* =========================================================
-   PLAYER
-========================================================= */
+        recorder.start(100);
 
-const player=
- new THREE.Group();
 
-scene.add(player);
+        recording = true;
 
+        recordingStart = Date.now();
 
-/* MATERIALS */
 
-const bodyMat=
- new THREE.MeshStandardMaterial({
-  color:0x1c9f5a,
-  metalness:.65,
-  roughness:.35
- });
+        recordButton.textContent =
+            "⏹ Aufnahme stoppen";
 
+        recordButton.classList.add(
+            "recording"
+        );
 
-const headMat=
- new THREE.MeshStandardMaterial({
-  color:0x263b32,
-  metalness:.85,
-  roughness:.28
- });
+        recordDot.style.display =
+            "block";
 
+        recordTime.style.display =
+            "block";
 
-const legMat=
- new THREE.MeshStandardMaterial({
-  color:0x263b32,
-  metalness:.85,
-  roughness:.28
- });
+        status.textContent =
+            "🔴 Aufnahme läuft...";
 
+    }
 
-const tailMat=
- new THREE.MeshStandardMaterial({
-  color:0x263b32,
-  metalness:.8,
-  roughness:.3
- });
 
+    else{
 
-const eyeMat=
- new THREE.MeshStandardMaterial({
-  color:0x62ffad,
-  emissive:0x1aff72,
-  emissiveIntensity:2
- });
+        recorder.stop();
 
 
-/* BODY */
+        recording = false;
 
-const body=
- new THREE.Mesh(
-  new THREE.BoxGeometry(
-   1.6,
-   .85,
-   2.8
-  ),
-  bodyMat
- );
 
-body.position.y=1.1;
-body.castShadow=true;
+        recordButton.textContent =
+            "⏺ Aufnahme starten";
 
-player.add(body);
+        recordButton.classList.remove(
+            "recording"
+        );
 
 
-/* HEAD */
+        recordDot.style.display =
+            "none";
 
-const head=
- new THREE.Mesh(
-  new THREE.BoxGeometry(
-   1.35,
-   .85,
-   1
-  ),
-  headMat
- );
+        recordTime.style.display =
+            "none";
 
-head.position.set(
- 0,
-  1.55,
- -1.55
-);
+    }
 
-head.castShadow=true;
+});
 
-player.add(head);
 
+downloadButton.addEventListener("click",()=>{
 
-/* EYES */
+    if(!window.recordedVideo){
+        return;
+    }
 
-for(const x of [-.42,.42]){
 
- const eye=
-  new THREE.Mesh(
-   new THREE.SphereGeometry(
-    .16,
-    12,
-    12
-   ),
-   eyeMat
-  );
+    const a =
+        document.createElement("a");
 
- eye.position.set(
-  x,
-  1.65,
- -2.06
- );
 
- player.add(eye);
+    a.href =
+        window.recordedVideo;
 
-}
 
+    a.download =
+        "gemaltes-video.webm";
 
-/* TAIL */
 
-const tail=
- new THREE.Group();
+    document.body.appendChild(a);
 
-tail.position.set(
- 0,
- 1,
- 0
-);
+    a.click();
 
-for(let i=0;i<5;i++){
+    a.remove();
 
- const segment=
-  new THREE.Mesh(
-   new THREE.CylinderGeometry(
-    .22-i*.025,
-    .27-i*.025,
-    .9,
-    10
-   ),
-   tailMat
-  );
+});
 
- segment.rotation.z=
-  Math.PI/2;
 
- segment.position.set(
-  0,
-  0,
-  1.3+i*.72
- );
+window.addEventListener("beforeunload",()=>{
 
- tail.add(segment);
+    if(animationFrame){
 
-}
+        cancelAnimationFrame(
+            animationFrame
+        );
 
-player.add(tail);
+    }
 
 
-/* LEGS */
+    if(stream){
 
-const legs=[];
+        stream.getTracks().forEach(track=>{
+            track.stop();
+        });
 
-for(const x of [-.7,.7]){
+    }
 
- for(const z of [-.7,.7]){
-
-  const leg=
-   new THREE.Group();
-
-  leg.position.set(
-   x,
-   .85,
-   z
-  );
-
-
-  const upper=
-   new THREE.Mesh(
-    new THREE.BoxGeometry(
-     .38,
-     .9,
-     .38
-    ),
-    legMat
-   );
-
-  upper.position.y=-.45;
-
-  leg.add(upper);
-
-
-  const foot=
-   new THREE.Mesh(
-    new THREE.BoxGeometry(
-     .55,
-     .25,
-     .75
-    ),
-    bodyMat
-   );
-
-  foot.position.set(
-   0,
-   -.95,
-   -.1
-  );
-
-  leg.add(foot);
-
-  player.add(leg);
-
-  legs.push(leg);
-
- }
-
-}
-
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-let yaw=0;
-let pitch=-.22;
-let pointerLocked=false;
-let paintOpen=false;
-
-
-renderer.domElement.addEventListener(
- "click",
- ()=>{
-
-  if(
-   !pointerLocked &&
-   !paintOpen
-  )
-   renderer.domElement
-   .requestPointerLock();
-
- }
-);
-
-
-document.addEventListener(
- "pointerlockchange",
- ()=>{
-
-  pointerLocked=
-   document.pointerLockElement===
-   renderer.domElement;
-
- }
-);
-
-
-document.addEventListener(
- "mousemove",
- e=>{
-
-  if(
-   !pointerLocked ||
-   paintOpen
-  )return;
-
-  yaw-=
-   e.movementX*.0025;
-
-  pitch-=
-   e.movementY*.0025;
-
-  pitch=
-   Math.max(
-    -.8,
-    Math.min(
-     .55,
-     pitch
-    )
-   );
-
- }
-);
-
-
-/* =========================================================
-   PAINT MENU
-========================================================= */
-
-const paintMenu=
- document.getElementById(
-  "paintMenu"
- );
-
-
-function openPaintMenu(){
-
- if(!gameStarted)return;
-
- paintOpen=true;
-
- paintMenu.style.display=
- "flex";
-
- if(pointerLocked)
-  document.exitPointerLock();
-
-}
-
-
-function closePaintMenu(){
-
- paintOpen=false;
-
- paintMenu.style.display=
- "none";
-
- renderer.domElement
- .requestPointerLock();
-
-}
-
-
-document
-.getElementById("closePaint")
-.addEventListener(
- "click",
- closePaintMenu
- );
-
-
-/* COLOR INPUTS */
-
-document
-.getElementById("bodyColor")
-.addEventListener(
- "input",
- e=>{
-  bodyMat.color.set(
-   e.target.value
-  );
- }
-);
-
-
-document
-.getElementById("headColor")
-.addEventListener(
- "input",
- e=>{
-  headMat.color.set(
-   e.target.value
-  );
- }
-);
-
-
-document
-.getElementById("legColor")
-.addEventListener(
- "input",
- e=>{
-  legMat.color.set(
-   e.target.value
-  );
- }
-);
-
-
-document
-.getElementById("tailColor")
-.addEventListener(
- "input",
- e=>{
-  tailMat.color.set(
-   e.target.value
-  );
- }
-);
-
-
-/* PRESET COLORS */
-
-const presetColors=[
- "#2f7d32",
- "#3f5f30",
- "#b59b55",
- "#6b5744",
- "#555555",
- "#eeeeee",
- "#153f2a",
- "#7b3f2b",
- "#234d72",
- "#815e2c",
- "#1f1f1f",
- "#d5bfa4"
-];
-
-
-const presets=
- document.getElementById(
-  "presets"
- );
-
-
-presetColors.forEach(
- color=>{
-
-  const b=
-   document.createElement(
-    "button"
-   );
-
-  b.className=
-   "colorPreset";
-
-  b.style.background=
-   color;
-
-  b.addEventListener(
-   "click",
-   ()=>{
-
-    bodyMat.color.set(color);
-
-    document
-    .getElementById("bodyColor")
-    .value=color;
-
-   }
-  );
-
-  presets.appendChild(b);
-
- }
-);
-
-
-/* =========================================================
-   KEYS
-========================================================= */
-
-const keys={};
-
-
-addEventListener(
- "keydown",
- e=>{
-
-  keys[e.code]=true;
-
-  if(
-   e.code==="KeyE" &&
-   !e.repeat
-  ){
-
-   if(paintOpen)
-    closePaintMenu();
-   else
-    openPaintMenu();
-
-  }
-
- }
-);
-
-
-addEventListener(
- "keyup",
- e=>{
-  keys[e.code]=false;
- }
-);
-
-
-/* =========================================================
-   COLLISION
-========================================================= */
-
-function canMove(
- x,
- z
-){
-
- const limit=77;
-
- if(
-  x<-limit||
-  x>limit||
-  z<-limit||
-  z>limit
- )
-  return false;
-
-
- for(const obstacle of obstacles){
-
-  const dx=
-   x-obstacle.x;
-
-  const dz=
-   z-obstacle.z;
-
-  if(
-   Math.hypot(
-    dx,
-    dz
-   )
-   <
-   obstacle.radius+1
-  )
-   return false;
-
- }
-
- return true;
-
-}
-
-
-/* =========================================================
-   SEEKERS
-========================================================= */
-
-const seekers=[];
-
-
-function createSeeker(
- x,
- z
-){
-
- const seeker=
-  new THREE.Group();
-
-
- const mat=
-  new THREE.MeshStandardMaterial({
-   color:0xc93b3b,
-   metalness:.65,
-   roughness:.3
-  });
-
-
- const base=
-  new THREE.Mesh(
-   new THREE.BoxGeometry(
-    1.7,
-    1.2,
-    1.7
-   ),
-   mat
-  );
-
- base.position.y=.9;
-
- seeker.add(base);
-
-
- seeker.position.set(
-  x,
-  0,
-  z
- );
-
- scene.add(seeker);
-
-
- seekers.push({
-  mesh:seeker,
-  speed:
-   .035+
-   Math.random()*.02,
-  wander:
-   Math.random()*Math.PI*2
- });
-
-}
-
-
-for(let i=0;i<5;i++){
-
- createSeeker(
-  (Math.random()-.5)*90,
-  (Math.random()-.5)*90
- );
-
-}
-
-
-/* =========================================================
-   GAME
-========================================================= */
-
-let gameStarted=false;
-
-let gameTime=60;
-
-let phase="HIDE";
-
-
-const message=
- document.getElementById(
-  "message"
- );
-
-
-function showMessage(
- text,
- time=1600
-){
-
- message.textContent=text;
-
- message.style.opacity=1;
-
- setTimeout(
-  ()=>{
-   message.style.opacity=0;
-  },
-  time
- );
-
-}
-
-
-document
-.getElementById("startButton")
-.addEventListener(
- "click",
- ()=>{
-
-  document
-  .getElementById("start")
-  .style.display="none";
-
-  renderer.domElement
-  .requestPointerLock();
-
-  gameStarted=true;
-
-  showMessage(
-   "VERSTECKPHASE!"
-  );
-
- }
-);
-
-
-/* =========================================================
-   PLAYER UPDATE
-========================================================= */
-
-function updatePlayer(
- delta,
- time
-){
-
- if(
-  !gameStarted ||
-  paintOpen
- )return;
-
-
- let speed=
-  keys["ShiftLeft"]
-  ?.19
-  :.11;
-
- speed*=
-  delta*60;
-
-
- let moveX=0;
- let moveZ=0;
-
-
- if(keys["KeyW"])
-  moveZ-=1;
-
- if(keys["KeyS"])
-  moveZ+=1;
-
- if(keys["KeyA"])
-  moveX-=1;
-
- if(keys["KeyD"])
-  moveX+=1;
-
-
- const len=
-  Math.hypot(
-   moveX,
-   moveZ
-  );
-
-
- if(len>0){
-
-  moveX/=len;
-  moveZ/=len;
-
-
-  const sin=
-   Math.sin(yaw);
-
-  const cos=
-   Math.cos(yaw);
-
-
-  const worldX=
-   moveX*cos-
-   moveZ*sin;
-
-
-  const worldZ=
-   moveZ*cos+
-   moveX*sin;
-
-
-  const nx=
-   player.position.x+
-   worldX*speed;
-
-
-  const nz=
-   player.position.z+
-   worldZ*speed;
-
-
-  if(
-   canMove(nx,nz)
-  ){
-
-   player.position.x=nx;
-   player.position.z=nz;
-
-  }
-
-
-  player.rotation.y=
-   Math.atan2(
-    worldX,
-    worldZ
-   );
-
-
-  for(let i=0;i<legs.length;i++){
-
-   legs[i].rotation.x=
-    Math.sin(
-     time*.012+
-     i*Math.PI
-    )*.5;
-
-  }
-
- }else{
-
-  for(const leg of legs)
-   leg.rotation.x=0;
-
- }
-
-
- player.position.y=
-  Math.sin(
-   time*.003
-  )*.025;
-
-}
-
-
-/* =========================================================
-   SEEKER AI
-========================================================= */
-
-function updateSeekers(
- delta
-){
-
- if(
-  phase!=="SEEK"
- )return;
-
-
- for(const s of seekers){
-
-  const seeker=
-   s.mesh;
-
-
-  const dx=
-   player.position.x-
-   seeker.position.x;
-
-
-  const dz=
-   player.position.z-
-   seeker.position.z;
-
-
-  const distance=
-   Math.hypot(
-    dx,
-    dz
-   );
-
-
-  if(distance<25){
-
-   const angle=
-    Math.atan2(
-     dx,
-     dz
-    );
-
-
-   seeker.rotation.y=
-    angle;
-
-
-   seeker.position.x+=
-    Math.sin(angle)*
-    s.speed*
-    delta*60;
-
-
-   seeker.position.z+=
-    Math.cos(angle)*
-    s.speed*
-    delta*60;
-
-  }else{
-
-   seeker.position.x+=
-    Math.sin(
-     s.wander
-    )*
-    s.speed*.35*
-    delta*60;
-
-
-   seeker.position.z+=
-    Math.cos(
-     s.wander
-    )*
-    s.speed*.35*
-    delta*60;
-
-
-   s.wander+=
-    (Math.random()-.5)*
-    .06;
-
-  }
-
-
-  if(
-   distance<2.5
-  ){
-
-   phase="END";
-
-   document
-   .getElementById("status")
-   .textContent=
-   "DU WURDEST GEFUNDEN!";
-
-   showMessage(
-    "ENTDECKT!"
-   );
-
-  }
-
- }
-
-}
-
-
-/* =========================================================
-   TIMER
-========================================================= */
-
-let timerAccumulator=0;
-
-
-function updateTimer(
- delta
-){
-
- if(
-  !gameStarted||
-  phase==="END"||
-  paintOpen
- )return;
-
-
- timerAccumulator+=delta;
-
-
- if(
-  timerAccumulator>=1
- ){
-
-  timerAccumulator=0;
-
-  gameTime--;
-
-
-  document
-  .getElementById("timer")
-  .textContent=
-  "ZEIT: "+gameTime;
-
-
-  if(
-   gameTime<=0
-  ){
-
-   if(
-    phase==="HIDE"
-   ){
-
-    phase="SEEK";
-
-    gameTime=90;
-
-    document
-    .getElementById("status")
-    .textContent=
-    "MODUS: SUCHEN";
-
-    showMessage(
-     "DIE SUCHER KOMMEN!"
-    );
-
-   }else{
-
-    phase="END";
-
-    document
-    .getElementById("status")
-    .textContent=
-    "DU HAST GEWONNEN!";
-
-    showMessage(
-     "ÜBERLEBT!",
-     4000
-    );
-
-   }
-
-  }
-
- }
-
-}
-
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-function updateCamera(){
-
- const distance=8;
-
- const horizontal=
-  Math.cos(pitch);
-
-
- camera.position.set(
-
-  player.position.x+
-  Math.sin(yaw)*
-  distance*
-  horizontal,
-
-  player.position.y+
-  3.5+
-  Math.sin(pitch)*
-  distance,
-
-  player.position.z+
-  Math.cos(yaw)*
-  distance*
-  horizontal
-
- );
-
-
- camera.lookAt(
-  player.position.x,
-  player.position.y+1,
-  player.position.z
- );
-
-}
-
-
-/* =========================================================
-   LOOP
-========================================================= */
-
-const clock=
- new THREE.Clock();
-
-
-function animate(){
-
- requestAnimationFrame(
-  animate
- );
-
-
- const delta=
-  Math.min(
-   clock.getDelta(),
-   .05
-  );
-
-
- const time=
-  performance.now();
-
-
- updatePlayer(
-  delta,
-  time
- );
-
-
- updateSeekers(
-  delta
- );
-
-
- updateTimer(
-  delta
- );
-
-
- updateCamera();
-
-
- renderer.render(
-  scene,
-  camera
- );
-
-}
-
-
-animate();
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-addEventListener(
- "resize",
- ()=>{
-
-  camera.aspect=
-   innerWidth/
-   innerHeight;
-
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(
-   innerWidth,
-   innerHeight
-  );
-
- }
-);
+});
 
 </script>
+
 </body>
 </html>
