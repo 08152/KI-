@@ -3,442 +3,607 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>FPS GLB Viewer</title>
+<title>FPS Weapon Camera Position</title>
 
 <style>
-html,body{
+body{
     margin:0;
-    width:100%;
-    height:100%;
     overflow:hidden;
-    background:#87cfff;
-    font-family:Arial,sans-serif;
+    background:#111;
+    font-family:Arial;
 }
 
-canvas{display:block}
+#info{
+    position:absolute;
+    top:15px;
+    left:50%;
+    transform:translateX(-50%);
+    color:white;
+    background:rgba(0,0,0,.6);
+    padding:10px 16px;
+    border-radius:10px;
+    z-index:10;
+}
 
 #crosshair{
-    position:fixed;
+    position:absolute;
     left:50%;
     top:50%;
-    width:16px;
-    height:16px;
     transform:translate(-50%,-50%);
+    width:12px;
+    height:12px;
     z-index:10;
-    pointer-events:none;
 }
 
-#crosshair:before,#crosshair:after{
+#crosshair:before,
+#crosshair:after{
     content:"";
     position:absolute;
     background:white;
-    box-shadow:0 0 3px black;
 }
 
 #crosshair:before{
-    width:2px;
-    height:16px;
-    left:7px;
+    width:12px;
+    height:2px;
+    top:5px;
 }
 
 #crosshair:after{
-    width:16px;
-    height:2px;
-    top:7px;
-}
-
-#status{
-    position:fixed;
-    top:10px;
-    left:10px;
-    z-index:100;
-    background:rgba(0,0,0,.75);
-    color:white;
-    padding:8px 12px;
-    border-radius:6px;
-    font:13px monospace;
-    pointer-events:none;
+    width:2px;
+    height:12px;
+    left:5px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="status">Lade weapon.glb...</div>
+<div id="info">Klicken und mit WASD bewegen</div>
 <div id="crosshair"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script type="module">
 
-<script>
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87cfff);
+import { PointerLockControls } from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
-const camera=new THREE.PerspectiveCamera(
-    75,
-    innerWidth/innerHeight,
-    0.01,
-    5000
+import { GLTFLoader } from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+
+
+/* =====================================================
+   SCENE
+===================================================== */
+
+const scene = new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x87ceeb);
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+const camera =
+    new THREE.PerspectiveCamera(
+
+        75,
+
+        window.innerWidth /
+        window.innerHeight,
+
+        0.01,
+
+        1000
+
+    );
+
+camera.position.set(
+    0,
+    1.7,
+    5
 );
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
 
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputEncoding=THREE.sRGBEncoding;
+/* =====================================================
+   RENDERER
+===================================================== */
 
-document.body.appendChild(renderer.domElement);
+const renderer =
+    new THREE.WebGLRenderer({
+
+        antialias:true
+
+    });
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+document.body.appendChild(
+    renderer.domElement
+);
 
 
-/* LIGHT */
+/* =====================================================
+   LIGHT
+===================================================== */
 
-scene.add(new THREE.AmbientLight(0xffffff,2));
+const light =
+    new THREE.HemisphereLight(
 
-const sun=new THREE.DirectionalLight(0xffffff,3);
-sun.position.set(10,20,10);
+        0xffffff,
+        0x444444,
+        2
+
+    );
+
+scene.add(light);
+
+
+const sun =
+    new THREE.DirectionalLight(
+
+        0xffffff,
+        2
+
+    );
+
+sun.position.set(
+    5,
+    10,
+    5
+);
+
 scene.add(sun);
 
 
-/* GROUND */
+/* =====================================================
+   FLOOR
+===================================================== */
 
-const ground=new THREE.Mesh(
-    new THREE.PlaneGeometry(5000,5000),
-    new THREE.MeshStandardMaterial({color:0x228822})
+const floor =
+    new THREE.Mesh(
+
+        new THREE.PlaneGeometry(
+            1000,
+            1000
+        ),
+
+        new THREE.MeshStandardMaterial({
+
+            color:0x4d8f3a
+
+        })
+
+    );
+
+floor.rotation.x =
+    -Math.PI / 2;
+
+scene.add(floor);
+
+
+/* =====================================================
+   POINTER LOCK
+===================================================== */
+
+const controls =
+    new PointerLockControls(
+
+        camera,
+        document.body
+
+    );
+
+
+document.body.addEventListener(
+    "click",
+    () => {
+
+        controls.lock();
+
+    }
 );
 
-ground.rotation.x=-Math.PI/2;
-scene.add(ground);
+
+/* =====================================================
+   WASD
+===================================================== */
+
+const keys = {
+
+    w:false,
+    a:false,
+    s:false,
+    d:false
+
+};
 
 
-/* PLAYER */
+window.addEventListener(
+    "keydown",
+    event => {
 
-const player=new THREE.Object3D();
+        const key =
+            event.key.toLowerCase();
 
-scene.add(player);
+        if(key in keys){
 
-player.add(camera);
+            keys[key] = true;
 
-camera.position.set(0,2.2,0);
+        }
 
-
-/* WEAPON HOLDER */
-
-const weaponHolder=new THREE.Group();
-
-camera.add(weaponHolder);
-
-weaponHolder.position.set(
-    0.72,
-    -0.55,
-    -1.15
+    }
 );
 
 
-/* MODEL ROOT */
+window.addEventListener(
+    "keyup",
+    event => {
 
-const weaponRoot=new THREE.Group();
+        const key =
+            event.key.toLowerCase();
 
-weaponHolder.add(weaponRoot);
+        if(key in keys){
+
+            keys[key] = false;
+
+        }
+
+    }
+);
 
 
-/* GLB LOADER */
+/* =====================================================
+   WEAPON
+===================================================== */
 
-const loader=new THREE.GLTFLoader();
+const loader =
+    new GLTFLoader();
 
-let weapon=null;
+
+let weapon = null;
+
+
+/*
+   HIER DEINE GLB-DATEI EINTRAGEN
+*/
+
+const WEAPON_URL =
+    "weapon.glb";
+
 
 loader.load(
 
-    "./weapon.glb",
+    WEAPON_URL,
 
-    function(gltf){
+    gltf => {
 
-        weapon=gltf.scene;
-
-        weapon.traverse(function(obj){
-
-            if(!obj.isMesh)return;
-
-            obj.visible=true;
-            obj.frustumCulled=false;
-
-            if(obj.material){
-
-                if(Array.isArray(obj.material)){
-
-                    obj.material.forEach(function(mat){
-
-                        mat.side=THREE.DoubleSide;
-                        mat.needsUpdate=true;
-
-                    });
-
-                }else{
-
-                    obj.material.side=THREE.DoubleSide;
-                    obj.material.needsUpdate=true;
-
-                }
-
-            }
-
-        });
+        weapon =
+            gltf.scene;
 
 
-        /*
-           Das Modell weiter nach links drehen.
-
-           WICHTIG:
-           THREE.js verwendet RADIANT, nicht Grad.
-
-           Math.PI = 180°
-           Math.PI / 8 = 22,5°
-
-           Hier:
-           180° + 22,5° = 202,5°
-        */
+        /* =============================================
+           SICHERHEIT:
+           ALLE VORHERIGEN ROTATIONEN ENTFERNEN
+        ============================================= */
 
         weapon.rotation.set(
             0,
-            90,
             0,
+            0
         );
 
 
-        weapon.updateMatrixWorld(true);
+        weapon.quaternion.identity();
 
 
-        /* ORIGINAL BOUNDS */
+        /* =============================================
+           AUTOMATISCHE ZENTRIERUNG DES MODELLS
+        ============================================= */
 
-        let box=new THREE.Box3().setFromObject(weapon);
-
-        let size=new THREE.Vector3();
-
-        box.getSize(size);
-
-
-        const largest=Math.max(
-            size.x,
-            size.y,
-            size.z
-        );
+        const box =
+            new THREE.Box3()
+            .setFromObject(weapon);
 
 
-        /* SCALE */
-
-        const targetSize=3.0;
-
-        if(largest>0 && isFinite(largest)){
-
-            const scale=targetSize/largest;
-
-            weapon.scale.set(
-                scale,
-                scale,
-                scale
+        const center =
+            box.getCenter(
+                new THREE.Vector3()
             );
 
-        }
-
-
-        weapon.updateMatrixWorld(true);
-
-
-        /* CENTER */
-
-        box=new THREE.Box3().setFromObject(weapon);
-
-        const center=new THREE.Vector3();
-
-        box.getCenter(center);
 
         weapon.position.sub(center);
 
-        weapon.position.y-=0.15;
+
+        /* =============================================
+           WAFFE ZUR KAMERA
+           
+           WICHTIG:
+           Dadurch folgt sie IMMER der Kamera.
+        ============================================= */
+
+        camera.add(weapon);
 
 
-        weaponRoot.add(weapon);
+        /* =============================================
+           STARTPOSITION:
+           GENAU MITTIG UND DIREKT VOR DER KAMERA
+        ============================================= */
+
+        weapon.position.set(
+
+            0,      // Mitte
+
+            0,      // Höhe Mitte
+
+            -0.5    // Vor der Kamera
+
+        );
 
 
-        document.getElementById("status").textContent=
-            "✓ weapon.glb geladen";
+        /*
+           SICHERHEIT:
+           Waffe schaut in die gleiche Richtung
+           wie die Kamera.
+        */
+
+        weapon.rotation.set(
+
+            0,
+            0,
+            0
+
+        );
+
+
+        weapon.quaternion.identity();
+
+
+        /* =============================================
+           NACH 1 SEKUNDE
+           -> RECHTS
+           -> UNTEN
+           -> ETWAS WEITER NACH VORNE
+        ============================================= */
+
+        setTimeout(() => {
+
+            animateWeaponToFPSPosition();
+
+        }, 1000);
 
     },
 
-    function(xhr){
+    undefined,
 
-        if(xhr.total){
+    error => {
 
-            const percent=Math.round(
-                xhr.loaded/xhr.total*100
-            );
-
-            document.getElementById("status").textContent=
-                "Lade weapon.glb "+percent+"%";
-
-        }
-
-    },
-
-    function(error){
-
-        console.error("GLB ERROR:",error);
-
-        document.getElementById("status").textContent=
-            "❌ weapon.glb Fehler";
+        console.error(
+            "Weapon GLB konnte nicht geladen werden:",
+            error
+        );
 
     }
 
 );
 
 
-/* INPUT */
+/* =====================================================
+   WAFFEN ANIMATION
+===================================================== */
 
-const keys={};
+function animateWeaponToFPSPosition(){
 
-let yaw=0;
-let pitch=0;
-
-let velocityY=0;
-let onGround=true;
+    if(!weapon) return;
 
 
-window.addEventListener("keydown",function(e){
+    const startPosition =
+        weapon.position.clone();
 
-    keys[e.key.toLowerCase()]=true;
 
-    if(e.code==="Space"){
+    /*
+       FPS ZIELPOSITION
 
-        e.preventDefault();
+       X = Rechts
 
-        if(onGround){
+       Y = Unten
 
-            velocityY=0.25;
-            onGround=false;
+       Z = Vor Kamera
+    */
+
+    const targetPosition =
+        new THREE.Vector3(
+
+            0.35,
+
+            -0.35,
+
+            -0.65
+
+        );
+
+
+    const duration =
+        600;
+
+
+    const startTime =
+        performance.now();
+
+
+    function animate(time){
+
+        const progress =
+            Math.min(
+
+                (time - startTime)
+                /
+                duration,
+
+                1
+
+            );
+
+
+        /*
+           Smoothstep
+        */
+
+        const smooth =
+            progress *
+            progress *
+            (3 - 2 * progress);
+
+
+        weapon.position.lerpVectors(
+
+            startPosition,
+
+            targetPosition,
+
+            smooth
+
+        );
+
+
+        /*
+           SICHERHEIT:
+           ROTATION BLEIBT IMMER GERADEAUS.
+
+           Dadurch wird verhindert,
+           dass die Waffe sich während
+           der Animation verdreht.
+        */
+
+        weapon.rotation.set(
+
+            0,
+            0,
+            0
+
+        );
+
+
+        if(progress < 1){
+
+            requestAnimationFrame(
+                animate
+            );
 
         }
 
     }
 
-});
 
-
-window.addEventListener("keyup",function(e){
-
-    keys[e.key.toLowerCase()]=false;
-
-});
-
-
-/* POINTER LOCK */
-
-document.body.addEventListener("click",function(){
-
-    document.body.requestPointerLock();
-
-});
-
-
-/* MOUSE LOOK */
-
-document.addEventListener("mousemove",function(e){
-
-    if(document.pointerLockElement!==document.body)return;
-
-    yaw-=e.movementX*0.002;
-
-    pitch-=e.movementY*0.002;
-
-    pitch=Math.max(
-        -1.2,
-        Math.min(1.2,pitch)
-    );
-
-    player.rotation.y=yaw;
-
-    camera.rotation.x=pitch;
-
-});
-
-
-/* MOVEMENT */
-
-function move(){
-
-    const speed=0.15;
-
-    const direction=new THREE.Vector3();
-
-    if(keys["w"])direction.z-=1;
-    if(keys["s"])direction.z+=1;
-    if(keys["a"])direction.x-=1;
-    if(keys["d"])direction.x+=1;
-
-    if(direction.lengthSq()===0)return;
-
-    direction.normalize();
-
-    const forward=new THREE.Vector3(
-        0,0,-1
-    );
-
-    forward.applyEuler(player.rotation);
-
-    forward.y=0;
-
-    forward.normalize();
-
-    const right=new THREE.Vector3()
-        .crossVectors(
-            forward,
-            new THREE.Vector3(0,1,0)
-        )
-        .negate();
-
-    player.position.addScaledVector(
-        forward,
-        direction.z*speed
-    );
-
-    player.position.addScaledVector(
-        right,
-        direction.x*speed
+    requestAnimationFrame(
+        animate
     );
 
 }
 
 
-/* GRAVITY */
+/* =====================================================
+   GAME LOOP
+===================================================== */
 
-function gravity(){
+const clock =
+    new THREE.Clock();
 
-    velocityY-=0.015;
-
-    player.position.y+=velocityY;
-
-    if(player.position.y<=0){
-
-        player.position.y=0;
-
-        velocityY=0;
-
-        onGround=true;
-
-    }
-
-}
-
-
-/* LOOP */
 
 function animate(){
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 
-    move();
 
-    gravity();
+    const delta =
+        clock.getDelta();
+
+
+    const speed =
+        5;
+
+
+    if(
+        controls.isLocked
+    ){
+
+        if(keys.w){
+
+            controls.moveForward(
+                speed * delta
+            );
+
+        }
+
+
+        if(keys.s){
+
+            controls.moveForward(
+                -speed * delta
+            );
+
+        }
+
+
+        if(keys.a){
+
+            controls.moveRight(
+                -speed * delta
+            );
+
+        }
+
+
+        if(keys.d){
+
+            controls.moveRight(
+                speed * delta
+            );
+
+        }
+
+    }
+
+
+    /*
+       ZUSÄTZLICHE SICHERHEIT:
+
+       Solange die Waffe existiert,
+       bleibt ihre lokale Rotation
+       auf geradeaus.
+
+       Die Kamera dreht sie automatisch
+       mit, weil weapon ein Kind
+       der Kamera ist.
+    */
+
+    if(weapon){
+
+        weapon.rotation.set(
+
+            0,
+            0,
+            0
+
+        );
+
+    }
+
 
     renderer.render(
         scene,
@@ -447,24 +612,35 @@ function animate(){
 
 }
 
+
 animate();
 
 
-/* RESIZE */
+/* =====================================================
+   RESIZE
+===================================================== */
 
-window.addEventListener("resize",function(){
+window.addEventListener(
+    "resize",
+    () => {
 
-    camera.aspect=
-        innerWidth/innerHeight;
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
 
-    camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        innerWidth,
-        innerHeight
-    );
+        camera.updateProjectionMatrix();
 
-});
+
+        renderer.setSize(
+
+            window.innerWidth,
+            window.innerHeight
+
+        );
+
+    }
+);
 
 </script>
 
