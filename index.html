@@ -15,7 +15,9 @@ html,body{
     font-family:Arial,sans-serif;
 }
 
-canvas{display:block}
+canvas{
+    display:block;
+}
 
 #crosshair{
     position:fixed;
@@ -75,8 +77,18 @@ canvas{display:block}
 
 <script>
 
+/* =====================================================
+   SCENE
+===================================================== */
+
 const scene = new THREE.Scene();
+
 scene.background = new THREE.Color(0x87cfff);
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -85,64 +97,109 @@ const camera = new THREE.PerspectiveCamera(
     5000
 );
 
+
+/* =====================================================
+   RENDERER
+===================================================== */
+
 const renderer = new THREE.WebGLRenderer({
     antialias:true
 });
 
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
 
-document.body.appendChild(renderer.domElement);
-
-
-/* LIGHT */
-
-scene.add(
-    new THREE.HemisphereLight(
-        0xffffff,
-        0x445566,
+renderer.setPixelRatio(
+    Math.min(
+        devicePixelRatio,
         2
     )
 );
 
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    3
+renderer.outputEncoding =
+    THREE.sRGBEncoding;
+
+document.body.appendChild(
+    renderer.domElement
 );
 
-sun.position.set(10,20,10);
 
-scene.add(sun);
+/* =====================================================
+   LIGHTS
+===================================================== */
 
+const ambient =
+    new THREE.AmbientLight(
+        0xffffff,
+        2
+    );
 
-/* GROUND */
-
-const ground = new THREE.Mesh(
-
-    new THREE.PlaneGeometry(
-        5000,
-        5000
-    ),
-
-    new THREE.MeshStandardMaterial({
-        color:0x228822
-    })
-
+scene.add(
+    ambient
 );
 
-ground.rotation.x = -Math.PI / 2;
 
-scene.add(ground);
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        3
+    );
+
+sun.position.set(
+    10,
+    20,
+    10
+);
+
+scene.add(
+    sun
+);
 
 
-/* PLAYER */
+/* =====================================================
+   GROUND
+===================================================== */
 
-const player = new THREE.Object3D();
+const ground =
+    new THREE.Mesh(
 
-scene.add(player);
+        new THREE.PlaneGeometry(
+            5000,
+            5000
+        ),
 
-player.add(camera);
+        new THREE.MeshStandardMaterial({
+            color:0x228822
+        })
+
+    );
+
+ground.rotation.x =
+    -Math.PI / 2;
+
+scene.add(
+    ground
+);
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+const player =
+    new THREE.Object3D();
+
+scene.add(
+    player
+);
+
+
+player.add(
+    camera
+);
+
 
 camera.position.set(
     0,
@@ -151,14 +208,34 @@ camera.position.set(
 );
 
 
-/* MODEL HOLDER */
+/* =====================================================
+   WEAPON HOLDER
+===================================================== */
 
-const weaponHolder = new THREE.Group();
+/*
+    Der Holder hängt direkt
+    an der Kamera.
 
-camera.add(weaponHolder);
+    Dadurch bleibt weapon.glb
+    immer relativ zum Bildschirm.
+*/
+
+const weaponHolder =
+    new THREE.Group();
 
 
-/* POSITION: RECHTS UNTEN VOR DER KAMERA */
+camera.add(
+    weaponHolder
+);
+
+
+/*
+    FPS-POSITION:
+
+    X = rechts / links
+    Y = oben / unten
+    Z = Abstand vor Kamera
+*/
 
 weaponHolder.position.set(
     0.72,
@@ -167,16 +244,25 @@ weaponHolder.position.set(
 );
 
 
-/* MODEL ROOT */
+/* =====================================================
+   MODEL ROOT
+===================================================== */
 
-const weaponRoot = new THREE.Group();
+const weaponRoot =
+    new THREE.Group();
 
-weaponHolder.add(weaponRoot);
+weaponHolder.add(
+    weaponRoot
+);
 
 
-/* GLB LOADER */
+/* =====================================================
+   GLB LOADER
+===================================================== */
 
-const loader = new THREE.GLTFLoader();
+const loader =
+    new THREE.GLTFLoader();
+
 
 let weapon = null;
 
@@ -187,82 +273,128 @@ loader.load(
 
     function(gltf){
 
-        weapon = gltf.scene;
+        weapon =
+            gltf.scene;
 
 
-        weapon.traverse(function(obj){
-
-            if(!obj.isMesh) return;
-
-            obj.visible = true;
-
-            obj.frustumCulled = false;
+        console.log(
+            "weapon.glb geladen",
+            weapon
+        );
 
 
-            if(obj.material){
+        /* =============================================
+           MESH SETTINGS
+        ============================================= */
 
-                if(Array.isArray(obj.material)){
+        weapon.traverse(
+            function(obj){
 
-                    obj.material.forEach(function(mat){
+                if(
+                    !obj.isMesh
+                ) return;
 
-                        mat.side =
+
+                obj.visible =
+                    true;
+
+
+                obj.frustumCulled =
+                    false;
+
+
+                if(
+                    obj.material
+                ){
+
+                    if(
+                        Array.isArray(
+                            obj.material
+                        )
+                    ){
+
+                        obj.material.forEach(
+                            function(mat){
+
+                                mat.side =
+                                    THREE.DoubleSide;
+
+                                mat.needsUpdate =
+                                    true;
+
+                            }
+                        );
+
+                    }
+                    else{
+
+                        obj.material.side =
                             THREE.DoubleSide;
 
-                        mat.needsUpdate =
+                        obj.material.needsUpdate =
                             true;
 
-                    });
-
-                }else{
-
-                    obj.material.side =
-                        THREE.DoubleSide;
-
-                    obj.material.needsUpdate =
-                        true;
+                    }
 
                 }
 
             }
+        );
 
-        });
 
+        /* =============================================
+           ROTATION
+        ============================================= */
 
         /*
-           ===============================
-           ROTATION 180 GRAD
-           ===============================
+            Neue Rotation:
 
-           Das Modell wird um 180 Grad
-           auf der Y-Achse gedreht.
+            Y = -90 Grad
+
+            Damit wird das Modell
+            um 90 Grad gedreht.
         */
 
         weapon.rotation.set(
 
             0,
 
-            Math.PI,
+            0,
 
             0
 
         );
 
 
-        weapon.updateMatrixWorld(true);
+        weapon.updateMatrixWorld(
+            true
+        );
 
 
-        /* ORIGINAL BOUNDS */
+        /* =============================================
+           ORIGINAL BOUNDS
+        ============================================= */
 
         let box =
             new THREE.Box3()
-            .setFromObject(weapon);
+            .setFromObject(
+                weapon
+            );
 
 
         let size =
             new THREE.Vector3();
 
 
-        box.getSize(size);
+        box.getSize(
+            size
+        );
+
+
+        console.log(
+            "Originalgröße:",
+            size
+        );
 
 
         const largest =
@@ -273,14 +405,23 @@ loader.load(
             );
 
 
-        /* SCALE */
+        /* =============================================
+           SCALE
+        ============================================= */
 
-        const targetSize = 3.0;
+        /*
+            Größeres FPS-Modell.
+        */
+
+        const targetSize =
+            3.0;
 
 
         if(
             largest > 0 &&
-            isFinite(largest)
+            isFinite(
+                largest
+            )
         ){
 
             const scale =
@@ -289,42 +430,73 @@ loader.load(
 
 
             weapon.scale.set(
+
                 scale,
+
                 scale,
+
                 scale
+
             );
 
         }
 
 
-        weapon.updateMatrixWorld(true);
+        weapon.updateMatrixWorld(
+            true
+        );
 
 
-        /* BOUNDS NACH SCALE */
+        /* =============================================
+           BOUNDS NACH SCALE
+        ============================================= */
 
         box =
             new THREE.Box3()
-            .setFromObject(weapon);
+            .setFromObject(
+                weapon
+            );
 
 
         const center =
             new THREE.Vector3();
 
 
-        box.getCenter(center);
+        box.getCenter(
+            center
+        );
 
 
-        /* CENTER MODEL */
+        /* =============================================
+           ZENTRIEREN
+        ============================================= */
 
-        weapon.position.sub(center);
+        weapon.position.sub(
+            center
+        );
 
 
-        weapon.position.y -= 0.15;
+        /*
+            Etwas weiter nach unten.
+
+            Der weaponHolder bestimmt
+            die Bildschirmposition.
+
+            Diese Position korrigiert
+            nur den Mittelpunkt des GLB.
+        */
+
+        weapon.position.y -=
+            0.15;
 
 
-        /* ADD TO CAMERA */
+        /* =============================================
+           ADD TO CAMERA
+        ============================================= */
 
-        weaponRoot.add(weapon);
+        weaponRoot.add(
+            weapon
+        );
 
 
         document.getElementById(
@@ -332,24 +504,41 @@ loader.load(
         ).textContent =
             "✓ weapon.glb geladen";
 
+
+        console.log(
+            "Final Scale:",
+            weapon.scale
+        );
+
+
+        console.log(
+            "Final Position:",
+            weapon.position
+        );
+
     },
 
 
     function(xhr){
 
-        if(xhr.total){
+        if(
+            xhr.total
+        ){
 
             const percent =
                 Math.round(
+
                     xhr.loaded /
                     xhr.total *
                     100
+
                 );
 
 
             document.getElementById(
                 "status"
             ).textContent =
+
                 "Lade weapon.glb " +
                 percent +
                 "%";
@@ -361,7 +550,11 @@ loader.load(
 
     function(error){
 
-        console.error(error);
+        console.error(
+            "GLB ERROR:",
+            error
+        );
+
 
         document.getElementById(
             "status"
@@ -373,16 +566,25 @@ loader.load(
 );
 
 
-/* INPUT */
+/* =====================================================
+   INPUT
+===================================================== */
 
-const keys = {};
+const keys =
+    {};
 
-let yaw = 0;
-let pitch = 0;
 
-let velocityY = 0;
-let onGround = true;
+let yaw =
+    0;
 
+
+let pitch =
+    0;
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
 
 window.addEventListener(
     "keydown",
@@ -390,19 +592,30 @@ window.addEventListener(
 
         keys[
             e.key.toLowerCase()
-        ] = true;
+        ] =
+            true;
 
 
         if(
-            e.code === "Space" &&
-            onGround
+            e.code ===
+            "Space"
         ){
 
             e.preventDefault();
 
-            velocityY = 0.25;
 
-            onGround = false;
+            if(
+                onGround
+            ){
+
+                velocityY =
+                    0.25;
+
+
+                onGround =
+                    false;
+
+            }
 
         }
 
@@ -416,13 +629,16 @@ window.addEventListener(
 
         keys[
             e.key.toLowerCase()
-        ] = false;
+        ] =
+            false;
 
     }
 );
 
 
-/* POINTER LOCK */
+/* =====================================================
+   POINTER LOCK
+===================================================== */
 
 document.body.addEventListener(
     "click",
@@ -434,35 +650,45 @@ document.body.addEventListener(
 );
 
 
-/* MOUSE LOOK */
+/* =====================================================
+   MOUSE LOOK
+===================================================== */
 
 document.addEventListener(
     "mousemove",
     function(e){
 
         if(
-            document.pointerLockElement !==
+
+            document.pointerLockElement
+            !==
             document.body
+
         ) return;
 
 
         yaw -=
+
             e.movementX *
             0.002;
 
 
         pitch -=
+
             e.movementY *
             0.002;
 
 
         pitch =
             Math.max(
+
                 -1.2,
+
                 Math.min(
                     1.2,
                     pitch
                 )
+
             );
 
 
@@ -477,32 +703,54 @@ document.addEventListener(
 );
 
 
-/* MOVEMENT */
+/* =====================================================
+   MOVEMENT
+===================================================== */
 
 function move(){
 
-    const speed = 0.15;
+    const speed =
+        0.15;
+
 
     const direction =
         new THREE.Vector3();
 
 
-    if(keys["w"])
-        direction.z -= 1;
-
-    if(keys["s"])
-        direction.z += 1;
-
-    if(keys["a"])
-        direction.x -= 1;
-
-    if(keys["d"])
-        direction.x += 1;
+    if(
+        keys["w"]
+    )
+        direction.z -=
+            1;
 
 
     if(
-        direction.lengthSq() === 0
-    ) return;
+        keys["s"]
+    )
+        direction.z +=
+            1;
+
+
+    if(
+        keys["a"]
+    )
+        direction.x -=
+            1;
+
+
+    if(
+        keys["d"]
+    )
+        direction.x +=
+            1;
+
+
+    if(
+        direction.lengthSq()
+        ===
+        0
+    )
+        return;
 
 
     direction.normalize();
@@ -521,86 +769,133 @@ function move(){
     );
 
 
-    forward.y = 0;
+    forward.y =
+        0;
+
 
     forward.normalize();
 
 
     const right =
         new THREE.Vector3()
+
         .crossVectors(
+
             forward,
+
             new THREE.Vector3(
                 0,
                 1,
                 0
             )
+
         )
+
         .negate();
 
 
     player.position.addScaledVector(
+
         forward,
+
         direction.z *
         speed
+
     );
 
 
     player.position.addScaledVector(
+
         right,
+
         direction.x *
         speed
+
     );
 
 }
 
 
-/* GRAVITY */
+/* =====================================================
+   GRAVITY
+===================================================== */
+
+let velocityY =
+    0;
+
+
+let onGround =
+    true;
+
 
 function gravity(){
 
-    velocityY -= 0.015;
+    velocityY -=
+        0.015;
+
 
     player.position.y +=
         velocityY;
 
 
     if(
-        player.position.y <= 0
+
+        player.position.y
+        <=
+        0
+
     ){
 
-        player.position.y = 0;
+        player.position.y =
+            0;
 
-        velocityY = 0;
 
-        onGround = true;
+        velocityY =
+            0;
+
+
+        onGround =
+            true;
 
     }
 
 }
 
 
-/* LOOP */
+/* =====================================================
+   ANIMATION LOOP
+===================================================== */
 
 function animate(){
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
+
 
     move();
 
+
     gravity();
 
+
     renderer.render(
+
         scene,
+
         camera
+
     );
 
 }
 
+
 animate();
 
 
-/* RESIZE */
+/* =====================================================
+   RESIZE
+===================================================== */
 
 window.addEventListener(
     "resize",
@@ -610,11 +905,16 @@ window.addEventListener(
             innerWidth /
             innerHeight;
 
+
         camera.updateProjectionMatrix();
 
+
         renderer.setSize(
+
             innerWidth,
+
             innerHeight
+
         );
 
     }
