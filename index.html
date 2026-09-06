@@ -14,7 +14,10 @@ html,body{
     background:#87cfff;
     font-family:Arial,sans-serif;
 }
-canvas{display:block}
+
+canvas{
+    display:block;
+}
 
 #crosshair{
     position:fixed;
@@ -23,46 +26,60 @@ canvas{display:block}
     width:10px;
     height:10px;
     transform:translate(-50%,-50%);
-    pointer-events:none;
     z-index:20;
+    pointer-events:none;
 }
-#crosshair:before,#crosshair:after{
+
+#crosshair:before,
+#crosshair:after{
     content:"";
     position:absolute;
-    background:white;
-    box-shadow:0 0 2px black;
+    background:#fff;
+    box-shadow:0 0 3px #000;
 }
+
 #crosshair:before{
     width:10px;
     height:2px;
     top:4px;
 }
+
 #crosshair:after{
     width:2px;
     height:10px;
     left:4px;
 }
 
-#hud{
+#hud,
+#bucket{
     position:fixed;
-    top:15px;
-    left:15px;
     z-index:30;
     color:white;
-    background:rgba(0,0,0,.6);
-    padding:14px 18px;
-    border-radius:14px;
+    background:rgba(0,0,0,.62);
+    border-radius:13px;
+    padding:13px 17px;
+}
+
+#hud{
+    left:15px;
+    top:15px;
     line-height:1.6;
+}
+
+#bucket{
+    right:15px;
+    top:15px;
+    min-width:150px;
 }
 
 #hint{
     position:fixed;
-    bottom:20px;
+    bottom:18px;
     left:50%;
     transform:translateX(-50%);
     z-index:30;
-    color:white;
     background:rgba(0,0,0,.65);
+    color:white;
     padding:12px 20px;
     border-radius:12px;
     text-align:center;
@@ -73,183 +90,57 @@ canvas{display:block}
     top:18%;
     left:50%;
     transform:translateX(-50%);
-    z-index:40;
-    color:white;
+    z-index:50;
     background:rgba(0,0,0,.75);
-    padding:14px 25px;
-    border-radius:14px;
-    font-size:22px;
+    color:white;
+    padding:14px 24px;
+    border-radius:13px;
+    font-size:21px;
     font-weight:bold;
     opacity:0;
     transition:.2s;
-    pointer-events:none;
 }
 
-#bucketUI{
+#tableHUD,
+#backButton,
+#putBucket{
+    display:none;
     position:fixed;
-    right:15px;
-    top:15px;
-    z-index:30;
-    color:white;
-    background:rgba(0,0,0,.6);
-    padding:14px;
-    border-radius:14px;
-    min-width:150px;
+    z-index:60;
 }
 
-#tableUI{
-    position:fixed;
-    inset:0;
-    z-index:100;
-    display:none;
-    background:linear-gradient(#dbeef5 0 45%,#8a542d 46% 100%);
-}
-
-#tableTitle{
-    text-align:center;
-    color:white;
-    font-size:28px;
-    font-weight:bold;
-    margin-top:40px;
-}
-
-#table{
-    position:absolute;
-    left:10%;
-    right:10%;
-    top:25%;
-    height:50%;
-    background:#ad6e3b;
-    border:10px solid #68401f;
-    border-radius:20px;
-    box-shadow:0 20px 30px #333;
-}
-
-#fishWork{
-    position:absolute;
-    width:360px;
-    height:160px;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-}
-
-.workFishBody{
-    position:absolute;
-    left:60px;
-    top:42px;
-    width:250px;
-    height:80px;
-    border-radius:60% 45% 45% 60%;
-    background:linear-gradient(145deg,#9aaeb2,#536a70);
-    border:4px solid #29383c;
-}
-
-.workFishTail{
-    position:absolute;
-    left:20px;
-    top:55px;
-    width:0;
-    height:0;
-    border-top:30px solid transparent;
-    border-bottom:30px solid transparent;
-    border-right:55px solid #63797d;
-}
-
-#cutMark{
-    position:absolute;
-    left:90px;
-    top:78px;
-    width:230px;
-    height:6px;
-    background:#df5555;
-    border-radius:10px;
-    opacity:0;
-}
-
-#knife{
-    position:absolute;
-    width:120px;
-    height:10px;
-    background:#e8eef0;
-    border:3px solid #59646b;
-    border-radius:5px;
-    display:none;
-    left:50%;
-    top:45%;
-    transform:rotate(-25deg);
-}
-
-#knife:after{
-    content:"";
-    position:absolute;
-    right:-50px;
-    top:-3px;
-    width:50px;
-    height:15px;
-    background:#533520;
-    border-radius:5px;
-}
-
-#fillets{
-    display:none;
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    gap:30px;
-}
-
-.fillet{
-    position:relative;
-    width:180px;
-    height:90px;
-    border-radius:65% 45% 45% 65%;
-    background:linear-gradient(145deg,#f2b5a2,#c8756b);
-    border:4px solid #824c47;
-}
-
-.bones{
-    position:absolute;
-    inset:25px;
-    display:flex;
-    justify-content:space-around;
-    align-items:center;
-}
-
-.bone{
-    width:5px;
-    height:35px;
-    background:#eee6cd;
-    border-radius:4px;
-    transform:rotate(12deg);
-}
-
-.cleaned .bones{
-    display:none;
-}
-
-#removeBones{
-    position:absolute;
-    bottom:15%;
+#tableHUD{
+    top:20px;
     left:50%;
     transform:translateX(-50%);
-    background:#ffd83d;
-    border:0;
-    padding:14px 20px;
+    color:white;
+    background:rgba(0,0,0,.7);
+    padding:13px 20px;
     border-radius:12px;
+    text-align:center;
+}
+
+#backButton{
+    right:20px;
+    bottom:20px;
+    padding:13px 20px;
+    border:0;
+    border-radius:12px;
+    background:#e85d5d;
+    color:white;
     font-weight:bold;
 }
 
-#closeTable{
-    position:absolute;
-    right:20px;
-    top:20px;
-    background:#ff6969;
+#putBucket{
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    padding:15px 25px;
     border:0;
-    padding:12px 18px;
-    border-radius:10px;
+    border-radius:13px;
+    background:#ffd83d;
     font-weight:bold;
+    font-size:17px;
 }
 </style>
 </head>
@@ -259,12 +150,12 @@ canvas{display:block}
 <div id="crosshair"></div>
 
 <div id="hud">
-    <b>🎣 3D FISHING SIMULATOR</b><br>
+    <b>🎣 3D FISHING</b><br>
     💰 Geld: <span id="money">0</span>€<br>
     🐟 Fische: <span id="fishCount">0</span>
 </div>
 
-<div id="bucketUI">
+<div id="bucket">
     🪣 <b>Eimer</b>
     <div id="bucketList">Leer</div>
 </div>
@@ -272,87 +163,109 @@ canvas{display:block}
 <div id="message"></div>
 
 <div id="hint">
-    Linksklick = Auswerfen<br>
-    E = Tisch / Fisch vorbereiten
+    WASD = bewegen · Maus = schauen<br>
+    Linksklick = auswerfen / einholen<br>
+    Q = Fisch in den Eimer · E = Fischtisch
 </div>
 
-<div id="tableUI">
-
-    <div id="tableTitle">🔪 FISCH VORBEREITEN</div>
-
-    <div id="table">
-
-        <div id="fishWork">
-            <div class="workFishTail"></div>
-            <div class="workFishBody"></div>
-            <div id="cutMark"></div>
-        </div>
-
-        <div id="knife"></div>
-
-        <div id="fillets">
-            <div class="fillet">
-                <div class="bones">
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                </div>
-            </div>
-
-            <div class="fillet">
-                <div class="bones">
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                    <div class="bone"></div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <button id="removeBones">🦴 Gräten entfernen</button>
-    <button id="closeTable">Zurück</button>
+<div id="tableHUD">
+    🔪 3D-FISCHTISCH<br>
+    Linksklick = Bearbeiten
 </div>
+
+<button id="putBucket">
+    Q – Fisch in den Eimer
+</button>
+
+<button id="backButton">
+    E – Zurück zum Ufer
+</button>
+
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
+
 /* =========================================================
-   THREE.JS
+   SZENE
 ========================================================= */
 
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87cfff);
 
-const camera=new THREE.PerspectiveCamera(
-    75,
-    innerWidth/innerHeight,
-    .01,
-    1000
+scene.background=
+    new THREE.Color(0x87cfff);
+
+scene.fog=
+    new THREE.Fog(
+        0x87cfff,
+        35,
+        140
+    );
+
+
+/* =========================================================
+   KAMERA
+========================================================= */
+
+const camera=
+    new THREE.PerspectiveCamera(
+        75,
+        innerWidth/innerHeight,
+        .01,
+        500
+    );
+
+
+/* =========================================================
+   RENDERER
+========================================================= */
+
+const renderer=
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
 );
 
-const renderer=new THREE.WebGLRenderer({
-    antialias:true
-});
+renderer.setPixelRatio(
+    Math.min(devicePixelRatio,2)
+);
 
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.outputEncoding=
+    THREE.sRGBEncoding;
 
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(
+    renderer.domElement
+);
 
 
-/* LICHT */
+/* =========================================================
+   LICHT
+========================================================= */
 
-scene.add(new THREE.AmbientLight(0xffffff,.75));
+scene.add(
+    new THREE.HemisphereLight(
+        0xbfeaff,
+        0x50703d,
+        1.1
+    )
+);
 
-const sun=new THREE.DirectionalLight(0xffffff,1.1);
-sun.position.set(10,20,10);
+const sun=
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.3
+    );
+
+sun.position.set(
+    30,
+    40,
+    15
+);
+
 scene.add(sun);
 
 
@@ -360,248 +273,602 @@ scene.add(sun);
    SPIELER
 ========================================================= */
 
-const player=new THREE.Object3D();
-player.position.set(0,1.7,5);
+const player=
+    new THREE.Object3D();
+
+/*
+   Spawn direkt am Ufer.
+*/
+
+player.position.set(
+    0,
+    1.7,
+    6
+);
+
 scene.add(player);
 
 player.add(camera);
 
 
 /* =========================================================
-   WELT
+   BODEN
 ========================================================= */
 
-/* UFER */
+const ground=
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            200,
+            200
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x4f9846,
+            roughness:1
+        })
+    );
 
-const ground=new THREE.Mesh(
-    new THREE.PlaneGeometry(200,200),
-    new THREE.MeshStandardMaterial({
-        color:0x4b9b45
-    })
-);
+ground.rotation.x=
+    -Math.PI/2;
 
-ground.rotation.x=-Math.PI/2;
 scene.add(ground);
 
 
-/* WASSER */
+/* =========================================================
+   SAND AM UFER
+========================================================= */
 
-const water=new THREE.Mesh(
-    new THREE.PlaneGeometry(200,200),
-    new THREE.MeshStandardMaterial({
-        color:0x087db3,
-        transparent:true,
-        opacity:.88,
-        roughness:.15,
-        metalness:.05
-    })
+const sand=
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            200,
+            6
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xc8b27a,
+            roughness:1
+        })
+    );
+
+sand.rotation.x=
+    -Math.PI/2;
+
+sand.position.set(
+    0,
+    .01,
+    -1
 );
 
-water.rotation.x=-Math.PI/2;
-water.position.y=.03;
-water.position.z=-35;
+scene.add(sand);
+
+
+/* =========================================================
+   WASSER
+========================================================= */
+
+const water=
+    new THREE.Mesh(
+        new THREE.PlaneGeometry(
+            200,
+            100
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x087daf,
+            roughness:.25,
+            metalness:.05
+        })
+    );
+
+water.rotation.x=
+    -Math.PI/2;
+
+water.position.set(
+    0,
+    .035,
+    -52
+);
 
 scene.add(water);
 
 
-/* Wasserwellen */
+/* =========================================================
+   KLEINE WELLEN
+========================================================= */
 
-const waveGroup=new THREE.Group();
-scene.add(waveGroup);
+const waves=[];
 
-for(let i=0;i<25;i++){
+for(let i=0;i<85;i++){
 
-    const wave=new THREE.Mesh(
-        new THREE.PlaneGeometry(
-            4+Math.random()*8,
-            .05
-        ),
-        new THREE.MeshBasicMaterial({
-            color:0x8ee9ff,
-            transparent:true,
-            opacity:.25
-        })
-    );
+    const wave=
+        new THREE.Mesh(
+            new THREE.PlaneGeometry(
+                .7+Math.random()*1.5,
+                .035
+            ),
+            new THREE.MeshBasicMaterial({
+                color:0xa8edff,
+                transparent:true,
+                opacity:.20,
+                side:THREE.DoubleSide
+            })
+        );
 
-    wave.rotation.x=-Math.PI/2;
+    wave.rotation.x=
+        -Math.PI/2;
 
     wave.position.set(
-        (Math.random()-.5)*80,
-        .07,
-        -5-Math.random()*70
+        (Math.random()-.5)*90,
+        .075,
+        -3-Math.random()*95
     );
 
-    waveGroup.add(wave);
+    wave.userData={
+        baseX:wave.position.x,
+        phase:Math.random()*Math.PI*2,
+        speed:.15+Math.random()*.25
+    };
+
+    scene.add(wave);
+
+    waves.push(wave);
 }
 
 
 /* =========================================================
-   ANGEL
+   3D ANGEL
 ========================================================= */
 
-const rodGroup=new THREE.Group();
+const rodGroup=
+    new THREE.Group();
+
+/*
+   WICHTIG:
+   Die Angel ist jetzt gerade ausgerichtet.
+   Keine schräge Grundrotation.
+*/
 
 rodGroup.position.set(
-    .62,
-    -.45,
-    -1.2
+    .55,
+    -.43,
+    -1.15
 );
 
 rodGroup.rotation.set(
-    -.35,
     0,
-    -.15
+    0,
+    0
 );
 
 camera.add(rodGroup);
 
 
-/* Griff */
+/* =========================================================
+   ANGELGRIFF
+========================================================= */
 
-const handle=new THREE.Mesh(
-    new THREE.CylinderGeometry(.045,.055,.45,12),
-    new THREE.MeshStandardMaterial({
-        color:0x5a351d
-    })
-);
+const grip=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .075,
+            .085,
+            .55,
+            16
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x4c2d19,
+            roughness:.8
+        })
+    );
 
-handle.rotation.z=Math.PI/2;
-handle.position.x=-.18;
-rodGroup.add(handle);
+grip.rotation.z=
+    -Math.PI/2;
 
+grip.position.x=
+    -.2;
 
-/* Rute */
-
-const rod=new THREE.Mesh(
-    new THREE.CylinderGeometry(.018,.035,3.2,12),
-    new THREE.MeshStandardMaterial({
-        color:0x7b4b27
-    })
-);
-
-rod.rotation.z=-Math.PI/2;
-rod.position.x=1.55;
-rodGroup.add(rod);
-
-
-/* Schnur */
-
-const lineMaterial=new THREE.LineBasicMaterial({
-    color:0xffffff
-});
-
-let fishingLine=null;
-
-
-/* Schwimmer */
-
-const bobber=new THREE.Mesh(
-    new THREE.SphereGeometry(.10,16,10),
-    new THREE.MeshStandardMaterial({
-        color:0xff3333
-    })
-);
-
-bobber.visible=false;
-scene.add(bobber);
+rodGroup.add(grip);
 
 
 /* =========================================================
-   3D FISCH
+   RUTENBLANK
 ========================================================= */
 
-let caughtFish=null;
-let fishVisible=false;
-
-function createFish(){
-
-    const group=new THREE.Group();
-
-    /* Körper */
-
-    const body=new THREE.Mesh(
-        new THREE.SphereGeometry(1,24,16),
+const rod=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .014,
+            .035,
+            3.5,
+            14
+        ),
         new THREE.MeshStandardMaterial({
-            color:0x708b8f,
-            roughness:.75
+            color:0x222d32,
+            roughness:.35,
+            metalness:.25
         })
     );
 
-    body.scale.set(
-        1.45,
-        .55,
-        .55
-    );
+rod.rotation.z=
+    -Math.PI/2;
 
-    group.add(body);
+rod.position.x=
+    1.65;
+
+rodGroup.add(rod);
 
 
-    /* Schwanz */
+/* =========================================================
+   RUTENSPITZE
+========================================================= */
 
-    const tailGeometry=new THREE.ConeGeometry(
-        .65,
-        1,
-        4
-    );
-
-    const tail=new THREE.Mesh(
-        tailGeometry,
+const rodTip=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .006,
+            .015,
+            .8,
+            10
+        ),
         new THREE.MeshStandardMaterial({
-            color:0x536d70
+            color:0xd9e6e8,
+            roughness:.25,
+            metalness:.2
         })
     );
 
-    tail.rotation.z=Math.PI/2;
-    tail.position.x=-1.35;
+rodTip.rotation.z=
+    -Math.PI/2;
 
-    group.add(tail);
+rodTip.position.x=
+    3.8;
 
-
-    /* Auge */
-
-    const eye=new THREE.Mesh(
-        new THREE.SphereGeometry(.08,12,8),
-        new THREE.MeshBasicMaterial({
-            color:0x050505
-        })
-    );
-
-    eye.position.set(
-        1.05,
-        .16,
-        -.42
-    );
-
-    group.add(eye);
+rodGroup.add(rodTip);
 
 
-    /* Flosse */
+/* =========================================================
+   RINGE
+========================================================= */
 
-    const fin=new THREE.Mesh(
-        new THREE.ConeGeometry(.25,.7,3),
-        new THREE.MeshStandardMaterial({
-            color:0x5c777a
-        })
-    );
+for(let i=0;i<6;i++){
 
-    fin.rotation.z=Math.PI;
-    fin.position.y=.48;
+    const ring=
+        new THREE.Mesh(
+            new THREE.TorusGeometry(
+                .034,
+                .008,
+                6,
+                12
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0xc8c8c8,
+                metalness:.8,
+                roughness:.2
+            })
+        );
 
-    group.add(fin);
+    ring.rotation.y=
+        Math.PI/2;
 
-    return group;
+    ring.position.x=
+        .35+i*.58;
+
+    rodGroup.add(ring);
 }
 
 
 /* =========================================================
-   FANGEN
+   ANGELROLLE
 ========================================================= */
 
-let state="idle";
-let biteTimer=null;
-let fishTime=0;
+const reel=
+    new THREE.Group();
 
-const fishNames=[
+reel.position.set(
+    .05,
+    -.13,
+    .05
+);
+
+rodGroup.add(reel);
+
+
+/* Spule */
+
+const spool=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .16,
+            .16,
+            .1,
+            24
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x30363a,
+            metalness:.85,
+            roughness:.22
+        })
+    );
+
+spool.rotation.z=
+    Math.PI/2;
+
+reel.add(spool);
+
+
+/* Rollenrahmen */
+
+const reelFrame=
+    new THREE.Mesh(
+        new THREE.TorusGeometry(
+            .19,
+            .025,
+            8,
+            20
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x555b60,
+            metalness:.8,
+            roughness:.25
+        })
+    );
+
+reelFrame.rotation.y=
+    Math.PI/2;
+
+reel.add(reelFrame);
+
+
+/* Kurbel */
+
+const crank=
+    new THREE.Group();
+
+crank.position.set(
+    0,
+    0,
+    -.14
+);
+
+reel.add(crank);
+
+const crankArm=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .28,
+            .035,
+            .035
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x25292c,
+            metalness:.8
+        })
+    );
+
+crank.add(crankArm);
+
+const crankHandle=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .035,
+            .035,
+            .18,
+            10
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x111315
+        })
+    );
+
+crankHandle.rotation.z=
+    Math.PI/2;
+
+crankHandle.position.x=
+    .14;
+
+crank.add(crankHandle);
+
+
+/* =========================================================
+   SCHNUR
+========================================================= */
+
+let fishingLine=null;
+
+const lineMaterial=
+    new THREE.LineBasicMaterial({
+        color:0xf5f5f5
+    });
+
+
+function getRodTip(){
+
+    const p=
+        new THREE.Vector3(
+            4.15,
+            0,
+            0
+        );
+
+    rodGroup.localToWorld(p);
+
+    return p;
+}
+
+
+/* =========================================================
+   SCHWIMMER
+========================================================= */
+
+const bobber=
+    new THREE.Group();
+
+const bobTop=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .11,
+            16,
+            12
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xed3838
+        })
+    );
+
+bobber.add(bobTop);
+
+const bobBottom=
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .075,
+            14,
+            10
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xffffff
+        })
+    );
+
+bobBottom.position.y=
+    -.11;
+
+bobber.add(bobBottom);
+
+bobber.visible=false;
+
+scene.add(bobber);
+
+
+/* =========================================================
+   FISCH
+========================================================= */
+
+let fish=null;
+let fishTime=0;
+let caughtFish=null;
+
+function createFish(){
+
+    const g=
+        new THREE.Group();
+
+
+    const body=
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                1,
+                28,
+                18
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0x748e91,
+                roughness:.62
+            })
+        );
+
+    body.scale.set(
+        1.5,
+        .58,
+        .55
+    );
+
+    g.add(body);
+
+
+    const belly=
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                1,
+                20,
+                14
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0xb9c4bd,
+                roughness:.75
+            })
+        );
+
+    belly.scale.set(
+        1.15,
+        .32,
+        .48
+    );
+
+    belly.position.y=
+        -.28;
+
+    g.add(belly);
+
+
+    const tail=
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                .65,
+                1,
+                4
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0x506d72
+            })
+        );
+
+    tail.rotation.z=
+        Math.PI/2;
+
+    tail.position.x=
+        -1.4;
+
+    g.add(tail);
+
+
+    const eye=
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                .09,
+                14,
+                10
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0x111111
+            })
+        );
+
+    eye.position.set(
+        1.05,
+        .17,
+        -.43
+    );
+
+    g.add(eye);
+
+
+    const fin=
+        new THREE.Mesh(
+            new THREE.ConeGeometry(
+                .25,
+                .7,
+                3
+            ),
+            new THREE.MeshStandardMaterial({
+                color:0x607c80
+            })
+        );
+
+    fin.rotation.z=
+        Math.PI;
+
+    fin.position.y=
+        .48;
+
+    g.add(fin);
+
+    return g;
+}
+
+
+/* =========================================================
+   FISCHE
+========================================================= */
+
+const fishTypes=[
     ["Forelle",20],
     ["Karpfen",30],
     ["Hecht",40],
@@ -612,8 +879,10 @@ const fishNames=[
 function randomFish(){
 
     const f=
-        fishNames[
-            Math.floor(Math.random()*fishNames.length)
+        fishTypes[
+            Math.floor(
+                Math.random()*fishTypes.length
+            )
         ];
 
     return {
@@ -624,70 +893,70 @@ function randomFish(){
 
 
 /* =========================================================
+   STATUS
+========================================================= */
+
+let state="idle";
+
+let bucket=[];
+
+let money=0;
+
+let castStart=null;
+let castTarget=null;
+let castProgress=0;
+
+let reelProgress=0;
+let reelStart=null;
+
+
+/* =========================================================
    AUSWERFEN
 ========================================================= */
 
-document.addEventListener("mousedown",e=>{
-
-    if(e.button!==0)return;
-
-    if(document.getElementById("tableUI").style.display==="block")
-        return;
+function cast(){
 
     if(state!=="idle")
         return;
 
-    cast();
-});
+    state="casting";
 
+    castProgress=0;
 
-function cast(){
+    castStart=
+        getRodTip();
 
-    state="waiting";
+    castTarget=
+        new THREE.Vector3(
+            (Math.random()-.5)*5,
+            .08,
+            -8-Math.random()*12
+        );
 
-    showMessage("🎣 Ausgeworfen!");
-
-    /* Zielpunkt auf Wasser */
-
-    const target=new THREE.Vector3(
-        (Math.random()-.5)*5,
-        .08,
-        -9-Math.random()*9
+    bobber.position.copy(
+        castStart
     );
 
-    bobber.position.copy(target);
     bobber.visible=true;
 
-
-    /* Linie von Rutenspitze zum Wasser */
-
-    const tip=new THREE.Vector3(
-        1.55,
-        0,
-        0
-    );
-
-    rodGroup.localToWorld(tip);
-
-    const points=[
-        tip,
-        target
-    ];
-
     if(fishingLine)
-        scene.remove(fishingLine);
+        scene.remove(
+            fishingLine
+        );
 
-    fishingLine=new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(points),
-        lineMaterial
+    fishingLine=
+        new THREE.Line(
+            new THREE.BufferGeometry(),
+            lineMaterial
+        );
+
+    scene.add(
+        fishingLine
     );
 
-    scene.add(fishingLine);
-
-
-    biteTimer=setTimeout(()=>{
-        bite();
-    },2500+Math.random()*4500);
+    showMessage(
+        "🎣 Auswerfen..."
+    );
 }
 
 
@@ -695,153 +964,111 @@ function cast(){
    BISS
 ========================================================= */
 
-function bite(){
+function startBite(){
 
     if(state!=="waiting")
         return;
 
     state="biting";
 
-    showMessage("🐟 EIN FISCH BEISST AN!");
+    showMessage(
+        "🐟 BISS!"
+    );
 
-    let n=0;
+    let t=0;
 
-    const interval=setInterval(()=>{
+    const timer=
+        setInterval(()=>{
 
-        if(state!=="biting"){
-            clearInterval(interval);
-            return;
-        }
+            if(state!=="biting"){
+                clearInterval(timer);
+                return;
+            }
 
-        bobber.position.y=
-            .08+Math.sin(n)*.16;
+            t+=.8;
 
-        n+=.8;
+            bobber.position.y=
+                .08+
+                Math.sin(t)*.14;
 
-    },80);
-
+        },70);
 
     setTimeout(()=>{
 
-        clearInterval(interval);
+        clearInterval(timer);
 
         if(state==="biting")
-            showCaughtFish();
+            catchFish();
 
-    },1000);
+    },1100);
 }
 
 
 /* =========================================================
-   FISCH AN ANGEL
+   FISCH FANGEN
 ========================================================= */
 
-function showCaughtFish(){
+function catchFish(){
 
     state="fish";
 
-    caughtFish=randomFish();
+    caughtFish=
+        randomFish();
 
-    fishVisible=true;
+    fish=
+        createFish();
 
-    fish=createFish();
+    fish.scale.setScalar(
+        .62
+    );
 
-    /*
-       Wichtig:
-       Der Fisch erscheint erst beim Biss.
-       Unter Wasser gibt es keine sichtbaren Fische.
-    */
+    fish.position.copy(
+        bobber.position
+    );
 
-    fish.position.copy(bobber.position);
+    fish.position.y=
+        .72;
 
-    fish.position.y=.65;
-
-    fish.scale.setScalar(.65);
-
-    scene.add(fish);
+    scene.add(
+        fish
+    );
 
     bobber.visible=false;
 
+    if(fishingLine)
+        fishingLine.visible=false;
+
+    document.getElementById(
+        "putBucket"
+    ).style.display=
+        "block";
+
     showMessage(
-        "🐟 "+caughtFish.name+
+        "🐟 "+
+        caughtFish.name+
         " hängt an der Angel!"
     );
 }
 
 
-/* ZAPPELN */
-
-function animateFish(){
-
-    if(!fishVisible || !fish)
-        return;
-
-    fishTime+=.16;
-
-    fish.rotation.z=
-        Math.sin(fishTime*5)*.35;
-
-    fish.rotation.y=
-        Math.sin(fishTime*4)*.25;
-
-    fish.position.x=
-        bobber.position.x+
-        Math.sin(fishTime*5)*.18;
-
-    fish.position.y=
-        .65+
-        Math.sin(fishTime*7)*.12;
-
-    fish.position.z=
-        bobber.position.z+
-        Math.cos(fishTime*4)*.12;
-}
-
-
 /* =========================================================
-   FISCH NEHMEN
+   EINHOLEN
 ========================================================= */
 
-document.addEventListener("keydown",e=>{
-
-    if(e.code==="Space" && state==="fish"){
-        takeFish();
-    }
-
-    if(e.code==="KeyE"){
-        if(state==="fish" && !document.getElementById("tableUI").style.display){
-            takeFish();
-        }
-        else if(state==="idle"){
-            openTable();
-        }
-    }
-});
-
-
-function takeFish(){
+function startReel(){
 
     if(state!=="fish")
         return;
 
-    if(fish)
-        scene.remove(fish);
+    state="reeling";
 
-    fish=null;
-    fishVisible=false;
+    reelProgress=0;
 
-    if(fishingLine)
-        fishingLine.visible=false;
-
-    caughtFish.count=
-        caughtFish.count||0;
-
-    addToBucket(caughtFish);
-
-    state="idle";
+    reelStart=
+        fish.position.clone();
 
     showMessage(
-        "🪣 Fisch in den Eimer!"
+        "🎣 Einholen..."
     );
 }
 
@@ -850,360 +1077,937 @@ function takeFish(){
    EIMER
 ========================================================= */
 
-let bucket=[];
+function putFishInBucket(){
 
-function addToBucket(f){
+    if(
+        !caughtFish ||
+        (
+            state!=="fish" &&
+            state!=="fishReady"
+        )
+    )
+        return;
 
-    bucket.push(f);
+    bucket.push(
+        caughtFish
+    );
 
-    document.getElementById("fishCount").textContent=
+    caughtFish=null;
+
+    if(fish){
+
+        scene.remove(
+            fish
+        );
+
+        fish=null;
+    }
+
+    document.getElementById(
+        "putBucket"
+    ).style.display=
+        "none";
+
+    document.getElementById(
+        "fishCount"
+    ).textContent=
         bucket.length;
 
     updateBucket();
+
+    state="idle";
+
+    showMessage(
+        "🪣 Fisch im Eimer!"
+    );
 }
+
+
+document.getElementById(
+    "putBucket"
+).onclick=
+    putFishInBucket;
+
 
 function updateBucket(){
 
-    const list=document.getElementById("bucketList");
+    const list=
+        document.getElementById(
+            "bucketList"
+        );
 
     if(bucket.length===0){
-        list.textContent="Leer";
+
+        list.textContent=
+            "Leer";
+
         return;
     }
 
     list.innerHTML="";
 
-    bucket.forEach(f=>{
+    bucket.forEach(
+        f=>{
 
-        const div=document.createElement("div");
+            const d=
+                document.createElement(
+                    "div"
+                );
 
-        div.textContent=
-            "🐟 "+f.name;
+            d.textContent=
+                "🐟 "+f.name;
 
-        list.appendChild(div);
-    });
+            list.appendChild(d);
+        }
+    );
 }
 
 
 /* =========================================================
-   TISCH
+   3D FISCHTISCH
 ========================================================= */
+
+const tableScene=
+    new THREE.Group();
+
+tableScene.visible=false;
+
+scene.add(
+    tableScene
+);
+
+
+/* Tisch */
+
+const tableTop=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            9,
+            .45,
+            6
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x9c6335,
+            roughness:.8
+        })
+    );
+
+tableTop.position.set(
+    0,
+    1.3,
+    -5
+);
+
+tableScene.add(
+    tableTop
+);
+
+
+/* Beine */
+
+for(
+    const x of [-3.7,3.7]
+){
+
+    for(
+        const z of [-2.2,2.2]
+    ){
+
+        const leg=
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    .45,
+                    2.6,
+                    .45
+                ),
+                new THREE.MeshStandardMaterial({
+                    color:0x60391f
+                })
+            );
+
+        leg.position.set(
+            x,
+            0,
+            -5+z
+        );
+
+        tableScene.add(
+            leg
+        );
+    }
+}
+
+
+/* Schneidebrett */
+
+const board=
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            5.4,
+            .2,
+            2.5
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xc28c54
+        })
+    );
+
+board.position.set(
+    0,
+    1.64,
+    -5
+);
+
+tableScene.add(
+    board
+);
+
+
+/* Tischfisch */
+
+let tableFish=null;
 
 function openTable(){
 
     if(bucket.length===0){
-        showMessage("🪣 Dein Eimer ist leer.");
+
+        showMessage(
+            "🪣 Dein Eimer ist leer."
+        );
+
         return;
     }
 
-    document.getElementById("tableUI").style.display="block";
+    state="table";
 
-    document.getElementById("fishWork").style.display="block";
-    document.getElementById("knife").style.display="none";
-    document.getElementById("cutMark").style.opacity=0;
-    document.getElementById("fillets").style.display="none";
-    document.getElementById("removeBones").style.display="none";
+    tableScene.visible=true;
+
+    tableFish=
+        createFish();
+
+    tableFish.scale.setScalar(
+        .8
+    );
+
+    tableFish.position.set(
+        0,
+        1.93,
+        -5
+    );
+
+    tableScene.add(
+        tableFish
+    );
+
+    player.position.set(
+        0,
+        3.7,
+        1.8
+    );
+
+    player.rotation.y=0;
+
+    camera.rotation.x=
+        -.35;
+
+    document.getElementById(
+        "tableHUD"
+    ).style.display=
+        "block";
+
+    document.getElementById(
+        "backButton"
+    ).style.display=
+        "block";
+
+    showMessage(
+        "🔪 3D-Fischtisch"
+    );
 }
 
 
-/* Fisch anklicken */
+/* =========================================================
+   3D ZYLINDER-WERKZEUG
+========================================================= */
 
-document.getElementById("fishWork").addEventListener(
-    "click",
-    cutFish
+const tool=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .13,
+            .13,
+            2.5,
+            20
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xbcc4c8,
+            metalness:.75,
+            roughness:.25
+        })
+    );
+
+tool.rotation.z=
+    Math.PI/2;
+
+tool.position.set(
+    -4,
+    2,
+    -5
+);
+
+tool.visible=false;
+
+tableScene.add(
+    tool
+);
+
+
+/* Griff */
+
+const toolGrip=
+    new THREE.Mesh(
+        new THREE.CylinderGeometry(
+            .18,
+            .18,
+            .9,
+            16
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x4b301e
+        })
+    );
+
+toolGrip.rotation.z=
+    Math.PI/2;
+
+toolGrip.position.x=
+    -1.65;
+
+tool.add(
+    toolGrip
 );
 
 
 /* =========================================================
-   SCHNEIDEN
+   TISCH-BEARBEITUNG
 ========================================================= */
 
-function cutFish(){
+let tableWorking=false;
 
-    const workFish=
-        document.getElementById("fishWork");
+renderer.domElement.addEventListener(
+    "click",
+    ()=>{
 
-    if(workFish.style.display==="none")
-        return;
+        if(
+            state!=="table" ||
+            tableWorking ||
+            !tableFish
+        )
+            return;
 
-    document.getElementById("knife").style.display="block";
+        tableWorking=true;
 
-    const mark=
-        document.getElementById("cutMark");
+        tool.visible=true;
 
-    mark.style.opacity=1;
+        tool.position.set(
+            -4,
+            2,
+            -5
+        );
 
-    mark.animate(
-        [
-            {width:"0px"},
-            {width:"230px"}
-        ],
-        {
-            duration:1000,
-            fill:"forwards"
-        }
-    );
+        const start=
+            tool.position.clone();
 
-    const knife=
-        document.getElementById("knife");
+        const end=
+            new THREE.Vector3(
+                1.4,
+                2,
+                -5
+            );
 
-    knife.animate(
-        [
-            {
-                left:"42%",
-                top:"42%"
-            },
-            {
-                left:"58%",
-                top:"55%"
+        let p=0;
+
+        function moveTool(){
+
+            p+=.025;
+
+            tool.position.lerpVectors(
+                start,
+                end,
+                Math.min(p,1)
+            );
+
+            if(p<1){
+
+                requestAnimationFrame(
+                    moveTool
+                );
+
+            }else{
+
+                setTimeout(
+                    finishTable,
+                    500
+                );
             }
-        ],
-        {
-            duration:1200,
-            easing:"ease-in-out"
         }
-    );
 
-    setTimeout(()=>{
-
-        workFish.style.display="none";
-        knife.style.display="none";
-
-        document.getElementById("fillets").style.display="flex";
-
-        document.getElementById("removeBones").style.display="block";
-
-    },1400);
-}
+        moveTool();
+    }
+);
 
 
 /* =========================================================
-   GRÄTEN ENTFERNEN
+   TISCH FERTIG
 ========================================================= */
 
-document.getElementById("removeBones").onclick=()=>{
+function finishTable(){
 
-    document.querySelectorAll(".fillet")
-        .forEach(f=>{
-            f.classList.add("cleaned");
-        });
+    if(tableFish){
 
-    document.getElementById("removeBones").style.display="none";
+        tableScene.remove(
+            tableFish
+        );
 
-    /*
-       Fisch wird verarbeitet.
-       Die Hälften bleiben sichtbar,
-       nur die Gräten verschwinden.
-    */
+        tableFish=null;
+    }
+
+    tool.visible=false;
 
     if(bucket.length>0){
 
-        const prepared=bucket.shift();
+        const f=
+            bucket.shift();
 
-        money+=Math.round(prepared.price*1.5);
+        money+=
+            Math.round(
+                f.price*1.5
+            );
 
-        document.getElementById("money").textContent=
+        document.getElementById(
+            "money"
+        ).textContent=
             money;
 
-        document.getElementById("fishCount").textContent=
+        document.getElementById(
+            "fishCount"
+        ).textContent=
             bucket.length;
 
         updateBucket();
-
-        showMessage(
-            "✅ Fisch vorbereitet! +"+
-            Math.round(prepared.price*1.5)+
-            "€"
-        );
     }
-};
 
+    tableWorking=false;
 
-/* =========================================================
-   TISCH SCHLIESSEN
-========================================================= */
-
-document.getElementById("closeTable").onclick=()=>{
-
-    document.getElementById("tableUI").style.display="none";
-
-    document.querySelectorAll(".fillet")
-        .forEach(f=>{
-            f.classList.remove("cleaned");
-        });
-};
-
-
-/* =========================================================
-   MESSAGE
-========================================================= */
-
-function showMessage(text){
-
-    const m=document.getElementById("message");
-
-    m.textContent=text;
-    m.style.opacity=1;
-
-    setTimeout(()=>{
-        m.style.opacity=0;
-    },1800);
+    showMessage(
+        "✅ Fisch vorbereitet!"
+    );
 }
 
 
 /* =========================================================
-   WASD + MOUSE
+   ZURÜCK ZUM UFER
+========================================================= */
+
+function closeTable(){
+
+    tableScene.visible=false;
+
+    if(tableFish){
+
+        tableScene.remove(
+            tableFish
+        );
+
+        tableFish=null;
+    }
+
+    tool.visible=false;
+
+    tableWorking=false;
+
+    document.getElementById(
+        "tableHUD"
+    ).style.display=
+        "none";
+
+    document.getElementById(
+        "backButton"
+    ).style.display=
+        "none";
+
+    player.position.set(
+        0,
+        1.7,
+        6
+    );
+
+    player.rotation.y=0;
+
+    camera.rotation.x=0;
+
+    state="idle";
+}
+
+document.getElementById(
+    "backButton"
+).onclick=
+    closeTable;
+
+
+/* =========================================================
+   TASTATUR
 ========================================================= */
 
 const keys={};
 
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        keys[e.code]=true;
+
+        if(
+            e.code==="KeyQ"
+        ){
+
+            putFishInBucket();
+        }
+
+        if(
+            e.code==="KeyE"
+        ){
+
+            if(state==="idle"){
+
+                if(bucket.length>0)
+                    openTable();
+
+            }else if(
+                state==="table"
+            ){
+
+                closeTable();
+            }
+        }
+    }
+);
+
+document.addEventListener(
+    "keyup",
+    e=>{
+        keys[e.code]=false;
+    }
+);
+
+
+/* =========================================================
+   MAUS / POINTER LOCK
+========================================================= */
+
+document.body.addEventListener(
+    "click",
+    ()=>{
+        if(state!=="table"){
+
+            document.body.requestPointerLock();
+        }
+    }
+);
+
+
+document.addEventListener(
+    "mousedown",
+    e=>{
+
+        if(e.button!==0)
+            return;
+
+        if(state==="idle")
+            cast();
+
+        else if(state==="fish")
+            startReel();
+    }
+);
+
+
 let yaw=0;
 let pitch=0;
-let velocityY=0;
 
-document.addEventListener("keydown",e=>{
-    keys[e.code]=true;
+document.addEventListener(
+    "mousemove",
+    e=>{
 
-    if(
-        e.code==="Space" &&
-        Math.abs(player.position.y-1.7)<.05
-    ){
-        velocityY=5;
+        if(
+            document.pointerLockElement!==document.body
+        )
+            return;
+
+        yaw-=
+            e.movementX*.002;
+
+        pitch-=
+            e.movementY*.002;
+
+        pitch=
+            Math.max(
+                -Math.PI/2,
+                Math.min(
+                    Math.PI/2,
+                    pitch
+                )
+            );
+
+        player.rotation.y=
+            yaw;
+
+        camera.rotation.x=
+            pitch;
     }
-});
-
-document.addEventListener("keyup",e=>{
-    keys[e.code]=false;
-});
-
-
-document.body.addEventListener("click",()=>{
-
-    if(
-        document.getElementById("tableUI").style.display!=="block"
-    ){
-        document.body.requestPointerLock();
-    }
-});
-
-
-document.addEventListener("mousemove",e=>{
-
-    if(document.pointerLockElement!==document.body)
-        return;
-
-    yaw-=e.movementX*.002;
-    pitch-=e.movementY*.002;
-
-    pitch=Math.max(
-        -Math.PI/2,
-        Math.min(Math.PI/2,pitch)
-    );
-
-    player.rotation.y=yaw;
-    camera.rotation.x=pitch;
-});
+);
 
 
 /* =========================================================
    GAME LOOP
 ========================================================= */
 
-const clock=new THREE.Clock();
+const clock=
+    new THREE.Clock();
 
 function animate(){
 
-    requestAnimationFrame(animate);
-
-    const delta=Math.min(
-        clock.getDelta(),
-        .05
+    requestAnimationFrame(
+        animate
     );
 
-    /* WASD */
-
-    const speed=4.5;
-
-    const direction=new THREE.Vector3();
-
-    if(keys["KeyW"])direction.z-=1;
-    if(keys["KeyS"])direction.z+=1;
-    if(keys["KeyA"])direction.x-=1;
-    if(keys["KeyD"])direction.x+=1;
-
-    if(direction.lengthSq()>0){
-
-        direction.normalize();
-
-        direction.applyEuler(
-            new THREE.Euler(
-                0,
-                player.rotation.y,
-                0
-            )
+    const delta=
+        Math.min(
+            clock.getDelta(),
+            .05
         );
 
-        player.position.addScaledVector(
-            direction,
-            speed*delta
-        );
+
+    /* -----------------------------------------
+       BEWEGUNG
+    ----------------------------------------- */
+
+    if(state!=="table"){
+
+        const dir=
+            new THREE.Vector3();
+
+        if(keys["KeyW"])
+            dir.z-=1;
+
+        if(keys["KeyS"])
+            dir.z+=1;
+
+        if(keys["KeyA"])
+            dir.x-=1;
+
+        if(keys["KeyD"])
+            dir.x+=1;
+
+        if(dir.lengthSq()>0){
+
+            dir.normalize();
+
+            dir.applyEuler(
+                new THREE.Euler(
+                    0,
+                    player.rotation.y,
+                    0
+                )
+            );
+
+            player.position.addScaledVector(
+                dir,
+                4.5*delta
+            );
+        }
+
+
+        /*
+           Nicht ins Wasser laufen.
+        */
+
+        if(player.position.z<1)
+            player.position.z=1;
     }
 
 
-    /* GRAVITATION */
+    /* -----------------------------------------
+       KLEINE WELLEN
+    ----------------------------------------- */
 
-    velocityY-=12*delta;
+    const now=
+        performance.now()*.001;
 
-    player.position.y+=
-        velocityY*delta;
+    waves.forEach(
+        (w,i)=>{
 
-    if(player.position.y<1.7){
+            w.position.x=
+                w.userData.baseX+
+                Math.sin(
+                    now*w.userData.speed+
+                    w.userData.phase
+                )*.6;
 
-        player.position.y=1.7;
-        velocityY=0;
+            w.rotation.z=
+                Math.sin(
+                    now*.5+i
+                )*.05;
+        }
+    );
+
+
+    /* -----------------------------------------
+       AUSWERFEN
+    ----------------------------------------- */
+
+    if(state==="casting"){
+
+        castProgress+=
+            delta/.75;
+
+        const p=
+            Math.min(
+                castProgress,
+                1
+            );
+
+
+        const pos=
+            new THREE.Vector3().lerpVectors(
+                castStart,
+                castTarget,
+                p
+            );
+
+
+        /*
+           Leichte Parabel.
+        */
+
+        pos.y+=
+            Math.sin(
+                p*Math.PI
+            )*2.2;
+
+        bobber.position.copy(
+            pos
+        );
+
+
+        /*
+           Angel bewegt sich beim
+           Auswerfen nach vorne.
+        */
+
+        rodGroup.rotation.x=
+            Math.sin(
+                p*Math.PI
+            )*.12;
+
+
+        if(p>=1){
+
+            state="waiting";
+
+            rodGroup.rotation.x=0;
+
+            setTimeout(
+                startBite,
+                2500+
+                Math.random()*4500
+            );
+        }
     }
 
 
-    /* WASSER */
-
-    waveGroup.children.forEach((w,i)=>{
-
-        w.position.x+=
-            Math.sin(Date.now()*.0005+i)*.002;
-    });
-
-
-    /* FISCH */
-
-    animateFish();
-
-
-    /* SCHNUR AKTUALISIEREN */
+    /* -----------------------------------------
+       SCHNUR
+    ----------------------------------------- */
 
     if(
         fishingLine &&
-        fishingLine.visible &&
-        bobber.visible
+        (
+            state==="casting" ||
+            state==="waiting" ||
+            state==="biting"
+        )
     ){
 
-        const tip=new THREE.Vector3(
-            1.55,0,0
-        );
+        const tipPos=
+            getRodTip();
 
-        rodGroup.localToWorld(tip);
+        const middle=
+            new THREE.Vector3().lerpVectors(
+                tipPos,
+                bobber.position,
+                .5
+            );
 
-        const positions=[
-            tip,
-            bobber.position
-        ];
+        middle.y+=.3;
 
         fishingLine.geometry.dispose();
 
         fishingLine.geometry=
             new THREE.BufferGeometry()
-                .setFromPoints(positions);
+                .setFromPoints([
+                    tipPos,
+                    middle,
+                    bobber.position
+                ]);
     }
 
+
+    /* -----------------------------------------
+       FISCH ZAPPELT
+    ----------------------------------------- */
+
+    if(
+        state==="fish" ||
+        state==="reeling"
+    ){
+
+        fishTime+=delta;
+
+        if(fish){
+
+            fish.rotation.z=
+                Math.sin(
+                    fishTime*6
+                )*.3;
+
+            fish.rotation.y=
+                Math.sin(
+                    fishTime*4
+                )*.2;
+
+
+            if(state==="fish"){
+
+                fish.position.y=
+                    .72+
+                    Math.sin(
+                        fishTime*8
+                    )*.12;
+
+                fish.position.x=
+                    castTarget.x+
+                    Math.sin(
+                        fishTime*6
+                    )*.18;
+            }
+        }
+    }
+
+
+    /* -----------------------------------------
+       EINHOLEN
+    ----------------------------------------- */
+
+    if(state==="reeling"){
+
+        reelProgress+=
+            delta/.9;
+
+        const p=
+            Math.min(
+                reelProgress,
+                1
+            );
+
+
+        if(fish){
+
+            const rodPosition=
+                getRodTip();
+
+            const target=
+                rodPosition.clone();
+
+            target.y-=.15;
+
+            const pos=
+                new THREE.Vector3().lerpVectors(
+                    reelStart,
+                    target,
+                    p
+                );
+
+            pos.y+=
+                Math.sin(
+                    p*Math.PI
+                )*.7;
+
+            fish.position.copy(
+                pos
+            );
+
+            fish.rotation.z=
+                Math.sin(
+                    fishTime*12
+                )*.25;
+        }
+
+
+        /*
+           Rolle dreht sich beim Einholen.
+        */
+
+        crank.rotation.x+=
+            delta*18;
+
+        spool.rotation.x+=
+            delta*18;
+
+
+        /*
+           Angel leicht zurückziehen.
+        */
+
+        rodGroup.rotation.x=
+            Math.sin(
+                p*Math.PI
+            )*.08;
+
+
+        if(p>=1){
+
+            if(fish){
+
+                scene.remove(
+                    fish
+                );
+
+                fish=null;
+            }
+
+            caughtFish=
+                caughtFish||
+                randomFish();
+
+            document.getElementById(
+                "putBucket"
+            ).style.display=
+                "block";
+
+            state="fishReady";
+
+            rodGroup.rotation.x=0;
+
+            showMessage(
+                "🐟 Fisch eingeholt! Q = Eimer"
+            );
+        }
+    }
+
+
+    /* -----------------------------------------
+       RENDER
+    ----------------------------------------- */
 
     renderer.render(
         scene,
@@ -1214,20 +2018,26 @@ function animate(){
 animate();
 
 
-/* RESIZE */
+/* =========================================================
+   RESIZE
+========================================================= */
 
-window.addEventListener("resize",()=>{
+window.addEventListener(
+    "resize",
+    ()=>{
 
-    camera.aspect=
-        innerWidth/innerHeight;
+        camera.aspect=
+            innerWidth/innerHeight;
 
-    camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        innerWidth,
-        innerHeight
-    );
-});
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+    }
+);
+
 </script>
 
 </body>
