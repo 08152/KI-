@@ -3,14 +3,21 @@ const path = require("path");
 
 const app = express();
 
-app.use(express.static(path.join(__dirname)));
+const PORT = process.env.PORT || 10000;
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+// Statische Dateien ausliefern
+app.use(express.static(path.join(__dirname, "public")));
+
+// index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const PORT = process.env.PORT || 3000;
+// Health Check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
-app.listen(PORT, () => {
-  console.log("Server läuft auf Port " + PORT);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server läuft auf Port ${PORT}`);
 });
