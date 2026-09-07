@@ -2,443 +2,441 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GHOST Video Converter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GHOST A1 mini Control</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
+
 body{
-  margin:0;
-  min-height:100vh;
-  background:#0d0f12;
-  color:white;
-  font-family:Arial,sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-.app{
-  width:min(850px,94vw);
-  background:#181b20;
-  border:1px solid #30343d;
-  border-radius:22px;
-  padding:28px;
-  box-shadow:0 20px 70px #0008;
-}
-h1{margin:0 0 8px;font-size:32px}
-.sub{color:#9da3ad;margin-bottom:25px}
-
-.drop{
-  border:2px dashed #555b66;
-  border-radius:18px;
-  min-height:190px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:.2s;
-  text-align:center;
-}
-.drop:hover,.drop.drag{
-  background:#22262d;
-  border-color:white;
-}
-.icon{font-size:50px;margin-bottom:10px}
-input{display:none}
-
-.file{
-  display:none;
-  margin-top:15px;
-  padding:14px;
-  background:#22252b;
-  border-radius:12px;
-  word-break:break-all;
+    margin:0;
+    background:#101010;
+    color:white;
+    font-family:Arial,sans-serif;
 }
 
-.controls{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-  margin-top:18px;
+header{
+    padding:20px;
+    background:#181818;
+    border-bottom:1px solid #333;
 }
 
-label{
-  color:#aaa;
-  font-size:14px;
+h1{
+    margin:0;
+    font-size:26px;
 }
 
-select{
-  width:100%;
-  margin-top:7px;
-  padding:12px;
-  background:#101216;
-  color:white;
-  border:1px solid #383d46;
-  border-radius:10px;
+main{
+    max-width:850px;
+    margin:auto;
+    padding:20px;
+}
+
+.card{
+    background:#1b1b1b;
+    border:1px solid #333;
+    border-radius:15px;
+    padding:20px;
+    margin-bottom:18px;
+}
+
+h2{
+    margin-top:0;
+}
+
+input{
+    background:#111;
+    color:white;
+    border:1px solid #555;
+    border-radius:8px;
+    padding:12px;
+    width:100%;
+    margin:7px 0 12px;
 }
 
 button{
-  width:100%;
-  padding:15px;
-  margin-top:20px;
-  border:0;
-  border-radius:12px;
-  background:white;
-  color:#111;
-  font-weight:bold;
-  font-size:16px;
-  cursor:pointer;
-}
-button:hover{background:#ddd}
-button:disabled{opacity:.45;cursor:not-allowed}
-
-.progress{
-  display:none;
-  margin-top:22px;
+    background:#292929;
+    color:white;
+    border:1px solid #555;
+    border-radius:9px;
+    padding:12px 18px;
+    cursor:pointer;
+    margin:4px;
 }
 
-.progressTop{
-  display:flex;
-  justify-content:space-between;
-  color:#aaa;
-  margin-bottom:8px;
+button:hover{
+    background:#3b3b3b;
 }
 
-.track{
-  height:12px;
-  background:#292d34;
-  border-radius:20px;
-  overflow:hidden;
+.print{
+    background:#087f35;
+    border-color:#0aaf4c;
+    font-size:18px;
 }
 
-.fill{
-  height:100%;
-  width:0%;
-  background:white;
-  transition:width .15s;
+.print:hover{
+    background:#099e43;
+}
+
+.stop{
+    background:#8b1717;
+    border-color:#c22;
 }
 
 .status{
-  text-align:center;
-  color:#aaa;
-  margin-top:12px;
+    padding:12px;
+    border-radius:8px;
+    background:#111;
+    margin-top:10px;
 }
 
-.download{
-  display:none;
-  text-decoration:none;
-  color:#111;
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  margin-top:20px;
+.online{
+    color:#55e889;
 }
 
-@media(max-width:600px){
-  .controls{grid-template-columns:1fr}
+.offline{
+    color:#ff6666;
+}
+
+pre{
+    background:#080808;
+    border-radius:10px;
+    padding:15px;
+    overflow:auto;
+    min-height:80px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<header>
+    <h1>🖨️ GHOST A1 mini Control</h1>
+</header>
 
-<h1>🎬 GHOST Video Converter</h1>
-<div class="sub">
-Videos direkt im Browser in MP4 umwandeln
-</div>
+<main>
 
-<div class="drop" id="drop">
-  <div class="icon">📁</div>
-  <strong>Video hier hineinziehen</strong>
-  <span style="color:#888;margin-top:7px">
-    oder klicken, um eine Datei auszuwählen
-  </span>
-</div>
+<div class="card">
 
-<input id="fileInput" type="file" accept="video/*">
+<h2>🔌 A1 mini verbinden</h2>
 
-<div class="file" id="fileInfo"></div>
+<label>
+A1 mini IP-Adresse
+</label>
 
-<div class="controls">
+<input
+    id="printerIP"
+    placeholder="z.B. 192.168.1.50"
+>
 
-<div>
-<label>Qualität</label>
-<select id="quality">
-  <option value="23">Sehr hoch</option>
-  <option value="26" selected>Hoch</option>
-  <option value="30">Mittel</option>
-  <option value="34">Kleinere Datei</option>
-</select>
-</div>
-
-<div>
-<label>Auflösung</label>
-<select id="resolution">
-  <option value="original">Original</option>
-  <option value="1920">1920p</option>
-  <option value="1280">1280p</option>
-  <option value="854">854p</option>
-  <option value="640">640p</option>
-</select>
-</div>
-
-</div>
-
-<button id="convert" disabled>
-  🚀 IN MP4 UMWANDELN
+<button onclick="checkConnection()">
+    Verbindung testen
 </button>
 
-<div class="progress" id="progress">
-
-<div class="progressTop">
-  <span id="status">Vorbereitung...</span>
-  <span id="percent">0%</span>
-</div>
-
-<div class="track">
-  <div class="fill" id="fill"></div>
+<div id="connection" class="status offline">
+    Nicht verbunden
 </div>
 
 </div>
 
-<a class="download" id="download">
-  ⬇️ MP4 HERUNTERLADEN
-</a>
+
+<div class="card">
+
+<h2>📁 Druckdatei</h2>
+
+<input
+    id="file"
+    type="file"
+    accept=".gcode,.3mf"
+>
+
+<div id="fileName">
+    Keine Datei ausgewählt
+</div>
+
+<br>
+
+<button onclick="uploadFile()">
+    Datei an den Druckdienst senden
+</button>
 
 </div>
 
-<script type="module">
 
-import { FFmpeg } from
-"https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js";
+<div class="card">
 
-import { fetchFile, toBlobURL }
-from
-"https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js";
+<h2>🖨️ Drucksteuerung</h2>
 
-const ffmpeg = new FFmpeg();
+<button
+    class="print"
+    onclick="startPrint()"
+>
+    ▶ DRUCKEN
+</button>
 
-const drop = document.getElementById("drop");
-const input = document.getElementById("fileInput");
-const fileInfo = document.getElementById("fileInfo");
-const convert = document.getElementById("convert");
+<button
+    class="stop"
+    onclick="stopPrint()"
+>
+    ■ STOPPEN
+</button>
 
-const progress = document.getElementById("progress");
-const fill = document.getElementById("fill");
-const percent = document.getElementById("percent");
-const status = document.getElementById("status");
-const download = document.getElementById("download");
+</div>
 
-let selectedFile = null;
-let loaded = false;
 
-drop.onclick = () => input.click();
+<div class="card">
 
-input.onchange = () => {
-  if(input.files.length){
-    selectFile(input.files[0]);
-  }
+<h2>📊 Status</h2>
+
+<pre id="log">Bereit.</pre>
+
+</div>
+
+</main>
+
+
+<script>
+
+const SERVICE =
+    "http://" + location.hostname + ":8787";
+
+
+const log = message => {
+
+    document.getElementById("log")
+        .textContent = message;
+
 };
 
-drop.ondragover = e => {
-  e.preventDefault();
-  drop.classList.add("drag");
-};
 
-drop.ondragleave = () => {
-  drop.classList.remove("drag");
-};
+document.getElementById("file")
+.addEventListener("change", function(){
 
-drop.ondrop = e => {
-  e.preventDefault();
-  drop.classList.remove("drag");
+    const file = this.files[0];
 
-  const file = e.dataTransfer.files[0];
+    document.getElementById("fileName")
+        .textContent =
+        file
+        ? file.name
+        : "Keine Datei ausgewählt";
 
-  if(file && file.type.startsWith("video/")){
-    selectFile(file);
-  }
-};
-
-function selectFile(file){
-
-  selectedFile = file;
-
-  fileInfo.style.display = "block";
-
-  const size =
-    (file.size / 1024 / 1024).toFixed(1);
-
-  fileInfo.innerHTML =
-    "🎞️ <b>" +
-    escapeHTML(file.name) +
-    "</b><br>" +
-    "<span style='color:#888'>" +
-    size + " MB</span>";
-
-  convert.disabled = false;
-
-  download.style.display = "none";
-}
-
-function escapeHTML(text){
-  return text.replace(/[&<>"']/g,m => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#039;"
-  }[m]));
-}
-
-async function loadFFmpeg(){
-
-  if(loaded) return;
-
-  status.textContent =
-    "FFmpeg wird geladen...";
-
-  const base =
-    "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
-
-  await ffmpeg.load({
-    coreURL: await toBlobURL(
-      `${base}/ffmpeg-core.js`,
-      "text/javascript"
-    ),
-    wasmURL: await toBlobURL(
-      `${base}/ffmpeg-core.wasm`,
-      "application/wasm"
-    )
-  });
-
-  loaded = true;
-}
-
-ffmpeg.on("progress", ({progress:p}) => {
-
-  const value =
-    Math.max(0,Math.min(1,p));
-
-  const number =
-    Math.round(value * 100);
-
-  fill.style.width = number + "%";
-  percent.textContent = number + "%";
-
-  status.textContent =
-    "Konvertiere Video...";
 });
 
-convert.onclick = async () => {
 
-  if(!selectedFile) return;
+async function checkConnection(){
 
-  convert.disabled = true;
-  progress.style.display = "block";
-  download.style.display = "none";
+    const ip =
+        document.getElementById("printerIP")
+        .value.trim();
 
-  fill.style.width = "0%";
-  percent.textContent = "0%";
+    if(!ip){
 
-  try{
+        log("Bitte zuerst die IP-Adresse des A1 mini eingeben.");
 
-    await loadFFmpeg();
+        return;
+    }
 
-    status.textContent =
-      "Video wird vorbereitet...";
+    try{
 
-    const inputName =
-      "input." +
-      (selectedFile.name.split(".").pop() || "mp4");
+        const response =
+            await fetch(
+                SERVICE +
+                "/api/status?ip=" +
+                encodeURIComponent(ip)
+            );
 
-    const outputName = "GHOST_CONVERTED.mp4";
+        const data =
+            await response.json();
 
-    await ffmpeg.writeFile(
-      inputName,
-      await fetchFile(selectedFile)
-    );
+        if(data.ok){
 
-    const crf =
-      document.getElementById("quality").value;
+            document.getElementById("connection")
+                .className =
+                "status online";
 
-    const resolution =
-      document.getElementById("resolution").value;
+            document.getElementById("connection")
+                .textContent =
+                "✓ Lokaler Dienst erreichbar";
 
-    let args = [
-      "-i", inputName,
-      "-c:v", "libx264",
-      "-preset", "veryfast",
-      "-crf", crf,
-      "-c:a", "aac",
-      "-b:a", "128k"
-    ];
+        }else{
 
-    if(resolution !== "original"){
+            throw new Error(data.message);
 
-      args.push(
-        "-vf",
-        `scale=-2:${resolution}`
-      );
+        }
+
+        log(JSON.stringify(data,null,2));
+
+    }catch(error){
+
+        document.getElementById("connection")
+            .className =
+            "status offline";
+
+        document.getElementById("connection")
+            .textContent =
+            "✕ Keine Verbindung";
+
+        log(
+            "Verbindungsfehler:\n" +
+            error.message
+        );
 
     }
 
-    args.push(
-      "-movflags",
-      "+faststart",
-      outputName
+}
+
+
+async function uploadFile(){
+
+    const file =
+        document.getElementById("file")
+        .files[0];
+
+    if(!file){
+
+        log("Bitte zuerst eine G-Code- oder 3MF-Datei auswählen.");
+
+        return;
+    }
+
+    const form =
+        new FormData();
+
+    form.append(
+        "file",
+        file
     );
 
-    await ffmpeg.exec(args);
+    try{
 
-    const data =
-      await ffmpeg.readFile(outputName);
+        const response =
+            await fetch(
+                SERVICE + "/api/upload",
+                {
+                    method:"POST",
+                    body:form
+                }
+            );
 
-    const blob =
-      new Blob([data.buffer], {
-        type:"video/mp4"
-      });
+        const text =
+            await response.text();
 
-    const url =
-      URL.createObjectURL(blob);
+        log(text);
 
-    download.href = url;
-    download.download =
-      selectedFile.name
-      .replace(/\.[^/.]+$/,"")
-      + ".mp4";
+    }catch(error){
 
-    fill.style.width = "100%";
-    percent.textContent = "100%";
-    status.textContent =
-      "✅ Fertig!";
+        log(
+            "Upload-Fehler:\n" +
+            error.message
+        );
 
-    download.style.display = "block";
+    }
 
-  }catch(error){
+}
 
-    console.error(error);
 
-    status.textContent =
-      "❌ Fehler bei der Konvertierung.";
+async function startPrint(){
 
-    alert(
-      "Die Konvertierung ist fehlgeschlagen. " +
-      "Bei sehr großen Videos kann der Browser " +
-      "zu wenig Speicher haben."
-    );
+    const ip =
+        document.getElementById("printerIP")
+        .value.trim();
 
-  }finally{
+    if(!ip){
 
-    convert.disabled = false;
+        log("Bitte die A1-mini-IP eingeben.");
 
-  }
-};
+        return;
+    }
+
+    if(!confirm(
+        "Druck wirklich starten?"
+    )) return;
+
+    try{
+
+        const response =
+            await fetch(
+                SERVICE + "/api/print",
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "application/json"
+                    },
+
+                    body:JSON.stringify({
+                        ip:ip
+                    })
+                }
+            );
+
+        const text =
+            await response.text();
+
+        log(text);
+
+    }catch(error){
+
+        log(
+            "Druckfehler:\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+async function stopPrint(){
+
+    const ip =
+        document.getElementById("printerIP")
+        .value.trim();
+
+    if(!ip){
+
+        log("Bitte die A1-mini-IP eingeben.");
+
+        return;
+    }
+
+    try{
+
+        const response =
+            await fetch(
+                SERVICE + "/api/stop",
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "application/json"
+                    },
+
+                    body:JSON.stringify({
+                        ip:ip
+                    })
+                }
+            );
+
+        const text =
+            await response.text();
+
+        log(text);
+
+    }catch(error){
+
+        log(
+            "Fehler:\n" +
+            error.message
+        );
+
+    }
+
+}
 
 </script>
 
