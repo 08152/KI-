@@ -1,12 +1,13 @@
 {
-  "name": "ghost-video-converter",
+  "name": "ghost-a1-mini",
   "version": "1.0.0",
-  "private": true,
+  "description": "GHOST Websteuerung für Bambu Lab A1 mini",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "multer": "^2.0.2"
   }
 }
