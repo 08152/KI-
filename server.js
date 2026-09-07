@@ -1,226 +1,121 @@
 const express = require("express");
-const multer = require("multer");
-const { spawn } = require("child_process");
-const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
+const multer = require("multer");
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-
-const uploadDir = path.join(__dirname, "uploads");
-const outputDir = path.join(__dirname, "outputs");
-
-fs.mkdirSync(uploadDir, { recursive: true });
-fs.mkdirSync(outputDir, { recursive: true });
+const PORT = process.env.PORT || 8787;
 
 const upload = multer({
-  dest: uploadDir,
-  limits: {
-    fileSize: 500 * 1024 * 1024
-  }
+    dest: path.join(__dirname, "uploads")
 });
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
+app.use(express.static(__dirname));
 
+
+// Startseite
 app.get("/", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "public", "index.html")
-  );
+    res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok"
-  });
+
+// Dienststatus
+app.get("/api/status", (req, res) => {
+
+    const ip = req.query.ip;
+
+    if (!ip) {
+        return res.status(400).json({
+            ok: false,
+            message: "Keine Drucker-IP angegeben."
+        });
+    }
+
+    res.json({
+        ok: true,
+        service: "GHOST A1 mini Service",
+        printerIP: ip,
+        message:
+            "Webdienst läuft. Der A1-mini-LAN-Tunnel muss im selben Netzwerk wie der Drucker laufen."
+    });
 });
 
+
+// Datei hochladen
 app.post(
-  "/convert",
-  upload.single("video"),
-  (req, res) => {
+    "/api/upload",
+    upload.single("file"),
+    (req, res) => {
 
-    if (!req.file) {
-      return res.status(400).json({
-        error: "Kein Video hochgeladen."
-      });
-    }
-
-    const input = req.file.path;
-
-    const id =
-      crypto.randomBytes(12).toString("hex");
-
-    const output =
-      path.join(
-        outputDir,
-        id + ".mp4"
-      );
-
-    console.log("Starte FFmpeg");
-
-    const args = [
-      "-i",
-      input,
-
-      "-c:v",
-      "libx264",
-
-      "-preset",
-      "veryfast",
-
-      "-crf",
-      "26",
-
-      "-c:a",
-      "aac",
-
-      "-b:a",
-      "128k",
-
-      "-movflags",
-      "+faststart",
-
-      "-y",
-      output
-    ];
-
-    const ffmpeg =
-      spawn("ffmpeg", args);
-
-    let errorText = "";
-
-    ffmpeg.stderr.on(
-      "data",
-      data => {
-
-        const text =
-          data.toString();
-
-        errorText += text;
-
-        console.log(text);
-      }
-    );
-
-    ffmpeg.on(
-      "error",
-      error => {
-
-        console.error(
-          "FFmpeg Fehler:",
-          error
-        );
-
-        cleanup(
-          input,
-          output
-        );
-
-        if (!res.headersSent) {
-          res.status(500).json({
-            error:
-              "FFmpeg ist auf dem Server nicht installiert."
-          });
-        }
-      }
-    );
-
-    ffmpeg.on(
-      "close",
-      code => {
-
-        console.log(
-          "FFmpeg beendet:",
-          code
-        );
-
-        if (code !== 0) {
-
-          console.error(
-            errorText
-          );
-
-          cleanup(
-            input,
-            output
-          );
-
-          if (!res.headersSent) {
-            res.status(500).json({
-              error:
-                "Die Konvertierung ist fehlgeschlagen."
+        if (!req.file) {
+            return res.status(400).json({
+                ok: false,
+                message: "Keine Datei erhalten."
             });
-          }
-
-          return;
         }
 
-        if (
-          !fs.existsSync(output)
-        ) {
-
-          cleanup(
-            input,
-            output
-          );
-
-          return res.status(500).json({
-            error:
-              "MP4-Datei wurde nicht erstellt."
-          });
-        }
-
-        res.download(
-          output,
-          "converted.mp4",
-          error => {
-
-            cleanup(
-              input,
-              output
-            );
-
-            if (error) {
-              console.error(
-                "Download-Fehler:",
-                error
-              );
-            }
-          }
-        );
-      }
-    );
-  }
+        res.json({
+            ok: true,
+            filename: req.file.originalname,
+            storedAs: req.file.filename,
+            message: "Datei wurde empfangen."
+        });
+    }
 );
 
-function cleanup(
-  input,
-  output
-) {
 
-  try {
-    if (fs.existsSync(input)) {
-      fs.unlinkSync(input);
+// Druck starten
+app.post("/api/print", (req, res) => {
+
+    const { ip } = req.body;
+
+    if (!ip) {
+        return res.status(400).json({
+            ok: false,
+            message: "Keine Drucker-IP."
+        });
     }
-  } catch {}
 
-  try {
-    if (fs.existsSync(output)) {
-      fs.unlinkSync(output);
+    /*
+      WICHTIG:
+
+      Render kann nicht einfach auf einen privaten
+      192.168.x.x-Drucker in deinem Zuhause zugreifen.
+
+      Deshalb wird hier NOCH KEIN Druckbefehl an den
+      A1 mini geschickt.
+    */
+
+    res.status(501).json({
+        ok: false,
+        message:
+            "Drucker nicht direkt erreichbar: Dieser Render-Server befindet sich nicht im WLAN des A1 mini."
+    });
+});
+
+
+// Druck stoppen
+app.post("/api/stop", (req, res) => {
+
+    const { ip } = req.body;
+
+    if (!ip) {
+        return res.status(400).json({
+            ok: false,
+            message: "Keine Drucker-IP."
+        });
     }
-  } catch {}
-}
 
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
+    res.status(501).json({
+        ok: false,
+        message:
+            "Stoppen benötigt ebenfalls eine lokale Verbindung zum A1 mini."
+    });
+});
 
+
+app.listen(PORT, () => {
     console.log(
-      "GHOST Video Converter läuft auf Port " +
-      PORT
+        `GHOST A1 mini Service läuft auf Port ${PORT}`
     );
-
-  }
-);
+});
