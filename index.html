@@ -2,691 +2,1104 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Lokaler Video Maler</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MAXE RUNNER – ELEVATOR INTRO</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
-
-body{
+html,body{
     margin:0;
-    min-height:100vh;
-    background:#181818;
-    color:white;
-    font-family:Arial,sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-}
-
-header{
     width:100%;
-    padding:20px;
-    text-align:center;
-    background:#242424;
-    border-bottom:1px solid #444;
-}
-
-h1{
-    margin:0;
-    font-size:24px;
-}
-
-p{
-    color:#aaa;
-}
-
-#container{
-    width:min(95vw,900px);
-    margin-top:20px;
-}
-
-#cameraBox{
-    position:relative;
-    width:100%;
-    background:#000;
-    border-radius:15px;
+    height:100%;
     overflow:hidden;
-    box-shadow:0 10px 40px rgba(0,0,0,.5);
+    background:#000;
+    font-family:Arial,sans-serif;
 }
 
 canvas{
-    width:100%;
     display:block;
 }
 
-video{
-    display:none;
+/* DUNKLE FILMATMOSPHÄRE */
+#vignette{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:10;
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 25%,
+            rgba(0,0,0,.15) 50%,
+            rgba(0,0,0,.85) 100%
+        );
 }
 
-#controls{
+/* UNSCHÄRFE */
+#blur{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:9;
+    backdrop-filter:blur(0px);
+}
+
+/* AUGENLIDER */
+#eyelidTop,
+#eyelidBottom{
+    position:fixed;
+    left:0;
+    width:100%;
+    height:0%;
+    background:#050505;
+    z-index:20;
+    pointer-events:none;
+}
+
+#eyelidTop{
+    top:0;
+}
+
+#eyelidBottom{
+    bottom:0;
+}
+
+/* CINEMA TEXT */
+#text{
+    position:fixed;
+    left:50%;
+    bottom:8%;
+    transform:translateX(-50%);
+    z-index:30;
+
+    color:white;
+    font-size:14px;
+    letter-spacing:4px;
+
+    opacity:0;
+    transition:opacity 1s;
+
+    text-shadow:0 0 10px black;
+}
+
+#start{
+    position:fixed;
+    inset:0;
+
     display:flex;
-    flex-wrap:wrap;
+    align-items:center;
     justify-content:center;
-    gap:10px;
-    padding:20px;
-}
 
-button{
-    border:none;
-    padding:13px 18px;
-    border-radius:10px;
-    font-size:16px;
-    cursor:pointer;
-    background:#444;
-    color:white;
-}
+    z-index:100;
 
-button:hover{
-    background:#666;
-}
+    color:#ddd;
+    background:#000;
 
-.start{
-    background:#1685ff;
-}
-
-.start:hover{
-    background:#006fe8;
-}
-
-.record{
-    background:#d92525;
-}
-
-.recording{
-    animation:pulse 1s infinite;
-}
-
-@keyframes pulse{
-    50%{
-        opacity:.5;
-    }
-}
-
-.download{
-    background:#18a84c;
-}
-
-#settings{
-    margin:10px 0 30px 0;
-    padding:20px;
-    background:#242424;
-    border-radius:15px;
-}
-
-.setting{
-    margin:15px 0;
-}
-
-label{
-    display:flex;
-    justify-content:space-between;
-    gap:15px;
-    margin-bottom:8px;
-}
-
-input[type="range"]{
-    width:100%;
-}
-
-select{
-    width:100%;
-    padding:10px;
-    border-radius:8px;
-    background:#333;
-    color:white;
-    border:1px solid #555;
-}
-
-#status{
-    text-align:center;
-    min-height:25px;
-    color:#aaa;
-}
-
-#recordDot{
-    position:absolute;
-    top:15px;
-    left:15px;
-    width:15px;
-    height:15px;
-    background:red;
-    border-radius:50%;
-    display:none;
-    box-shadow:0 0 15px red;
-}
-
-#recordTime{
-    position:absolute;
-    top:12px;
-    left:42px;
-    display:none;
     font-size:18px;
-    text-shadow:0 2px 5px black;
+    letter-spacing:3px;
+
+    cursor:pointer;
 }
+
 </style>
 </head>
 
 <body>
 
-<header>
-    <h1>🎨 Lokaler Video Maler</h1>
-    <p>Echte Kamera → gemalter Effekt → Videoaufnahme</p>
-</header>
+<div id="start">KLICKEN ZUM STARTEN</div>
 
-<div id="container">
+<div id="blur"></div>
 
-    <div id="cameraBox">
-        <video id="video" autoplay playsinline muted></video>
+<div id="vignette"></div>
 
-        <canvas id="canvas"></canvas>
+<div id="eyelidTop"></div>
+<div id="eyelidBottom"></div>
 
-        <div id="recordDot"></div>
-        <div id="recordTime">00:00</div>
-    </div>
+<div id="text"></div>
 
-    <div id="controls">
-        <button class="start" id="startCamera">
-            📷 Kamera starten
-        </button>
 
-        <button class="record" id="recordButton" disabled>
-            ⏺ Aufnahme starten
-        </button>
-
-        <button class="download" id="downloadButton" disabled>
-            ⬇ Video herunterladen
-        </button>
-    </div>
-
-    <div id="settings">
-
-        <div class="setting">
-            <label>
-                Effekt
-            </label>
-
-            <select id="effect">
-                <option value="paint">Gemalt</option>
-                <option value="watercolor">Aquarell</option>
-                <option value="sketch">Bleistiftzeichnung</option>
-                <option value="cartoon">Comic</option>
-                <option value="soft">Weich gemalt</option>
-            </select>
-        </div>
-
-        <div class="setting">
-            <label>
-                <span>Farbstärke</span>
-                <span id="saturationValue">140%</span>
-            </label>
-
-            <input
-                type="range"
-                id="saturation"
-                min="0"
-                max="250"
-                value="140"
-            >
-        </div>
-
-        <div class="setting">
-            <label>
-                <span>Kontrast</span>
-                <span id="contrastValue">120%</span>
-            </label>
-
-            <input
-                type="range"
-                id="contrast"
-                min="50"
-                max="250"
-                value="120"
-            >
-        </div>
-
-        <div class="setting">
-            <label>
-                <span>Helligkeit</span>
-                <span id="brightnessValue">100%</span>
-            </label>
-
-            <input
-                type="range"
-                id="brightness"
-                min="50"
-                max="180"
-                value="100"
-            >
-        </div>
-
-    </div>
-
-    <div id="status">
-        Kamera noch nicht gestartet.
-    </div>
-
-</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
 <script>
 
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d", {
-    willReadFrequently:true
+/* =====================================================
+   SCENE
+===================================================== */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x000000);
+
+scene.fog = new THREE.Fog(
+    0x000000,
+    5,
+    120
+);
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+const camera = new THREE.PerspectiveCamera(
+    70,
+    innerWidth / innerHeight,
+    0.1,
+    1000
+);
+
+camera.position.set(
+    0,
+    1.7,
+    0
+);
+
+
+/* =====================================================
+   RENDERER
+===================================================== */
+
+const renderer = new THREE.WebGLRenderer({
+    antialias:true
 });
 
-const startCamera = document.getElementById("startCamera");
-const recordButton = document.getElementById("recordButton");
-const downloadButton = document.getElementById("downloadButton");
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
 
-const effectSelect = document.getElementById("effect");
+renderer.setPixelRatio(
+    Math.min(
+        devicePixelRatio,
+        2
+    )
+);
 
-const saturation = document.getElementById("saturation");
-const contrast = document.getElementById("contrast");
-const brightness = document.getElementById("brightness");
+renderer.outputEncoding =
+    THREE.sRGBEncoding;
 
-const saturationValue = document.getElementById("saturationValue");
-const contrastValue = document.getElementById("contrastValue");
-const brightnessValue = document.getElementById("brightnessValue");
+document.body.appendChild(
+    renderer.domElement
+);
 
-const status = document.getElementById("status");
 
-const recordDot = document.getElementById("recordDot");
-const recordTime = document.getElementById("recordTime");
+/* =====================================================
+   ELEVATOR
+===================================================== */
 
+const elevator =
+    new THREE.Group();
 
-let stream = null;
-let recorder = null;
-let chunks = [];
+scene.add(
+    elevator
+);
 
-let recording = false;
-let recordingStart = 0;
-let animationFrame = null;
 
+/* FLOOR */
 
-saturation.addEventListener("input",()=>{
-    saturationValue.textContent =
-        saturation.value + "%";
-});
+const floor =
+    new THREE.Mesh(
 
-contrast.addEventListener("input",()=>{
-    contrastValue.textContent =
-        contrast.value + "%";
-});
+        new THREE.BoxGeometry(
+            4,
+            0.15,
+            4
+        ),
 
-brightness.addEventListener("input",()=>{
-    brightnessValue.textContent =
-        brightness.value + "%";
-});
+        new THREE.MeshStandardMaterial({
+            color:0x111111,
+            roughness:.8
+        })
 
+    );
 
-startCamera.addEventListener("click",async()=>{
+floor.position.y =
+    -1.7;
 
-    try{
+elevator.add(
+    floor
+);
 
-        stream = await navigator.mediaDevices.getUserMedia({
 
-            video:{
-                facingMode:"environment",
-                width:{ideal:1280},
-                height:{ideal:720}
-            },
+/* WALLS */
 
-            audio:true
+function createWall(
+    x,
+    y,
+    z,
+    sx,
+    sy,
+    sz
+){
 
-        });
+    const wall =
+        new THREE.Mesh(
 
-        video.srcObject = stream;
+            new THREE.BoxGeometry(
+                sx,
+                sy,
+                sz
+            ),
 
-        await video.play();
+            new THREE.MeshStandardMaterial({
+                color:0x090909,
+                roughness:1
+            })
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        );
 
-        recordButton.disabled = false;
+    wall.position.set(
+        x,
+        y,
+        z
+    );
 
-        status.textContent =
-            "Kamera läuft. Wähle einen Effekt.";
-
-        draw();
-
-    }
-    catch(error){
-
-        console.error(error);
-
-        status.textContent =
-            "Kamera konnte nicht gestartet werden.";
-
-    }
-
-});
-
-
-function draw(){
-
-    if(!video.videoWidth){
-        animationFrame = requestAnimationFrame(draw);
-        return;
-    }
-
-
-    const w = canvas.width;
-    const h = canvas.height;
-
-
-    const sat = saturation.value;
-    const con = contrast.value;
-    const bri = brightness.value;
-
-
-    ctx.clearRect(0,0,w,h);
-
-
-    const effect = effectSelect.value;
-
-
-    if(effect === "paint"){
-
-        ctx.filter =
-            `brightness(${bri}%)
-             contrast(${con + 20}%)
-             saturate(${sat + 30}%)
-             blur(0.6px)`;
-
-        ctx.drawImage(video,0,0,w,h);
-
-        ctx.globalAlpha = 0.25;
-
-        ctx.filter =
-            "blur(2px) saturate(180%)";
-
-        ctx.drawImage(video,0,0,w,h);
-
-        ctx.globalAlpha = 1;
-
-    }
-
-
-    else if(effect === "watercolor"){
-
-        ctx.filter =
-            `brightness(${bri + 5}%)
-             contrast(${con - 10}%)
-             saturate(${sat + 50}%)
-             blur(1.2px)`;
-
-        ctx.drawImage(video,0,0,w,h);
-
-        ctx.globalAlpha = 0.3;
-
-        ctx.filter =
-            "blur(4px) saturate(180%)";
-
-        ctx.drawImage(video,0,0,w,h);
-
-        ctx.globalAlpha = 1;
-
-    }
-
-
-    else if(effect === "soft"){
-
-        ctx.filter =
-            `brightness(${bri + 10}%)
-             contrast(${con - 10}%)
-             saturate(${sat + 20}%)
-             blur(1px)`;
-
-        ctx.drawImage(video,0,0,w,h);
-
-    }
-
-
-    else if(effect === "cartoon"){
-
-        ctx.filter =
-            `brightness(${bri}%)
-             contrast(${con + 60}%)
-             saturate(${sat + 70}%)`;
-
-        ctx.drawImage(video,0,0,w,h);
-
-    }
-
-
-    else if(effect === "sketch"){
-
-        ctx.filter =
-            "grayscale(100%) contrast(250%) invert(100%)";
-
-        ctx.drawImage(video,0,0,w,h);
-
-        ctx.globalCompositeOperation = "multiply";
-
-        ctx.filter =
-            "grayscale(100%) contrast(250%)";
-
-        ctx.drawImage(video,2,0,w,h);
-
-        ctx.globalCompositeOperation = "source-over";
-
-    }
-
-
-    if(recording){
-
-        const seconds =
-            Math.floor(
-                (Date.now() - recordingStart) / 1000
-            );
-
-        const min =
-            String(Math.floor(seconds / 60))
-            .padStart(2,"0");
-
-        const sec =
-            String(seconds % 60)
-            .padStart(2,"0");
-
-        recordTime.textContent =
-            min + ":" + sec;
-
-    }
-
-
-    animationFrame =
-        requestAnimationFrame(draw);
+    elevator.add(
+        wall
+    );
 
 }
 
 
-recordButton.addEventListener("click",()=>{
+/* LEFT */
+createWall(
+    -2,
+    1,
+    0,
+    .15,
+    5,
+    5
+);
 
-    if(!recording){
+/* RIGHT */
+createWall(
+    2,
+    1,
+    0,
+    .15,
+    5,
+    5
+);
 
-        chunks = [];
+/* BACK */
+createWall(
+    0,
+    1,
+    2,
+    4,
+    5,
+    .15
+);
 
 
-        const canvasStream =
-            canvas.captureStream(30);
+/* =====================================================
+   ELEVATOR SHAFT
+===================================================== */
+
+const shaft =
+    new THREE.Group();
+
+scene.add(
+    shaft
+);
 
 
-        if(stream && stream.getAudioTracks().length > 0){
+/* DUNKLE SEITEN */
 
-            stream.getAudioTracks().forEach(track=>{
+function shaftWall(
+    x
+){
 
-                canvasStream.addTrack(
-                    track
+    const wall =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .3,
+                500,
+                10
+            ),
+
+            new THREE.MeshStandardMaterial({
+                color:0x030303
+            })
+
+        );
+
+    wall.position.set(
+        x,
+        250,
+        0
+    );
+
+    shaft.add(
+        wall
+    );
+
+}
+
+shaftWall(
+    -5
+);
+
+shaftWall(
+    5
+);
+
+
+/* =====================================================
+   VORBEIRASENDE LICHTER
+===================================================== */
+
+const lights =
+    [];
+
+const lightMaterial =
+    new THREE.MeshBasicMaterial({
+        color:0xff3333
+    });
+
+
+for(
+    let i=0;
+    i<80;
+    i++
+){
+
+    const light =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .15,
+                1,
+                .1
+            ),
+
+            lightMaterial.clone()
+
+        );
+
+
+    light.position.set(
+
+        Math.random() > .5
+        ?
+        -4.7
+        :
+        4.7,
+
+        Math.random()*250-50,
+
+        -2 + Math.random()*4
+
+    );
+
+
+    shaft.add(
+        light
+    );
+
+
+    lights.push(
+        light
+    );
+
+}
+
+
+/* =====================================================
+   ROTES LICHT OBEN
+===================================================== */
+
+const redLight =
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            .18,
+            32,
+            32
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color:0xff0000
+        })
+
+    );
+
+redLight.position.set(
+    0,
+    120,
+    -1
+);
+
+scene.add(
+    redLight
+);
+
+
+/* ROTES GLOW */
+
+const redGlow =
+    new THREE.PointLight(
+        0xff0000,
+        4,
+        15
+    );
+
+redGlow.position.copy(
+    redLight.position
+);
+
+scene.add(
+    redGlow
+);
+
+
+/* =====================================================
+   TOR
+===================================================== */
+
+const gate =
+    new THREE.Group();
+
+gate.position.set(
+    0,
+    123,
+    -5
+);
+
+scene.add(
+    gate
+);
+
+
+const gateMaterial =
+    new THREE.MeshStandardMaterial({
+        color:0x181818,
+        roughness:.7
+    });
+
+
+const gateLeft =
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            3,
+            4,
+            .2
+        ),
+
+        gateMaterial
+
+    );
+
+
+const gateRight =
+    gateLeft.clone();
+
+
+gateLeft.position.x =
+    -1.5;
+
+gateRight.position.x =
+    1.5;
+
+
+gate.add(
+    gateLeft
+);
+
+gate.add(
+    gateRight
+);
+
+
+/* =====================================================
+   NEUTRALE MENSCHLICHE SILHOUETTEN
+===================================================== */
+
+const people =
+    [];
+
+function createPerson(
+    angle,
+    radius
+){
+
+    const person =
+        new THREE.Group();
+
+
+    const body =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .25,
+                .32,
+                1.4,
+                8
+            ),
+
+            new THREE.MeshStandardMaterial({
+                color:0x090909
+            })
+
+        );
+
+
+    body.position.y =
+        .7;
+
+
+    const head =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+                .28,
+                12,
+                12
+            ),
+
+            new THREE.MeshStandardMaterial({
+                color:0x111111
+            })
+
+        );
+
+
+    head.position.y =
+        1.65;
+
+
+    person.add(
+        body
+    );
+
+    person.add(
+        head
+    );
+
+
+    person.position.set(
+
+        Math.cos(angle)*radius,
+
+        121,
+
+        -5 +
+        Math.sin(angle)*radius
+
+    );
+
+
+    person.lookAt(
+        0,
+        121,
+        -5
+    );
+
+
+    scene.add(
+        person
+    );
+
+
+    people.push(
+        person
+    );
+
+}
+
+
+/* KREIS */
+
+for(
+    let i=0;
+    i<7;
+    i++
+){
+
+    createPerson(
+
+        i /
+        7 *
+        Math.PI *
+        2,
+
+        4
+
+    );
+
+}
+
+
+/* =====================================================
+   AMBIENT LIGHT
+===================================================== */
+
+const ambient =
+    new THREE.AmbientLight(
+        0x111111,
+        .3
+    );
+
+scene.add(
+    ambient
+);
+
+
+/* =====================================================
+   INTRO STATE
+===================================================== */
+
+let started =
+    false;
+
+let introTime =
+    0;
+
+let elevatorY =
+    0;
+
+let speed =
+    0;
+
+let stopped =
+    false;
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+const startScreen =
+    document.getElementById(
+        "start"
+    );
+
+const text =
+    document.getElementById(
+        "text"
+    );
+
+const blur =
+    document.getElementById(
+        "blur"
+    );
+
+const eyelidTop =
+    document.getElementById(
+        "eyelidTop"
+    );
+
+const eyelidBottom =
+    document.getElementById(
+        "eyelidBottom"
+    );
+
+
+startScreen.addEventListener(
+    "click",
+    ()=>{
+
+        started =
+            true;
+
+        startScreen.style.display =
+            "none";
+
+    }
+);
+
+
+/* =====================================================
+   ANIMATION
+===================================================== */
+
+const clock =
+    new THREE.Clock();
+
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    const delta =
+        Math.min(
+            clock.getDelta(),
+            .05
+        );
+
+
+    if(
+        started
+    ){
+
+        introTime +=
+            delta;
+
+
+        /*
+        =====================================
+        0–3 SEKUNDEN
+        =====================================
+        */
+
+        if(
+            introTime <
+            3
+        ){
+
+            speed =
+                0;
+
+        }
+
+
+        /*
+        =====================================
+        AUFZUG BESCHLEUNIGT
+        =====================================
+        */
+
+        else
+        if(
+            introTime <
+            8
+        ){
+
+            speed +=
+                7 *
+                delta;
+
+
+            speed =
+                Math.min(
+                    speed,
+                    30
                 );
 
-            });
+        }
+
+
+        /*
+        =====================================
+        SCHNELLE FAHRT
+        =====================================
+        */
+
+        else
+        if(
+            introTime <
+            10
+        ){
+
+            speed =
+                30;
 
         }
 
 
-        let mimeType =
-            "video/webm;codecs=vp9,opus";
+        /*
+        =====================================
+        ABRUPTER STOPP
+        =====================================
+        */
+
+        else
+        if(
+            introTime <
+            10.25
+        ){
+
+            speed *=
+                .1;
 
 
-        if(!MediaRecorder.isTypeSupported(mimeType)){
-
-            mimeType =
-                "video/webm";
+            stopped =
+                true;
 
         }
 
 
-        recorder =
-            new MediaRecorder(
-                canvasStream,
-                {
-                    mimeType:mimeType,
-                    videoBitsPerSecond:8000000
+        /*
+        =====================================
+        AUFZUG BEWEGUNG
+        =====================================
+        */
+
+        elevatorY +=
+            speed *
+            delta;
+
+
+        elevator.position.y =
+            elevatorY;
+
+
+        /*
+        Kamera fährt mit.
+        Der Schacht bleibt fest.
+        */
+
+        camera.position.y =
+            1.7;
+
+
+        /*
+        =====================================
+        LICHTER RASEN VORBEI
+        =====================================
+        */
+
+        if(
+            speed >
+            0
+        ){
+
+            lights.forEach(
+                light=>{
+
+                    light.position.y -=
+                        speed *
+                        delta;
+
+
+                    if(
+                        light.position.y <
+                        elevatorY -
+                        20
+                    ){
+
+                        light.position.y +=
+                            250;
+
+                    }
+
                 }
             );
 
-
-        recorder.ondataavailable = event=>{
-
-            if(event.data.size > 0){
-
-                chunks.push(event.data);
-
-            }
-
-        };
+        }
 
 
-        recorder.onstop = ()=>{
+        /*
+        =====================================
+        KAMERA VIBRATION
+        =====================================
+        */
 
-            const blob =
-                new Blob(
-                    chunks,
-                    {
-                        type:"video/webm"
-                    }
+        if(
+            speed >
+            10
+        ){
+
+            camera.position.x =
+                Math.sin(
+                    introTime*
+                    45
+                )*
+                .012;
+
+
+            camera.position.z =
+                Math.cos(
+                    introTime*
+                    37
+                )*
+                .012;
+
+        }
+
+
+        /*
+        =====================================
+        AUF ROTES LICHT ZOOMEN
+        =====================================
+        */
+
+        if(
+            introTime >
+            3 &&
+            introTime <
+            10
+        ){
+
+            const target =
+                new THREE.Vector3(
+                    0,
+                    120 -
+                    elevatorY,
+                    -1
                 );
 
 
-            window.recordedVideo =
-                URL.createObjectURL(blob);
+            camera.lookAt(
+                target
+            );
+
+        }
 
 
-            downloadButton.disabled = false;
+        /*
+        =====================================
+        STOPP
+        =====================================
+        */
 
-            status.textContent =
-                "Aufnahme fertig!";
+        if(
+            introTime >
+            10 &&
+            introTime <
+            10.5
+        ){
 
-        };
+            camera.position.z =
+                Math.sin(
+                    introTime*
+                    150
+                )*
+                .12;
+
+        }
 
 
-        recorder.start(100);
+        /*
+        =====================================
+        AUGEN SCHLIESSEN
+        =====================================
+        */
+
+        if(
+            introTime >
+            10.5 &&
+            introTime <
+            13
+        ){
+
+            const p =
+                Math.min(
+                    1,
+                    (
+                        introTime-
+                        10.5
+                    )/
+                    2.5
+                );
 
 
-        recording = true;
+            eyelidTop.style.height =
+                (
+                    p*
+                    50
+                )+
+                "%";
 
-        recordingStart = Date.now();
+
+            eyelidBottom.style.height =
+                (
+                    p*
+                    50
+                )+
+                "%";
 
 
-        recordButton.textContent =
-            "⏹ Aufnahme stoppen";
+            blur.style.backdropFilter =
+                "blur("+
+                (
+                    p*
+                    12
+                )+
+                "px)";
 
-        recordButton.classList.add(
-            "recording"
+
+            redLight.visible =
+                p <
+                .65;
+
+
+            redGlow.visible =
+                p <
+                .65;
+
+        }
+
+
+        /*
+        =====================================
+        TOR ÖFFNET SICH
+        =====================================
+        */
+
+        if(
+            introTime >
+            13
+        ){
+
+            eyelidTop.style.height =
+                "38%";
+
+            eyelidBottom.style.height =
+                "38%";
+
+            blur.style.backdropFilter =
+                "blur(7px)";
+
+
+            gateLeft.position.x -=
+                delta*
+                .5;
+
+
+            gateRight.position.x +=
+                delta*
+                .5;
+
+
+            text.style.opacity =
+                "1";
+
+            text.textContent =
+                "WILLKOMMEN";
+
+
+        }
+
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+animate();
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+window.addEventListener(
+    "resize",
+    ()=>{
+
+        camera.aspect =
+            innerWidth /
+            innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            innerWidth,
+            innerHeight
         );
 
-        recordDot.style.display =
-            "block";
-
-        recordTime.style.display =
-            "block";
-
-        status.textContent =
-            "🔴 Aufnahme läuft...";
-
     }
-
-
-    else{
-
-        recorder.stop();
-
-
-        recording = false;
-
-
-        recordButton.textContent =
-            "⏺ Aufnahme starten";
-
-        recordButton.classList.remove(
-            "recording"
-        );
-
-
-        recordDot.style.display =
-            "none";
-
-        recordTime.style.display =
-            "none";
-
-    }
-
-});
-
-
-downloadButton.addEventListener("click",()=>{
-
-    if(!window.recordedVideo){
-        return;
-    }
-
-
-    const a =
-        document.createElement("a");
-
-
-    a.href =
-        window.recordedVideo;
-
-
-    a.download =
-        "gemaltes-video.webm";
-
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-});
-
-
-window.addEventListener("beforeunload",()=>{
-
-    if(animationFrame){
-
-        cancelAnimationFrame(
-            animationFrame
-        );
-
-    }
-
-
-    if(stream){
-
-        stream.getTracks().forEach(track=>{
-            track.stop();
-        });
-
-    }
-
-});
+);
 
 </script>
 
