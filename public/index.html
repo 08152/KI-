@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GHOST Video Converter</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#0d0f12;
+  color:white;
+  font-family:Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.app{
+  width:min(850px,94vw);
+  background:#181b20;
+  border:1px solid #30343d;
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 20px 70px #0008;
+}
+h1{margin:0 0 8px;font-size:32px}
+.sub{color:#9da3ad;margin-bottom:25px}
+
+.drop{
+  border:2px dashed #555b66;
+  border-radius:18px;
+  min-height:190px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.2s;
+  text-align:center;
+}
+.drop:hover,.drop.drag{
+  background:#22262d;
+  border-color:white;
+}
+.icon{font-size:50px;margin-bottom:10px}
+input{display:none}
+
+.file{
+  display:none;
+  margin-top:15px;
+  padding:14px;
+  background:#22252b;
+  border-radius:12px;
+  word-break:break-all;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  margin-top:18px;
+}
+
+label{
+  color:#aaa;
+  font-size:14px;
+}
+
+select{
+  width:100%;
+  margin-top:7px;
+  padding:12px;
+  background:#101216;
+  color:white;
+  border:1px solid #383d46;
+  border-radius:10px;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  margin-top:20px;
+  border:0;
+  border-radius:12px;
+  background:white;
+  color:#111;
+  font-weight:bold;
+  font-size:16px;
+  cursor:pointer;
+}
+button:hover{background:#ddd}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.progress{
+  display:none;
+  margin-top:22px;
+}
+
+.progressTop{
+  display:flex;
+  justify-content:space-between;
+  color:#aaa;
+  margin-bottom:8px;
+}
+
+.track{
+  height:12px;
+  background:#292d34;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.fill{
+  height:100%;
+  width:0%;
+  background:white;
+  transition:width .15s;
+}
+
+.status{
+  text-align:center;
+  color:#aaa;
+  margin-top:12px;
+}
+
+.download{
+  display:none;
+  text-decoration:none;
+  color:#111;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:bold;
+  margin-top:20px;
+}
+
+@media(max-width:600px){
+  .controls{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>🎬 GHOST Video Converter</h1>
+<div class="sub">
+Videos direkt im Browser in MP4 umwandeln
+</div>
+
+<div class="drop" id="drop">
+  <div class="icon">📁</div>
+  <strong>Video hier hineinziehen</strong>
+  <span style="color:#888;margin-top:7px">
+    oder klicken, um eine Datei auszuwählen
+  </span>
+</div>
+
+<input id="fileInput" type="file" accept="video/*">
+
+<div class="file" id="fileInfo"></div>
+
+<div class="controls">
+
+<div>
+<label>Qualität</label>
+<select id="quality">
+  <option value="23">Sehr hoch</option>
+  <option value="26" selected>Hoch</option>
+  <option value="30">Mittel</option>
+  <option value="34">Kleinere Datei</option>
+</select>
+</div>
+
+<div>
+<label>Auflösung</label>
+<select id="resolution">
+  <option value="original">Original</option>
+  <option value="1920">1920p</option>
+  <option value="1280">1280p</option>
+  <option value="854">854p</option>
+  <option value="640">640p</option>
+</select>
+</div>
+
+</div>
+
+<button id="convert" disabled>
+  🚀 IN MP4 UMWANDELN
+</button>
+
+<div class="progress" id="progress">
+
+<div class="progressTop">
+  <span id="status">Vorbereitung...</span>
+  <span id="percent">0%</span>
+</div>
+
+<div class="track">
+  <div class="fill" id="fill"></div>
+</div>
+
+</div>
+
+<a class="download" id="download">
+  ⬇️ MP4 HERUNTERLADEN
+</a>
+
+</div>
+
+<script type="module">
+
+import { FFmpeg } from
+"https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js";
+
+import { fetchFile, toBlobURL }
+from
+"https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js";
+
+const ffmpeg = new FFmpeg();
+
+const drop = document.getElementById("drop");
+const input = document.getElementById("fileInput");
+const fileInfo = document.getElementById("fileInfo");
+const convert = document.getElementById("convert");
+
+const progress = document.getElementById("progress");
+const fill = document.getElementById("fill");
+const percent = document.getElementById("percent");
+const status = document.getElementById("status");
+const download = document.getElementById("download");
+
+let selectedFile = null;
+let loaded = false;
+
+drop.onclick = () => input.click();
+
+input.onchange = () => {
+  if(input.files.length){
+    selectFile(input.files[0]);
+  }
+};
+
+drop.ondragover = e => {
+  e.preventDefault();
+  drop.classList.add("drag");
+};
+
+drop.ondragleave = () => {
+  drop.classList.remove("drag");
+};
+
+drop.ondrop = e => {
+  e.preventDefault();
+  drop.classList.remove("drag");
+
+  const file = e.dataTransfer.files[0];
+
+  if(file && file.type.startsWith("video/")){
+    selectFile(file);
+  }
+};
+
+function selectFile(file){
+
+  selectedFile = file;
+
+  fileInfo.style.display = "block";
+
+  const size =
+    (file.size / 1024 / 1024).toFixed(1);
+
+  fileInfo.innerHTML =
+    "🎞️ <b>" +
+    escapeHTML(file.name) +
+    "</b><br>" +
+    "<span style='color:#888'>" +
+    size + " MB</span>";
+
+  convert.disabled = false;
+
+  download.style.display = "none";
+}
+
+function escapeHTML(text){
+  return text.replace(/[&<>"']/g,m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[m]));
+}
+
+async function loadFFmpeg(){
+
+  if(loaded) return;
+
+  status.textContent =
+    "FFmpeg wird geladen...";
+
+  const base =
+    "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
+
+  await ffmpeg.load({
+    coreURL: await toBlobURL(
+      `${base}/ffmpeg-core.js`,
+      "text/javascript"
+    ),
+    wasmURL: await toBlobURL(
+      `${base}/ffmpeg-core.wasm`,
+      "application/wasm"
+    )
+  });
+
+  loaded = true;
+}
+
+ffmpeg.on("progress", ({progress:p}) => {
+
+  const value =
+    Math.max(0,Math.min(1,p));
+
+  const number =
+    Math.round(value * 100);
+
+  fill.style.width = number + "%";
+  percent.textContent = number + "%";
+
+  status.textContent =
+    "Konvertiere Video...";
+});
+
+convert.onclick = async () => {
+
+  if(!selectedFile) return;
+
+  convert.disabled = true;
+  progress.style.display = "block";
+  download.style.display = "none";
+
+  fill.style.width = "0%";
+  percent.textContent = "0%";
+
+  try{
+
+    await loadFFmpeg();
+
+    status.textContent =
+      "Video wird vorbereitet...";
+
+    const inputName =
+      "input." +
+      (selectedFile.name.split(".").pop() || "mp4");
+
+    const outputName = "GHOST_CONVERTED.mp4";
+
+    await ffmpeg.writeFile(
+      inputName,
+      await fetchFile(selectedFile)
+    );
+
+    const crf =
+      document.getElementById("quality").value;
+
+    const resolution =
+      document.getElementById("resolution").value;
+
+    let args = [
+      "-i", inputName,
+      "-c:v", "libx264",
+      "-preset", "veryfast",
+      "-crf", crf,
+      "-c:a", "aac",
+      "-b:a", "128k"
+    ];
+
+    if(resolution !== "original"){
+
+      args.push(
+        "-vf",
+        `scale=-2:${resolution}`
+      );
+
+    }
+
+    args.push(
+      "-movflags",
+      "+faststart",
+      outputName
+    );
+
+    await ffmpeg.exec(args);
+
+    const data =
+      await ffmpeg.readFile(outputName);
+
+    const blob =
+      new Blob([data.buffer], {
+        type:"video/mp4"
+      });
+
+    const url =
+      URL.createObjectURL(blob);
+
+    download.href = url;
+    download.download =
+      selectedFile.name
+      .replace(/\.[^/.]+$/,"")
+      + ".mp4";
+
+    fill.style.width = "100%";
+    percent.textContent = "100%";
+    status.textContent =
+      "✅ Fertig!";
+
+    download.style.display = "block";
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent =
+      "❌ Fehler bei der Konvertierung.";
+
+    alert(
+      "Die Konvertierung ist fehlgeschlagen. " +
+      "Bei sehr großen Videos kann der Browser " +
+      "zu wenig Speicher haben."
+    );
+
+  }finally{
+
+    convert.disabled = false;
+
+  }
+};
+
+</script>
+
+</body>
+</html>
