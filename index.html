@@ -3,1230 +3,1704 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fishing Boat 3D</title>
+<title>GHOST Bedrock Add-on Studio</title>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#72bde8;
-    font-family:Arial,sans-serif;
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+:root{
+--bg:#0b0d12;--panel:#12161e;--panel2:#1a1f29;
+--line:#303847;--accent:#ffd52a;--text:#f4f6fa;
+--muted:#99a3b5;--red:#e85c5c;--green:#48c878
+}
+body{margin:0;height:100vh;overflow:hidden;background:var(--bg);color:var(--text)}
+header{
+height:60px;display:flex;align-items:center;gap:14px;
+padding:0 18px;background:#10141c;border-bottom:1px solid var(--line)
+}
+.logo{font-weight:900;color:var(--accent);font-size:19px}
+.badge{font-size:12px;background:#222936;padding:7px 10px;border-radius:20px;color:var(--muted)}
+#status{margin-left:auto;font-size:12px;color:var(--muted)}
+
+.app{
+height:calc(100vh - 60px);
+display:grid;
+grid-template-columns:230px 1fr 360px
 }
 
-#crosshair{
-    position:fixed;
-    left:50%;
-    top:50%;
-    width:8px;
-    height:8px;
-    margin:-4px;
-    border:2px solid white;
-    border-radius:50%;
-    box-sizing:border-box;
-    pointer-events:none;
-    z-index:10;
+.sidebar{
+background:var(--panel);
+border-right:1px solid var(--line);
+padding:14px;
+overflow:auto
 }
 
-#info{
-    position:fixed;
-    left:15px;
-    top:15px;
-    padding:12px 15px;
-    color:white;
-    background:rgba(0,0,0,.55);
-    border-radius:10px;
-    z-index:20;
-    line-height:1.5;
+.workspace{
+display:flex;
+flex-direction:column;
+min-width:0
 }
 
-#interaction{
-    position:fixed;
-    left:50%;
-    bottom:70px;
-    transform:translateX(-50%);
-    color:white;
-    background:rgba(0,0,0,.65);
-    padding:10px 18px;
-    border-radius:10px;
-    display:none;
-    z-index:20;
+.properties{
+background:var(--panel);
+border-left:1px solid var(--line);
+padding:16px;
+overflow:auto
 }
 
-#boatStatus{
-    position:fixed;
-    right:15px;
-    top:15px;
-    padding:10px 14px;
-    color:white;
-    background:rgba(0,0,0,.55);
-    border-radius:10px;
-    z-index:20;
-    display:none;
+h2{font-size:18px;margin:0 0 14px}
+h3{
+font-size:11px;
+text-transform:uppercase;
+letter-spacing:1px;
+color:var(--muted);
+margin:18px 0 8px
+}
+
+button{
+width:100%;
+border:0;
+border-radius:8px;
+padding:11px;
+margin-bottom:7px;
+background:#252d3a;
+color:white;
+cursor:pointer;
+font-weight:bold
+}
+
+button:hover{background:#344055}
+button.primary{background:var(--accent);color:#171717}
+button.primary:hover{background:#ffe36b}
+button.danger{background:#512525;color:#ffbaba}
+
+.element{
+padding:10px;
+background:#1d2430;
+border:1px solid transparent;
+border-radius:8px;
+margin-bottom:6px;
+cursor:pointer
+}
+
+.element:hover{border-color:var(--accent)}
+.element.active{border-color:var(--accent);background:#292816}
+
+.toolbar{
+height:50px;
+padding:8px;
+display:flex;
+gap:8px;
+background:#11151d;
+border-bottom:1px solid var(--line)
+}
+
+.toolbar button{
+width:auto;
+margin:0;
+padding:8px 13px
+}
+
+.preview{
+position:relative;
+flex:1;
+overflow:hidden;
+background:
+radial-gradient(circle at center,#2a3444 0%,#11151c 65%)
+}
+
+canvas{
+width:100%;
+height:100%;
+display:block
+}
+
+.previewLabel{
+position:absolute;
+left:14px;
+top:14px;
+padding:8px 11px;
+background:#0009;
+border-radius:8px;
+font-size:13px;
+pointer-events:none
+}
+
+.info{
+position:absolute;
+bottom:14px;
+left:14px;
+background:#000a;
+padding:10px;
+border-radius:8px;
+color:#c6cfdb;
+font-size:12px
+}
+
+label{
+display:block;
+font-size:12px;
+color:var(--muted);
+margin-top:13px;
+margin-bottom:5px
+}
+
+input,select,textarea{
+width:100%;
+background:#0d1016;
+border:1px solid var(--line);
+color:white;
+padding:10px;
+border-radius:7px;
+outline:none
+}
+
+input:focus,textarea:focus,select:focus{
+border-color:var(--accent)
+}
+
+textarea{
+min-height:130px;
+resize:vertical;
+font-family:monospace
+}
+
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px
+}
+
+.checkbox{
+display:flex;
+align-items:center;
+gap:8px;
+background:#1b222d;
+padding:10px;
+border-radius:7px;
+margin-top:7px
+}
+
+.checkbox input{
+width:auto
+}
+
+.section{
+border-top:1px solid var(--line);
+margin-top:18px;
+padding-top:12px
+}
+
+.hidden{display:none!important}
+
+.textureGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px
+}
+
+.texture{
+background:#1c232e;
+border-radius:8px;
+padding:8px;
+border:1px solid var(--line)
+}
+
+.textureTop{
+border-color:var(--accent)
+}
+
+.textureName{
+font-size:11px;
+color:#c8d0dc;
+margin-bottom:6px
+}
+
+.texturePreview{
+width:100%;
+height:70px;
+background:#0d1016;
+border-radius:5px;
+object-fit:cover;
+image-rendering:pixelated;
+margin-bottom:5px
+}
+
+.small{
+font-size:11px;
+color:var(--muted)
+}
+
+.rangeValue{
+color:var(--accent);
+font-size:12px
+}
+
+.tabbar{
+display:flex;
+gap:5px;
+margin-bottom:10px
+}
+
+.tab{
+width:auto;
+flex:1;
+margin:0;
+font-size:11px
+}
+
+.tab.active{
+background:var(--accent);
+color:#111
+}
+
+@media(max-width:900px){
+.app{grid-template-columns:180px 1fr 300px}
+}
+
+@media(max-width:700px){
+body{overflow:auto}
+.app{
+height:auto;
+min-height:calc(100vh - 60px);
+grid-template-columns:1fr
+}
+.sidebar,.properties{border:none}
+.preview{height:400px}
 }
 </style>
 </head>
 
 <body>
 
-<div id="crosshair"></div>
+<header>
+<div class="logo">🟨 GHOST BEDROCK ADD-ON STUDIO</div>
+<div class="badge">RP + BP EDITOR</div>
+<div id="status">Bereit</div>
+</header>
 
-<div id="info">
-<b>FISCHERBOOT</b><br>
-WASD – Bewegen<br>
-Maus – Umschauen<br>
-E – Interagieren<br>
-ESC – Maus freigeben
+<div class="app">
+
+<div class="sidebar">
+
+<h3>Projekt</h3>
+
+<button class="primary" onclick="createBlock()">🧱 New Block</button>
+<button class="primary" onclick="createMob()">👾 New Mob</button>
+
+<button onclick="saveProject()">💾 Projekt speichern</button>
+<button onclick="exportAddon()">📦 Export .mcaddon</button>
+
+<h3>Elemente</h3>
+
+<div id="elementList"></div>
+
 </div>
 
-<div id="interaction"></div>
-<div id="boatStatus">⚓ Am Steuer</div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/PointerLockControls.js"></script>
+<div class="workspace">
+
+<div class="toolbar">
+<button onclick="rotateLeft()">↶</button>
+<button onclick="rotateRight()">↷</button>
+<button onclick="resetView()">⌖ Reset</button>
+</div>
+
+<div class="preview">
+<canvas id="canvas"></canvas>
+
+<div class="previewLabel" id="previewLabel">
+Keine Auswahl
+</div>
+
+<div class="info">
+🟨 Gelb = Oben<br>
+Ziehen = Drehen
+</div>
+</div>
+
+</div>
+
+
+<div class="properties">
+
+<div id="welcome">
+<h2>Willkommen</h2>
+<div class="small">
+Erstelle einen Block oder Mob.
+</div>
+</div>
+
+
+<div id="blockEditor" class="hidden">
+
+<h2>🧱 Block Editor</h2>
+
+<div class="tabbar">
+<button class="tab active" id="tabBasic" onclick="showBlockTab('basic')">Basis</button>
+<button class="tab" id="tabVisual" onclick="showBlockTab('visual')">Aussehen</button>
+<button class="tab" id="tabFunctions" onclick="showBlockTab('functions')">Funktionen</button>
+</div>
+
+
+<div id="blockBasic">
+
+<label>Name</label>
+<input id="blockName" oninput="updateBlock()" placeholder="Mein Block">
+
+<label>Identifier</label>
+<input id="blockId" oninput="updateBlock()" placeholder="ghost:mein_block">
+
+<label>Creative Kategorie</label>
+<select id="blockCategory" onchange="updateBlock()">
+<option value="construction">Construction</option>
+<option value="nature">Nature</option>
+<option value="equipment">Equipment</option>
+<option value="items">Items</option>
+</select>
+
+<div class="section">
+
+<label>Helligkeit</label>
+
+<input
+type="range"
+min="0"
+max="15"
+value="0"
+id="blockLight"
+oninput="updateBlock()">
+
+<div class="rangeValue" id="lightText">0 / 15</div>
+
+<label>Härte / Zerstörzeit</label>
+
+<input
+type="number"
+id="blockDestroy"
+value="1"
+min="0"
+step="0.1"
+oninput="updateBlock()">
+
+<label>Explosionsresistenz</label>
+
+<input
+type="number"
+id="blockExplosion"
+value="1"
+min="0"
+step="0.1"
+oninput="updateBlock()">
+
+<label>Reibung</label>
+
+<input
+type="number"
+id="blockFriction"
+value="0.6"
+min="0"
+max="1"
+step="0.05"
+oninput="updateBlock()">
+
+</div>
+
+<div class="section">
+
+<div class="checkbox">
+<input type="checkbox" id="blockCollision" checked onchange="updateBlock()">
+<label for="blockCollision">Kollision aktiviert</label>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="blockTransparent" onchange="updateBlock()">
+<label for="blockTransparent">Transparent</label>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="blockBurnable" onchange="updateBlock()">
+<label for="blockBurnable">Brennbar</label>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="blockBreakable" checked onchange="updateBlock()">
+<label for="blockBreakable">Zerstörbar</label>
+</div>
+
+</div>
+
+</div>
+
+
+<div id="blockVisual" class="hidden">
+
+<div style="background:#493d08;padding:10px;border-radius:8px;font-size:12px;color:#ffe472;margin-bottom:10px">
+🟨 Die gelbe Seite im 3D-Modell ist immer OBEN.
+</div>
+
+<div class="textureGrid">
+
+<div class="texture textureTop">
+<div class="textureName">🟨 OBEN</div>
+<img class="texturePreview" id="previewTop">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'top')">
+</div>
+
+<div class="texture">
+<div class="textureName">⬛ UNTEN</div>
+<img class="texturePreview" id="previewBottom">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'bottom')">
+</div>
+
+<div class="texture">
+<div class="textureName">⬆ VORNE</div>
+<img class="texturePreview" id="previewFront">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'front')">
+</div>
+
+<div class="texture">
+<div class="textureName">⬇ HINTEN</div>
+<img class="texturePreview" id="previewBack">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'back')">
+</div>
+
+<div class="texture">
+<div class="textureName">⬅ LINKS</div>
+<img class="texturePreview" id="previewLeft">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'left')">
+</div>
+
+<div class="texture">
+<div class="textureName">➡ RECHTS</div>
+<img class="texturePreview" id="previewRight">
+<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'right')">
+</div>
+
+</div>
+
+</div>
+
+
+<div id="blockFunctions" class="hidden">
+
+<label>Drop Identifier</label>
+<input id="blockDrop" oninput="updateBlock()" placeholder="minecraft:diamond">
+
+<label>Beim Platzieren</label>
+<textarea id="onPlace" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
+
+<label>Beim Zerstören</label>
+<textarea id="onBreak" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
+
+<label>Beim Anklicken</label>
+<textarea id="onInteract" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
+
+<label>Wenn Spieler darauf steht</label>
+<textarea id="onStep" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
+
+<label>Custom Components</label>
+<textarea id="customComponents" oninput="updateBlock()" placeholder='{
+  "minecraft:light_emission": 15
+}'></textarea>
+
+</div>
+
+<div class="section">
+<button class="primary" onclick="saveCurrentBlock()">💾 Block speichern</button>
+</div>
+
+</div>
+
+
+<div id="mobEditor" class="hidden">
+
+<h2>👾 Mob Editor</h2>
+
+<label>Name</label>
+<input id="mobName" oninput="updateMob()" placeholder="Mein Mob">
+
+<label>Identifier</label>
+<input id="mobId" oninput="updateMob()" placeholder="ghost:mein_mob">
+
+<div class="row">
+
+<div>
+<label>Gesundheit</label>
+<input id="mobHealth" type="number" value="20" oninput="updateMob()">
+</div>
+
+<div>
+<label>Schaden</label>
+<input id="mobDamage" type="number" value="2" oninput="updateMob()">
+</div>
+
+</div>
+
+<label>Geschwindigkeit</label>
+<input id="mobSpeed" type="number" value="0.25" step="0.01" oninput="updateMob()">
+
+<label>Bedrock Geometry / Modell</label>
+<input
+type="file"
+accept=".json"
+id="mobModel"
+onchange="loadMobModel(event)">
+
+<div id="modelStatus" class="small">Kein Modell geladen</div>
+
+<label>Script / Funktionen</label>
+
+<textarea id="mobScript" oninput="updateMob()" placeholder="// Hier kannst du Code speichern
+
+// Beispiel:
+// Event oder Custom Component"></textarea>
+
+<div class="section">
+
+<div class="checkbox">
+<input type="checkbox" id="mobWander" checked onchange="updateMob()">
+<label for="mobWander">Wandern</label>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="mobFollow" onchange="updateMob()">
+<label for="mobFollow">Spieler verfolgen</label>
+</div>
+
+<div class="checkbox">
+<input type="checkbox" id="mobAttack" onchange="updateMob()">
+<label for="mobAttack">Angreifen</label>
+</div>
+
+</div>
+
+<button class="primary" onclick="saveCurrentMob()">
+💾 Mob speichern
+</button>
+
+</div>
+
+</div>
+
+</div>
+
 
 <script>
-/* =========================================================
-   SZENE
-========================================================= */
 
-const scene = new THREE.Scene();
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-scene.background = new THREE.Color(0x79c8ed);
+let selected=null;
+let currentBlock=null;
+let currentMob=null;
 
-scene.fog = new THREE.Fog(
-    0x79c8ed,
-    45,
-    130
-);
+let blocks=[];
+let mobs=[];
 
-const camera = new THREE.PerspectiveCamera(
-    75,
-    innerWidth/innerHeight,
-    0.05,
-    300
-);
+let rotation=0;
+let dragging=false;
+let lastX=0;
 
-const renderer = new THREE.WebGLRenderer({
-    antialias:true
+function uuid(){
+
+return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
+
+const r=Math.random()*16|0;
+const v=c==="x"?r:(r&0x3|0x8);
+
+return v.toString(16);
+
 });
 
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.shadowMap.enabled=true;
+}
 
-document.body.appendChild(renderer.domElement);
+function status(text){
 
+document.getElementById("status").textContent=text;
 
-/* =========================================================
-   LICHT
-========================================================= */
+}
 
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    2
-);
+function resize(){
 
-sun.position.set(
-    20,
-    35,
-    10
-);
+const rect=canvas.getBoundingClientRect();
 
-sun.castShadow=true;
+canvas.width=rect.width*devicePixelRatio;
+canvas.height=rect.height*devicePixelRatio;
 
-scene.add(sun);
+ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 
-scene.add(
-    new THREE.HemisphereLight(
-        0xbfefff,
-        0x31566b,
-        1.4
-    )
-);
+}
+
+window.addEventListener("resize",resize);
+resize();
 
 
-/* =========================================================
-   WASSER
-========================================================= */
+canvas.addEventListener("mousedown",e=>{
 
-const waterGeo = new THREE.PlaneGeometry(
-    300,
-    300,
-    50,
-    50
-);
+dragging=true;
+lastX=e.clientX;
 
-const waterMat = new THREE.MeshPhongMaterial({
-    color:0x247ca5,
-    transparent:true,
-    opacity:.88,
-    shininess:100
 });
 
-const water = new THREE.Mesh(
-    waterGeo,
-    waterMat
-);
+window.addEventListener("mouseup",()=>dragging=false);
 
-water.rotation.x=-Math.PI/2;
-water.position.y=-1.1;
+window.addEventListener("mousemove",e=>{
 
-scene.add(water);
+if(!dragging)return;
 
+rotation+=(e.clientX-lastX)*0.01;
+lastX=e.clientX;
 
-/* =========================================================
-   MATERIALIEN
-========================================================= */
-
-const wood = new THREE.MeshStandardMaterial({
-    color:0x70451f
-});
-
-const woodLight = new THREE.MeshStandardMaterial({
-    color:0x9b6330
-});
-
-const darkWood = new THREE.MeshStandardMaterial({
-    color:0x3e2716
-});
-
-const metal = new THREE.MeshStandardMaterial({
-    color:0x555b60,
-    metalness:.8,
-    roughness:.3
-});
-
-const white = new THREE.MeshStandardMaterial({
-    color:0xe6e2d7
-});
-
-const red = new THREE.MeshStandardMaterial({
-    color:0xa83225
-});
-
-const glass = new THREE.MeshStandardMaterial({
-    color:0x65a9c6,
-    transparent:true,
-    opacity:.55
 });
 
 
-/* =========================================================
-   HILFSFUNKTIONEN
-========================================================= */
-
-function box(
-    x,y,z,
-    sx,sy,sz,
-    material,
-    parent=scene
-){
-    const mesh=new THREE.Mesh(
-        new THREE.BoxGeometry(sx,sy,sz),
-        material
-    );
-
-    mesh.position.set(x,y,z);
-    mesh.castShadow=true;
-    mesh.receiveShadow=true;
-
-    parent.add(mesh);
-
-    return mesh;
+function rotateLeft(){
+rotation-=0.3;
 }
 
-function cylinder(
-    x,y,z,
-    radius,
-    height,
-    material,
-    segments=16
-){
-    const mesh=new THREE.Mesh(
-        new THREE.CylinderGeometry(
-            radius,
-            radius,
-            height,
-            segments
-        ),
-        material
-    );
+function rotateRight(){
+rotation+=0.3;
+}
 
-    mesh.position.set(x,y,z);
-    mesh.castShadow=true;
-
-    scene.add(mesh);
-
-    return mesh;
+function resetView(){
+rotation=0;
 }
 
 
-/* =========================================================
-   BOOT
-========================================================= */
+function textureFor(side,fallback){
 
-const boat=new THREE.Group();
+if(!currentBlock)return null;
 
-scene.add(boat);
+const t=currentBlock.textures[side];
 
-boat.position.set(0,0,0);
+if(!t)return null;
 
+return t.image;
 
-/* Rumpf */
-
-box(
-    0,
-    0,
-    0,
-    15,
-    1.8,
-    5.8,
-    wood,
-    boat
-);
-
-
-/* Bugspitze */
-
-const bow=new THREE.Mesh(
-    new THREE.ConeGeometry(
-        3.2,
-        5,
-        4
-    ),
-    wood
-);
-
-bow.rotation.y=Math.PI/4;
-bow.rotation.z=Math.PI/2;
-bow.position.set(8,0,0);
-
-boat.add(bow);
-
-
-/* Deck */
-
-box(
-    0,
-    1.05,
-    0,
-    14.5,
-    .35,
-    5.2,
-    woodLight,
-    boat
-);
-
-
-/* Reling */
-
-for(let x=-6;x<=6;x+=2){
-    cylinder(
-        x,
-        1.9,
-        -2.45,
-        .06,
-        1.6,
-        metal
-    );
-
-    cylinder(
-        x,
-        1.9,
-        2.45,
-        .06,
-        1.6,
-        metal
-    );
-}
-
-box(
-    0,
-    2.55,
-    -2.45,
-    13,
-    .08,
-    .08,
-    metal,
-    boat
-);
-
-box(
-    0,
-    2.55,
-    2.45,
-    13,
-    .08,
-    .08,
-    metal,
-    boat
-);
-
-
-/* =========================================================
-   KAJÜTE
-========================================================= */
-
-const cabin=new THREE.Group();
-
-cabin.position.set(-4,1.2,0);
-
-boat.add(cabin);
-
-
-/* Wände */
-
-box(
-    0,
-    1.8,
-    -1.8,
-    5,
-    3.4,
-    .25,
-    white,
-    cabin
-);
-
-box(
-    0,
-    1.8,
-    1.8,
-    5,
-    3.4,
-    .25,
-    white,
-    cabin
-);
-
-box(
-    -2.35,
-    1.8,
-    0,
-    .25,
-    3.4,
-    3.4,
-    white,
-    cabin
-);
-
-
-/* Dach */
-
-box(
-    0,
-    3.55,
-    0,
-    5.2,
-    .25,
-    4,
-    red,
-    cabin
-);
-
-
-/* Frontfenster */
-
-box(
-    2.45,
-    2.35,
-    0,
-    .12,
-    1.15,
-    2.4,
-    glass,
-    cabin
-);
-
-
-/* =========================================================
-   KAJÜTENTÜR
-========================================================= */
-
-const doorPivot=new THREE.Group();
-
-doorPivot.position.set(
-    2.48,
-    1.75,
-    -1.15
-);
-
-cabin.add(doorPivot);
-
-const door=box(
-    0,
-    0,
-    .65,
-    .12,
-    2.5,
-    1.3,
-    darkWood,
-    doorPivot
-);
-
-let doorOpen=false;
-
-
-/* =========================================================
-   STEUERSTAND
-========================================================= */
-
-const steeringGroup=new THREE.Group();
-
-steeringGroup.position.set(
-    0,
-    1.3,
-    0
-);
-
-boat.add(steeringGroup);
-
-
-/* Sitz */
-
-box(
-    1.3,
-    .9,
-    0,
-    1.4,
-    .25,
-    1.2,
-    darkWood,
-    steeringGroup
-);
-
-box(
-    .65,
-    1.65,
-    0,
-    .25,
-    1.5,
-    1.2,
-    darkWood,
-    steeringGroup
-);
-
-
-/* Armaturenbrett */
-
-box(
-    2.2,
-    1.9,
-    0,
-    .35,
-    1.1,
-    2.2,
-    darkWood,
-    steeringGroup
-);
-
-
-/* Lenkrad */
-
-const wheel=new THREE.Mesh(
-    new THREE.TorusGeometry(
-        .65,
-        .09,
-        12,
-        24
-    ),
-    metal
-);
-
-wheel.rotation.y=Math.PI/2;
-wheel.position.set(
-    1.95,
-    2.35,
-    0
-);
-
-steeringGroup.add(wheel);
-
-
-/* =========================================================
-   KRAN
-========================================================= */
-
-const crane=new THREE.Group();
-
-crane.position.set(
-    3,
-    1.3,
-    -1.5
-);
-
-boat.add(crane);
-
-
-/* Sockel */
-
-cylinder(
-    0,
-    .4,
-    0,
-    .65,
-    .8,
-    metal
-);
-
-
-/* Mast */
-
-box(
-    0,
-    3,
-    0,
-    .3,
-    4,
-    .3,
-    metal,
-    crane
-);
-
-
-/* Arm */
-
-box(
-    1.8,
-    4.5,
-    0,
-    3.6,
-    .25,
-    .25,
-    metal,
-    crane
-);
-
-
-/* Seil */
-
-const rope=box(
-    3.55,
-    2.8,
-    0,
-    .05,
-    3.2,
-    .05,
-    darkWood,
-    crane
-);
-
-
-/* Haken */
-
-const hook=new THREE.Mesh(
-    new THREE.TorusGeometry(
-        .22,
-        .06,
-        10,
-        20,
-        Math.PI*1.5
-    ),
-    metal
-);
-
-hook.position.set(
-    3.55,
-    1.15,
-    0
-);
-
-crane.add(hook);
-
-
-/* =========================================================
-   ARBEITSTISCH
-========================================================= */
-
-const table=new THREE.Group();
-
-table.position.set(
-    3,
-    1.25,
-    1.5
-);
-
-boat.add(table);
-
-
-/* Tischplatte */
-
-box(
-    0,
-    1,
-    0,
-    2.5,
-    .25,
-    1.4,
-    darkWood,
-    table
-);
-
-
-/* Beine */
-
-for(const x of [-.9,.9]){
-    for(const z of [-.45,.45]){
-        box(
-            x,
-            .45,
-            z,
-            .18,
-            .9,
-            .18,
-            darkWood,
-            table
-        );
-    }
 }
 
 
-/* Kisten auf Tisch */
+function drawImagePolygon(img,points,fallback){
 
-box(
-    -.55,
-    1.28,
-    0,
-    .65,
-    .35,
-    .5,
-    woodLight,
-    table
+ctx.save();
+
+ctx.beginPath();
+
+ctx.moveTo(points[0][0],points[0][1]);
+
+for(let i=1;i<points.length;i++){
+ctx.lineTo(points[i][0],points[i][1]);
+}
+
+ctx.closePath();
+
+ctx.clip();
+
+ctx.fillStyle=fallback;
+ctx.fillRect(-1000,-1000,3000,3000);
+
+if(img){
+
+const minX=Math.min(...points.map(p=>p[0]));
+const maxX=Math.max(...points.map(p=>p[0]));
+const minY=Math.min(...points.map(p=>p[1]));
+const maxY=Math.max(...points.map(p=>p[1]));
+
+ctx.drawImage(
+img,
+minX,
+minY,
+maxX-minX,
+maxY-minY
 );
 
-box(
-    .45,
-    1.3,
-    0,
-    .45,
-    .4,
-    .4,
-    red,
-    table
-);
+}
 
+ctx.restore();
 
-/* =========================================================
-   HITBOXEN
-========================================================= */
+ctx.beginPath();
+ctx.moveTo(points[0][0],points[0][1]);
 
-const hitboxes=[];
+for(let i=1;i<points.length;i++){
+ctx.lineTo(points[i][0],points[i][1]);
+}
 
-function addHitbox(
-    x,z,w,d,
-    name=""
-){
-    hitboxes.push({
-        x:x,
-        z:z,
-        w:w,
-        d:d,
-        name:name
-    });
+ctx.closePath();
+
+ctx.strokeStyle="#07090d";
+ctx.lineWidth=2;
+ctx.stroke();
+
 }
 
 
-/*
-   Bootskörper
-*/
-addHitbox(
-    0,
-    0,
-    14.5,
-    5,
-    "Boot"
+function render(){
+
+const w=canvas.clientWidth;
+const h=canvas.clientHeight;
+
+ctx.clearRect(0,0,w,h);
+
+if(selected==="block"&&currentBlock){
+
+const x=w/2;
+const y=h/2;
+
+const size=Math.min(w,h)*0.23;
+
+const c=Math.cos(rotation)*0.7;
+const horizontal=size*c;
+
+const top=[
+[x,y-size],
+[x+horizontal,y-size*0.5],
+[x,y],
+[x-horizontal,y-size*0.5]
+];
+
+const left=[
+[x-horizontal,y-size*0.5],
+[x,y],
+[x,y+size],
+[x-horizontal,y+size*0.5]
+];
+
+const right=[
+[x+horizontal,y-size*0.5],
+[x,y],
+[x,y+size],
+[x+horizontal,y+size*0.5]
+];
+
+drawImagePolygon(
+textureFor("top"),
+top,
+"#e0bd00"
 );
 
-
-/*
-   Kajüte
-*/
-addHitbox(
-    -4,
-    1.8,
-    4.8,
-    .3,
-    "Kajütenwand"
+drawImagePolygon(
+textureFor("left"),
+left,
+"#697384"
 );
 
-addHitbox(
-    -4,
-    -1.8,
-    4.8,
-    .3,
-    "Kajütenwand"
+drawImagePolygon(
+textureFor("right"),
+right,
+"#8e99aa"
 );
 
+ctx.fillStyle="white";
+ctx.font="bold 13px Arial";
+ctx.fillText("🟨 OBEN",x-28,y-size-15);
 
-/*
-   Tisch
-*/
-addHitbox(
-    3,
-    1.5,
-    2.5,
-    1.4,
-    "Tisch"
-);
+}
 
+if(selected==="mob"&&currentMob){
 
-/*
-   Kran
-*/
-addHitbox(
-    3,
-    -1.5,
-    1.4,
-    1.4,
-    "Kran"
-);
+const x=w/2;
+const y=h/2;
 
+ctx.fillStyle="#30394a";
+ctx.fillRect(x-55,y-100,110,180);
 
-/* =========================================================
-   SPIELER
-========================================================= */
+ctx.beginPath();
+ctx.arc(x,y-140,55,0,Math.PI*2);
+ctx.fillStyle="#566176";
+ctx.fill();
 
-const controls=new THREE.PointerLockControls(
-    camera,
-    document.body
-);
+ctx.fillStyle="white";
+ctx.font="15px Arial";
+ctx.fillText("👾 MOB VORSCHAU",x-65,y+120);
 
-scene.add(controls.getObject());
+}
 
-controls.getObject().position.set(
-    0,
-    2.3,
-    3.5
-);
+requestAnimationFrame(render);
 
-document.body.addEventListener(
-    "click",
-    ()=>{
-        controls.lock();
-    }
-);
+}
+
+render();
 
 
-/* =========================================================
-   BEWEGUNG
-========================================================= */
+function clearEditors(){
 
-const keys={};
+document.getElementById("welcome").classList.add("hidden");
+document.getElementById("blockEditor").classList.add("hidden");
+document.getElementById("mobEditor").classList.add("hidden");
 
-addEventListener(
-    "keydown",
-    e=>{
-        keys[e.code]=true;
-    }
-);
-
-addEventListener(
-    "keyup",
-    e=>{
-        keys[e.code]=false;
-    }
-);
-
-const playerRadius=.35;
-
-function collision(x,z){
-
-    /*
-       Außenkante des Bootes.
-    */
-
-    if(x < -6.8) return true;
-    if(x > 6.8) return true;
-    if(z < -2.15) return true;
-    if(z > 2.15) return true;
-
-
-    /*
-       Objekte
-    */
-
-    for(const h of hitboxes){
-
-        if(
-            x > h.x-h.w/2-playerRadius &&
-            x < h.x+h.w/2+playerRadius &&
-            z > h.z-h.d/2-playerRadius &&
-            z < h.z+h.d/2+playerRadius
-        ){
-            return true;
-        }
-    }
-
-    return false;
 }
 
 
-let velocityY=0;
-let onGround=true;
+function createBlock(){
 
-function updateMovement(){
+selected="block";
 
-    if(!controls.isLocked) return;
+clearEditors();
 
-    const speed=
-        keys["ShiftLeft"] ? .105 : .065;
+document.getElementById("blockEditor").classList.remove("hidden");
 
-    let dx=0;
-    let dz=0;
+currentBlock={
+name:"Neuer Block",
+id:"ghost:new_block",
+category:"construction",
+light:0,
+destroyTime:1,
+explosionResistance:1,
+friction:0.6,
+collision:true,
+transparent:false,
+burnable:false,
+breakable:true,
+drop:"",
+onPlace:"",
+onBreak:"",
+onInteract:"",
+onStep:"",
+customComponents:"",
+textures:{
+top:null,
+bottom:null,
+front:null,
+back:null,
+left:null,
+right:null
+}
+};
 
-    if(keys["KeyW"]) dz-=speed;
-    if(keys["KeyS"]) dz+=speed;
-    if(keys["KeyA"]) dx-=speed;
-    if(keys["KeyD"]) dx+=speed;
+document.getElementById("blockName").value=currentBlock.name;
+document.getElementById("blockId").value=currentBlock.id;
+document.getElementById("blockCategory").value=currentBlock.category;
+document.getElementById("blockLight").value=0;
+document.getElementById("blockDestroy").value=1;
+document.getElementById("blockExplosion").value=1;
+document.getElementById("blockFriction").value=0.6;
 
-    const obj=controls.getObject();
+document.getElementById("blockCollision").checked=true;
+document.getElementById("blockTransparent").checked=false;
+document.getElementById("blockBurnable").checked=false;
+document.getElementById("blockBreakable").checked=true;
 
-    /*
-       Vorwärtsrichtung
-    */
+document.getElementById("lightText").textContent="0 / 15";
 
-    const forward=new THREE.Vector3();
+document.getElementById("previewLabel").textContent="🧱 Neuer Block";
 
-    camera.getWorldDirection(forward);
+status("Block wird bearbeitet");
 
-    forward.y=0;
-    forward.normalize();
-
-    const right=new THREE.Vector3()
-        .crossVectors(
-            forward,
-            new THREE.Vector3(0,1,0)
-        )
-        .normalize();
-
-    const movement=new THREE.Vector3();
-
-    movement.addScaledVector(
-        forward,
-        -dz
-    );
-
-    movement.addScaledVector(
-        right,
-        dx
-    );
-
-    const nx=
-        obj.position.x+
-        movement.x;
-
-    const nz=
-        obj.position.z+
-        movement.z;
-
-
-    if(!collision(nx,nz)){
-        obj.position.x=nx;
-        obj.position.z=nz;
-    }
-
-
-    /*
-       Springen
-    */
-
-    if(
-        keys["Space"] &&
-        onGround
-    ){
-        velocityY=.16;
-        onGround=false;
-    }
-
-    velocityY-=.008;
-
-    obj.position.y+=velocityY;
-
-    if(obj.position.y<=2.3){
-        obj.position.y=2.3;
-        velocityY=0;
-        onGround=true;
-    }
 }
 
 
-/* =========================================================
-   INTERAKTION
-========================================================= */
+function updateBlock(){
 
-const interaction=
-    document.getElementById("interaction");
+if(!currentBlock)return;
 
-const boatStatus=
-    document.getElementById("boatStatus");
+currentBlock.name=document.getElementById("blockName").value||"Block";
+currentBlock.id=document.getElementById("blockId").value||"ghost:block";
+currentBlock.category=document.getElementById("blockCategory").value;
 
-let steering=false;
+currentBlock.light=Number(document.getElementById("blockLight").value);
+currentBlock.destroyTime=Number(document.getElementById("blockDestroy").value);
+currentBlock.explosionResistance=Number(document.getElementById("blockExplosion").value);
+currentBlock.friction=Number(document.getElementById("blockFriction").value);
 
-function distanceTo(
-    x,z
-){
-    const p=controls.getObject().position;
+currentBlock.collision=document.getElementById("blockCollision").checked;
+currentBlock.transparent=document.getElementById("blockTransparent").checked;
+currentBlock.burnable=document.getElementById("blockBurnable").checked;
+currentBlock.breakable=document.getElementById("blockBreakable").checked;
 
-    return Math.hypot(
-        p.x-x,
-        p.z-z
-    );
+currentBlock.drop=document.getElementById("blockDrop").value;
+currentBlock.onPlace=document.getElementById("onPlace").value;
+currentBlock.onBreak=document.getElementById("onBreak").value;
+currentBlock.onInteract=document.getElementById("onInteract").value;
+currentBlock.onStep=document.getElementById("onStep").value;
+currentBlock.customComponents=document.getElementById("customComponents").value;
+
+document.getElementById("lightText").textContent=currentBlock.light+" / 15";
+
+document.getElementById("previewLabel").textContent=
+"🧱 "+currentBlock.name;
+
+renderElementList();
+
 }
 
 
-function updateInteraction(){
+function loadTexture(event,side){
 
-    const p=controls.getObject().position;
+if(!currentBlock)return;
 
-    /*
-       Tür
-    */
+const file=event.target.files[0];
 
-    const doorDistance=
-        Math.hypot(
-            p.x-(-1.5),
-            p.z-(-1.15)
-        );
+if(!file)return;
 
-    if(doorDistance<2){
+const reader=new FileReader();
 
-        interaction.style.display="block";
-        interaction.textContent=
-            doorOpen
-            ? "E – Tür schließen"
-            : "E – Kajütentür öffnen";
+reader.onload=function(e){
 
-        interaction.dataset.action="door";
+const image=new Image();
 
-        return;
-    }
+image.onload=function(){
 
+currentBlock.textures[side]={
+name:file.name,
+data:e.target.result,
+image:image
+};
 
-    /*
-       Steuerstand
-    */
+const preview=document.getElementById(
+"preview"+
+side.charAt(0).toUpperCase()+
+side.slice(1)
+);
 
-    const steeringDistance=
-        Math.hypot(
-            p.x-1.3,
-            p.z
-        );
+preview.src=e.target.result;
 
-    if(steeringDistance<2){
+status("Textur geladen: "+side);
 
-        interaction.style.display="block";
-        interaction.textContent=
-            steering
-            ? "E – Steuerstand verlassen"
-            : "E – Auf den Steuerstand setzen";
+};
 
-        interaction.dataset.action="steering";
+image.src=e.target.result;
 
-        return;
-    }
+};
 
+reader.readAsDataURL(file);
 
-    /*
-       Kran
-    */
-
-    const craneDistance=
-        Math.hypot(
-            p.x-3,
-            p.z+1.5
-        );
-
-    if(craneDistance<2){
-
-        interaction.style.display="block";
-        interaction.textContent=
-            "E – Kran bedienen";
-
-        interaction.dataset.action="crane";
-
-        return;
-    }
-
-
-    /*
-       Tisch
-    */
-
-    const tableDistance=
-        Math.hypot(
-            p.x-3,
-            p.z-1.5
-        );
-
-    if(tableDistance<2){
-
-        interaction.style.display="block";
-        interaction.textContent=
-            "E – Arbeitstisch benutzen";
-
-        interaction.dataset.action="table";
-
-        return;
-    }
-
-
-    interaction.style.display="none";
-    interaction.dataset.action="";
 }
 
 
-/* =========================================================
-   E INTERAKTION
-========================================================= */
+function saveCurrentBlock(){
 
-addEventListener(
-    "keydown",
-    e=>{
+if(!currentBlock)return;
 
-        if(e.code!=="KeyE") return;
+const index=blocks.findIndex(x=>x.uid===currentBlock.uid);
 
-        const action=
-            interaction.dataset.action;
+if(!currentBlock.uid){
 
-        if(action==="door"){
+currentBlock.uid=uuid();
 
-            doorOpen=!doorOpen;
+blocks.push(currentBlock);
 
-            if(doorOpen){
+}else if(index>=0){
 
-                doorPivot.rotation.y=
-                    -Math.PI/2;
+blocks[index]=currentBlock;
 
-            }else{
+}
 
-                doorPivot.rotation.y=0;
-            }
-        }
+status("Block gespeichert");
+
+renderElementList();
+
+}
 
 
-        if(action==="steering"){
+function createMob(){
 
-            steering=!steering;
+selected="mob";
 
-            if(steering){
+clearEditors();
 
-                controls.getObject().position.set(
-                    1.3,
-                    2.2,
-                    0
-                );
+document.getElementById("mobEditor").classList.remove("hidden");
 
-                boatStatus.style.display="block";
+currentMob={
+name:"Neuer Mob",
+id:"ghost:new_mob",
+health:20,
+damage:2,
+speed:0.25,
+model:null,
+script:"",
+wander:true,
+follow:false,
+attack:false
+};
 
-            }else{
+document.getElementById("mobName").value=currentMob.name;
+document.getElementById("mobId").value=currentMob.id;
+document.getElementById("mobHealth").value=20;
+document.getElementById("mobDamage").value=2;
+document.getElementById("mobSpeed").value=0.25;
+document.getElementById("mobScript").value="";
+document.getElementById("mobWander").checked=true;
+document.getElementById("mobFollow").checked=false;
+document.getElementById("mobAttack").checked=false;
 
-                controls.getObject().position.set(
-                    2.8,
-                    2.3,
-                    0
-                );
+document.getElementById("modelStatus").textContent=
+"Kein Bedrock Geometry Modell geladen";
 
-                boatStatus.style.display="none";
-            }
-        }
+document.getElementById("previewLabel").textContent=
+"👾 Neuer Mob";
 
+status("Mob wird bearbeitet");
 
-        if(action==="crane"){
-
-            alert(
-                "Kran aktiviert!\n\nHier kann später die Kransteuerung eingebaut werden."
-            );
-        }
+}
 
 
-        if(action==="table"){
+function updateMob(){
 
-            alert(
-                "Arbeitstisch\n\nHier können später Fischerei- und Reparaturfunktionen eingebaut werden."
-            );
-        }
-    }
+if(!currentMob)return;
+
+currentMob.name=document.getElementById("mobName").value||"Mob";
+currentMob.id=document.getElementById("mobId").value||"ghost:mob";
+currentMob.health=Number(document.getElementById("mobHealth").value);
+currentMob.damage=Number(document.getElementById("mobDamage").value);
+currentMob.speed=Number(document.getElementById("mobSpeed").value);
+
+currentMob.script=document.getElementById("mobScript").value;
+
+currentMob.wander=document.getElementById("mobWander").checked;
+currentMob.follow=document.getElementById("mobFollow").checked;
+currentMob.attack=document.getElementById("mobAttack").checked;
+
+document.getElementById("previewLabel").textContent=
+"👾 "+currentMob.name;
+
+renderElementList();
+
+}
+
+
+function loadMobModel(event){
+
+const file=event.target.files[0];
+
+if(!file||!currentMob)return;
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+currentMob.model={
+name:file.name,
+data:e.target.result
+};
+
+document.getElementById("modelStatus").textContent=
+"✓ Modell geladen: "+file.name;
+
+status("Bedrock Geometry geladen");
+
+};
+
+reader.readAsText(file);
+
+}
+
+
+function saveCurrentMob(){
+
+if(!currentMob)return;
+
+const index=mobs.findIndex(x=>x.uid===currentMob.uid);
+
+if(!currentMob.uid){
+
+currentMob.uid=uuid();
+
+mobs.push(currentMob);
+
+}else if(index>=0){
+
+mobs[index]=currentMob;
+
+}
+
+status("Mob gespeichert");
+
+renderElementList();
+
+}
+
+
+function renderElementList(){
+
+const list=document.getElementById("elementList");
+
+list.innerHTML="";
+
+blocks.forEach(block=>{
+
+const div=document.createElement("div");
+
+div.className="element";
+
+div.textContent="🧱 "+block.name;
+
+div.onclick=function(){
+
+selected="block";
+
+currentBlock=block;
+
+clearEditors();
+
+document.getElementById("blockEditor").classList.remove("hidden");
+
+loadBlockIntoEditor();
+
+};
+
+list.appendChild(div);
+
+});
+
+
+mobs.forEach(mob=>{
+
+const div=document.createElement("div");
+
+div.className="element";
+
+div.textContent="👾 "+mob.name;
+
+div.onclick=function(){
+
+selected="mob";
+
+currentMob=mob;
+
+clearEditors();
+
+document.getElementById("mobEditor").classList.remove("hidden");
+
+loadMobIntoEditor();
+
+};
+
+list.appendChild(div);
+
+});
+
+}
+
+
+function loadBlockIntoEditor(){
+
+document.getElementById("blockName").value=currentBlock.name;
+document.getElementById("blockId").value=currentBlock.id;
+document.getElementById("blockCategory").value=currentBlock.category;
+document.getElementById("blockLight").value=currentBlock.light;
+document.getElementById("blockDestroy").value=currentBlock.destroyTime;
+document.getElementById("blockExplosion").value=currentBlock.explosionResistance;
+document.getElementById("blockFriction").value=currentBlock.friction;
+
+document.getElementById("blockCollision").checked=currentBlock.collision;
+document.getElementById("blockTransparent").checked=currentBlock.transparent;
+document.getElementById("blockBurnable").checked=currentBlock.burnable;
+document.getElementById("blockBreakable").checked=currentBlock.breakable;
+
+document.getElementById("blockDrop").value=currentBlock.drop||"";
+document.getElementById("onPlace").value=currentBlock.onPlace||"";
+document.getElementById("onBreak").value=currentBlock.onBreak||"";
+document.getElementById("onInteract").value=currentBlock.onInteract||"";
+document.getElementById("onStep").value=currentBlock.onStep||"";
+document.getElementById("customComponents").value=currentBlock.customComponents||"";
+
+document.getElementById("lightText").textContent=currentBlock.light+" / 15";
+
+["top","bottom","front","back","left","right"].forEach(side=>{
+
+const tex=currentBlock.textures[side];
+
+if(tex){
+
+document.getElementById(
+"preview"+
+side.charAt(0).toUpperCase()+
+side.slice(1)
+).src=tex.data;
+
+}
+
+});
+
+}
+
+
+function loadMobIntoEditor(){
+
+document.getElementById("mobName").value=currentMob.name;
+document.getElementById("mobId").value=currentMob.id;
+document.getElementById("mobHealth").value=currentMob.health;
+document.getElementById("mobDamage").value=currentMob.damage;
+document.getElementById("mobSpeed").value=currentMob.speed;
+document.getElementById("mobScript").value=currentMob.script||"";
+
+document.getElementById("mobWander").checked=currentMob.wander;
+document.getElementById("mobFollow").checked=currentMob.follow;
+document.getElementById("mobAttack").checked=currentMob.attack;
+
+document.getElementById("modelStatus").textContent=
+currentMob.model
+?"✓ "+currentMob.model.name
+:"Kein Modell geladen";
+
+}
+
+
+function showBlockTab(tab){
+
+["basic","visual","functions"].forEach(name=>{
+
+document.getElementById(
+"block"+
+name.charAt(0).toUpperCase()+
+name.slice(1)
+).classList.toggle("hidden",name!==tab);
+
+document.getElementById(
+"tab"+
+name.charAt(0).toUpperCase()+
+name.slice(1)
+).classList.toggle("active",name===tab);
+
+});
+
+}
+
+
+function createManifest(name,type){
+
+return {
+format_version:2,
+header:{
+name:name,
+description:"Erstellt mit GHOST Bedrock Add-on Studio",
+uuid:uuid(),
+version:[1,0,0],
+min_engine_version:[1,20,0]
+},
+modules:[
+{
+type:type,
+uuid:uuid(),
+version:[1,0,0]
+}
+]
+};
+
+}
+
+
+function dataURLtoBlob(dataURL){
+
+const parts=dataURL.split(",");
+
+const mime=parts[0].match(/:(.*?);/)[1];
+
+const binary=atob(parts[1]);
+
+const array=new Uint8Array(binary.length);
+
+for(let i=0;i<binary.length;i++){
+
+array[i]=binary.charCodeAt(i);
+
+}
+
+return new Blob([array],{type:mime});
+
+}
+
+
+async function exportAddon(){
+
+if(currentBlock&&!blocks.includes(currentBlock)){
+
+saveCurrentBlock();
+
+}
+
+if(currentMob&&!mobs.includes(currentMob)){
+
+saveCurrentMob();
+
+}
+
+if(blocks.length===0&&mobs.length===0){
+
+alert("Erstelle mindestens einen Block oder Mob.");
+
+return;
+
+}
+
+if(typeof JSZip==="undefined"){
+
+alert("JSZip konnte nicht geladen werden. Internet wird für den Export benötigt.");
+
+return;
+
+}
+
+status("Export wird erstellt...");
+
+const addon=new JSZip();
+
+const rp=addon.folder("GHOST_RP");
+const bp=addon.folder("GHOST_BP");
+
+
+const rpManifest=createManifest(
+"GHOST Resource Pack",
+"resources"
+);
+
+const bpManifest=createManifest(
+"GHOST Behavior Pack",
+"data"
 );
 
 
-/* =========================================================
-   WASSERBEWEGUNG
-========================================================= */
-
-let time=0;
-
-function animateWater(){
-
-    time+=.01;
-
-    const pos=
-        water.geometry.attributes.position;
-
-    for(
-        let i=0;
-        i<pos.count;
-        i++
-    ){
-
-        const x=pos.getX(i);
-        const z=pos.getY(i);
-
-        pos.setZ(
-            i,
-            Math.sin(
-                x*.08+time
-            )*.12+
-            Math.cos(
-                z*.06+time*.7
-            )*.1
-        );
-    }
-
-    pos.needsUpdate=true;
-}
-
-
-/* =========================================================
-   LOOP
-========================================================= */
-
-function animate(){
-
-    requestAnimationFrame(animate);
-
-    updateMovement();
-    updateInteraction();
-    animateWater();
-
-    renderer.render(
-        scene,
-        camera
-    );
-}
-
-animate();
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-addEventListener(
-    "resize",
-    ()=>{
-        camera.aspect=
-            innerWidth/innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-    }
+rp.file(
+"manifest.json",
+JSON.stringify(rpManifest,null,2)
 );
+
+bp.file(
+"manifest.json",
+JSON.stringify(bpManifest,null,2)
+);
+
+
+const terrainTexture={
+
+resource_pack_name:"ghost",
+texture_name:"atlas.terrain",
+
+texture_data:{}
+
+};
+
+
+blocks.forEach(block=>{
+
+const clean=block.id.replace(":","_");
+
+
+const blockData={
+
+format_version:"1.21.0",
+
+"minecraft:block":{
+
+description:{
+identifier:block.id
+},
+
+components:{
+
+"minecraft:destructible_by_mining":{
+seconds_to_destroy:block.destroyTime
+},
+
+"minecraft:destructible_by_explosion":{
+explosion_resistance:block.explosionResistance
+},
+
+"minecraft:friction":block.friction
+
+}
+
+}
+
+};
+
+
+if(block.light>0){
+
+blockData["minecraft:block"].components[
+"minecraft:light_emission"
+]=block.light;
+
+}
+
+
+if(!block.collision){
+
+blockData["minecraft:block"].components[
+"minecraft:collision_box"
+]=false;
+
+}
+
+
+if(!block.breakable){
+
+blockData["minecraft:block"].components[
+"minecraft:destructible_by_mining"
+]=false;
+
+}
+
+
+if(block.customComponents){
+
+try{
+
+const custom=JSON.parse(block.customComponents);
+
+Object.assign(
+blockData["minecraft:block"].components,
+custom
+);
+
+}catch(e){
+
+console.warn(
+"Custom Component JSON ungültig:",
+block.id
+);
+
+}
+
+}
+
+
+bp.file(
+"blocks/"+clean+".json",
+JSON.stringify(blockData,null,2)
+);
+
+
+const sides=[
+"top",
+"bottom",
+"front",
+"back",
+"left",
+"right"
+];
+
+
+sides.forEach(side=>{
+
+const tex=block.textures[side];
+
+if(!tex)return;
+
+const textureId=
+clean+"_"+side;
+
+
+terrainTexture.texture_data[
+textureId
+]={
+textures:"textures/blocks/"+textureId
+};
+
+
+rp.file(
+"textures/blocks/"+textureId+".png",
+dataURLtoBlob(tex.data)
+);
+
+});
+
+
+});
+
+
+rp.file(
+"textures/terrain_texture.json",
+JSON.stringify(terrainTexture,null,2)
+);
+
+
+mobs.forEach(mob=>{
+
+const clean=mob.id.replace(":","_");
+
+
+const entity={
+
+format_version:"1.21.0",
+
+"minecraft:entity":{
+
+description:{
+
+identifier:mob.id,
+
+is_spawnable:true,
+
+is_summonable:true
+
+},
+
+components:{
+
+"minecraft:type_family":{
+
+family:["ghost_mob"]
+
+},
+
+"minecraft:health":{
+
+value:mob.health,
+
+max:mob.health
+
+},
+
+"minecraft:movement":{
+
+value:mob.speed
+
+},
+
+"minecraft:attack":{
+
+damage:mob.damage
+
+}
+
+},
+
+component_groups:{},
+
+events:{}
+
+}
+
+};
+
+
+bp.file(
+"entities/"+clean+".json",
+JSON.stringify(entity,null,2)
+);
+
+
+if(mob.script){
+
+bp.file(
+"scripts/"+clean+".js",
+mob.script
+);
+
+}
+
+
+if(mob.model){
+
+try{
+
+rp.file(
+"models/entity/"+clean+".geo.json",
+mob.model.data
+);
+
+}catch(e){
+
+console.error(e);
+
+}
+
+}
+
+});
+
+
+const mcpackRP=await rp.generateAsync({
+type:"blob"
+});
+
+const mcpackBP=await bp.generateAsync({
+type:"blob"
+});
+
+
+addon.file(
+"GHOST_RP.mcpack",
+mcpackRP
+);
+
+addon.file(
+"GHOST_BP.mcpack",
+mcpackBP
+);
+
+
+const result=await addon.generateAsync({
+type:"blob"
+});
+
+
+const url=URL.createObjectURL(result);
+
+const a=document.createElement("a");
+
+a.href=url;
+
+a.download="GHOST_Addon.mcaddon";
+
+document.body.appendChild(a);
+
+a.click();
+
+a.remove();
+
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+status("✓ .mcaddon exportiert");
+
+}
+
+
+function saveProject(){
+
+const data={
+
+blocks:blocks.map(block=>{
+
+const copy={...block};
+
+Object.keys(copy.textures).forEach(side=>{
+
+if(copy.textures[side]){
+
+delete copy.textures[side].image;
+
+}
+
+});
+
+return copy;
+
+}),
+
+mobs:mobs
+
+};
+
+
+const blob=new Blob(
+[
+JSON.stringify(data,null,2)
+],
+{
+type:"application/json"
+}
+);
+
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement("a");
+
+a.href=url;
+a.download="ghost-project.json";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+status("Projekt gespeichert");
+
+}
+
 </script>
 
 </body>
-</html>s
+</html>
