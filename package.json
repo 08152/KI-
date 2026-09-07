@@ -1,15 +1,15 @@
 {
-  "name": "monster-ar-world",
+  "name": "ghost-video-converter",
   "version": "1.0.0",
-  "description": "Kostenloses WebXR AR Monster-Spiel",
+  "description": "Browser Video Converter",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
     "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
