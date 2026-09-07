@@ -1,15 +1,13 @@
 {
   "name": "ghost-video-converter",
   "version": "1.0.0",
-  "description": "Browser Video Converter",
-  "main": "server.js",
+  "private": true,
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
-  },
-  "engines": {
-    "node": ">=18"
+    "express": "^4.21.2",
+    "multer": "^2.0.2",
+    "ffmpeg-static": "^5.2.0"
   }
 }
