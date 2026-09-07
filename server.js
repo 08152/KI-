@@ -1,121 +1,335 @@
 const express = require("express");
 const path = require("path");
-const multer = require("multer");
 
 const app = express();
-const PORT = process.env.PORT || 8787;
 
-const upload = multer({
-    dest: path.join(__dirname, "uploads")
-});
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(__dirname));
+
+app.use(express.static(path.join(__dirname)));
 
 
-// Startseite
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
-});
+/*
+  ------------------------------------------------
+  HUE KONFIGURATION
+  ------------------------------------------------
+
+  Auf Render kann der Server deine Hue Bridge
+  zuhause NICHT direkt erreichen.
+
+  Deshalb muss die Hue Bridge über einen
+  erreichbaren Netzwerkweg angebunden werden.
+
+  Die Variablen werden über Render Environment
+  Variables gesetzt.
+*/
+
+const HUE_BRIDGE =
+  process.env.HUE_BRIDGE || "";
+
+const HUE_USERNAME =
+  process.env.HUE_USERNAME || "";
 
 
-// Dienststatus
-app.get("/api/status", (req, res) => {
+/*
+  Hue API Anfrage
+*/
 
-    const ip = req.query.ip;
+async function hueRequest(endpoint, options={}){
 
-    if (!ip) {
-        return res.status(400).json({
-            ok: false,
-            message: "Keine Drucker-IP angegeben."
-        });
-    }
+  if(!HUE_BRIDGE){
+
+    throw new Error(
+      "HUE_BRIDGE ist nicht konfiguriert."
+    );
+
+  }
+
+  if(!HUE_USERNAME){
+
+    throw new Error(
+      "HUE_USERNAME ist nicht konfiguriert."
+    );
+
+  }
+
+
+  const url =
+    `http://${HUE_BRIDGE}/api/${HUE_USERNAME}${endpoint}`;
+
+
+  const response =
+    await fetch(url,{
+      ...options,
+
+      headers:{
+        "Content-Type":"application/json",
+        ...(options.headers || {})
+      }
+    });
+
+
+  const text =
+    await response.text();
+
+
+  let data;
+
+  try{
+    data=JSON.parse(text);
+  }catch{
+    data={raw:text};
+  }
+
+
+  if(!response.ok){
+
+    throw new Error(
+      `Hue HTTP ${response.status}`
+    );
+
+  }
+
+
+  if(Array.isArray(data) && data[0]?.error){
+
+    throw new Error(
+      data[0].error.description ||
+      "Hue API Fehler"
+    );
+
+  }
+
+
+  return data;
+
+}
+
+
+/*
+  Lampen abrufen
+*/
+
+app.get("/api/lights",async(req,res)=>{
+
+  try{
+
+    const lights =
+      await hueRequest("/lights");
 
     res.json({
-        ok: true,
-        service: "GHOST A1 mini Service",
-        printerIP: ip,
-        message:
-            "Webdienst läuft. Der A1-mini-LAN-Tunnel muss im selben Netzwerk wie der Drucker laufen."
+      lights:lights
     });
+
+  }catch(error){
+
+    console.error(error);
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+
 });
 
 
-// Datei hochladen
+/*
+  AN / AUS
+*/
+
 app.post(
-    "/api/upload",
-    upload.single("file"),
-    (req, res) => {
+  "/api/lights/:id/power",
+  async(req,res)=>{
 
-        if (!req.file) {
-            return res.status(400).json({
-                ok: false,
-                message: "Keine Datei erhalten."
-            });
-        }
+    try{
 
-        res.json({
-            ok: true,
-            filename: req.file.originalname,
-            storedAs: req.file.filename,
-            message: "Datei wurde empfangen."
-        });
+      const id =
+        req.params.id;
+
+      const on =
+        Boolean(req.body.on);
+
+
+      const result =
+        await hueRequest(
+          `/lights/${id}/state`,
+          {
+            method:"PUT",
+            body:JSON.stringify({
+              on:on
+            })
+          }
+        );
+
+
+      res.json({
+        success:true,
+        result:result
+      });
+
+    }catch(error){
+
+      console.error(error);
+
+      res.status(500).json({
+        error:error.message
+      });
+
     }
+
+  }
 );
 
 
-// Druck starten
-app.post("/api/print", (req, res) => {
+/*
+  Helligkeit
+*/
 
-    const { ip } = req.body;
+app.post(
+  "/api/lights/:id/brightness",
+  async(req,res)=>{
 
-    if (!ip) {
-        return res.status(400).json({
-            ok: false,
-            message: "Keine Drucker-IP."
-        });
+    try{
+
+      const id =
+        req.params.id;
+
+      let brightness =
+        Number(req.body.brightness);
+
+
+      brightness =
+        Math.max(
+          1,
+          Math.min(
+            100,
+            brightness
+          )
+        );
+
+
+      const bri =
+        Math.round(
+          brightness * 254 / 100
+        );
+
+
+      const result =
+        await hueRequest(
+          `/lights/${id}/state`,
+          {
+            method:"PUT",
+            body:JSON.stringify({
+              on:true,
+              bri:bri
+            })
+          }
+        );
+
+
+      res.json({
+        success:true,
+        brightness:brightness,
+        result:result
+      });
+
+    }catch(error){
+
+      console.error(error);
+
+      res.status(500).json({
+        error:error.message
+      });
+
     }
 
-    /*
-      WICHTIG:
-
-      Render kann nicht einfach auf einen privaten
-      192.168.x.x-Drucker in deinem Zuhause zugreifen.
-
-      Deshalb wird hier NOCH KEIN Druckbefehl an den
-      A1 mini geschickt.
-    */
-
-    res.status(501).json({
-        ok: false,
-        message:
-            "Drucker nicht direkt erreichbar: Dieser Render-Server befindet sich nicht im WLAN des A1 mini."
-    });
-});
+  }
+);
 
 
-// Druck stoppen
-app.post("/api/stop", (req, res) => {
+/*
+  Farbe
+*/
 
-    const { ip } = req.body;
+app.post(
+  "/api/lights/:id/color",
+  async(req,res)=>{
 
-    if (!ip) {
+    try{
+
+      const id =
+        req.params.id;
+
+      let x =
+        Number(req.body.x);
+
+      let y =
+        Number(req.body.y);
+
+
+      if(
+        !Number.isFinite(x) ||
+        !Number.isFinite(y)
+      ){
+
         return res.status(400).json({
-            ok: false,
-            message: "Keine Drucker-IP."
+          error:"Ungültige Farbe"
         });
+
+      }
+
+
+      x =
+        Math.max(0,Math.min(1,x));
+
+      y =
+        Math.max(0,Math.min(1,y));
+
+
+      const result =
+        await hueRequest(
+          `/lights/${id}/state`,
+          {
+            method:"PUT",
+            body:JSON.stringify({
+              on:true,
+              xy:[x,y]
+            })
+          }
+        );
+
+
+      res.json({
+        success:true,
+        result:result
+      });
+
+    }catch(error){
+
+      console.error(error);
+
+      res.status(500).json({
+        error:error.message
+      });
+
     }
 
-    res.status(501).json({
-        ok: false,
-        message:
-            "Stoppen benötigt ebenfalls eine lokale Verbindung zum A1 mini."
-    });
-});
+  }
+);
 
 
-app.listen(PORT, () => {
+/*
+  Start
+*/
+
+app.listen(
+  PORT,
+  "0.0.0.0",
+  ()=>{
     console.log(
-        `GHOST A1 mini Service läuft auf Port ${PORT}`
+      `Hue Controller läuft auf Port ${PORT}`
     );
-});
+  }
+);
