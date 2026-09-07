@@ -1,13 +1,15 @@
 {
-  "name": "ghost-a1-mini",
+  "name": "ghost-hue-controller",
   "version": "1.0.0",
-  "description": "GHOST Websteuerung für Bambu Lab A1 mini",
+  "description": "Web controller for Philips Hue",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "multer": "^2.0.2"
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
