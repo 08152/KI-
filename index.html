@@ -1,1706 +1,232 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GHOST Bedrock Add-on Studio</title>
-
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
-<style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
-:root{
---bg:#0b0d12;--panel:#12161e;--panel2:#1a1f29;
---line:#303847;--accent:#ffd52a;--text:#f4f6fa;
---muted:#99a3b5;--red:#e85c5c;--green:#48c878
-}
-body{margin:0;height:100vh;overflow:hidden;background:var(--bg);color:var(--text)}
-header{
-height:60px;display:flex;align-items:center;gap:14px;
-padding:0 18px;background:#10141c;border-bottom:1px solid var(--line)
-}
-.logo{font-weight:900;color:var(--accent);font-size:19px}
-.badge{font-size:12px;background:#222936;padding:7px 10px;border-radius:20px;color:var(--muted)}
-#status{margin-left:auto;font-size:12px;color:var(--muted)}
-
-.app{
-height:calc(100vh - 60px);
-display:grid;
-grid-template-columns:230px 1fr 360px
-}
-
-.sidebar{
-background:var(--panel);
-border-right:1px solid var(--line);
-padding:14px;
-overflow:auto
-}
-
-.workspace{
-display:flex;
-flex-direction:column;
-min-width:0
-}
-
-.properties{
-background:var(--panel);
-border-left:1px solid var(--line);
-padding:16px;
-overflow:auto
-}
-
-h2{font-size:18px;margin:0 0 14px}
-h3{
-font-size:11px;
-text-transform:uppercase;
-letter-spacing:1px;
-color:var(--muted);
-margin:18px 0 8px
-}
-
-button{
-width:100%;
-border:0;
-border-radius:8px;
-padding:11px;
-margin-bottom:7px;
-background:#252d3a;
-color:white;
-cursor:pointer;
-font-weight:bold
-}
-
-button:hover{background:#344055}
-button.primary{background:var(--accent);color:#171717}
-button.primary:hover{background:#ffe36b}
-button.danger{background:#512525;color:#ffbaba}
-
-.element{
-padding:10px;
-background:#1d2430;
-border:1px solid transparent;
-border-radius:8px;
-margin-bottom:6px;
-cursor:pointer
-}
-
-.element:hover{border-color:var(--accent)}
-.element.active{border-color:var(--accent);background:#292816}
-
-.toolbar{
-height:50px;
-padding:8px;
-display:flex;
-gap:8px;
-background:#11151d;
-border-bottom:1px solid var(--line)
-}
-
-.toolbar button{
-width:auto;
-margin:0;
-padding:8px 13px
-}
-
-.preview{
-position:relative;
-flex:1;
-overflow:hidden;
-background:
-radial-gradient(circle at center,#2a3444 0%,#11151c 65%)
-}
-
-canvas{
-width:100%;
-height:100%;
-display:block
-}
-
-.previewLabel{
-position:absolute;
-left:14px;
-top:14px;
-padding:8px 11px;
-background:#0009;
-border-radius:8px;
-font-size:13px;
-pointer-events:none
-}
-
-.info{
-position:absolute;
-bottom:14px;
-left:14px;
-background:#000a;
-padding:10px;
-border-radius:8px;
-color:#c6cfdb;
-font-size:12px
-}
-
-label{
-display:block;
-font-size:12px;
-color:var(--muted);
-margin-top:13px;
-margin-bottom:5px
-}
-
-input,select,textarea{
-width:100%;
-background:#0d1016;
-border:1px solid var(--line);
-color:white;
-padding:10px;
-border-radius:7px;
-outline:none
-}
-
-input:focus,textarea:focus,select:focus{
-border-color:var(--accent)
-}
-
-textarea{
-min-height:130px;
-resize:vertical;
-font-family:monospace
-}
-
-.row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:9px
-}
-
-.checkbox{
-display:flex;
-align-items:center;
-gap:8px;
-background:#1b222d;
-padding:10px;
-border-radius:7px;
-margin-top:7px
-}
-
-.checkbox input{
-width:auto
-}
-
-.section{
-border-top:1px solid var(--line);
-margin-top:18px;
-padding-top:12px
-}
-
-.hidden{display:none!important}
-
-.textureGrid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px
-}
-
-.texture{
-background:#1c232e;
-border-radius:8px;
-padding:8px;
-border:1px solid var(--line)
-}
-
-.textureTop{
-border-color:var(--accent)
-}
-
-.textureName{
-font-size:11px;
-color:#c8d0dc;
-margin-bottom:6px
-}
-
-.texturePreview{
-width:100%;
-height:70px;
-background:#0d1016;
-border-radius:5px;
-object-fit:cover;
-image-rendering:pixelated;
-margin-bottom:5px
-}
-
-.small{
-font-size:11px;
-color:var(--muted)
-}
-
-.rangeValue{
-color:var(--accent);
-font-size:12px
-}
-
-.tabbar{
-display:flex;
-gap:5px;
-margin-bottom:10px
-}
-
-.tab{
-width:auto;
-flex:1;
-margin:0;
-font-size:11px
-}
-
-.tab.active{
-background:var(--accent);
-color:#111
-}
-
-@media(max-width:900px){
-.app{grid-template-columns:180px 1fr 300px}
-}
-
-@media(max-width:700px){
-body{overflow:auto}
-.app{
-height:auto;
-min-height:calc(100vh - 60px);
-grid-template-columns:1fr
-}
-.sidebar,.properties{border:none}
-.preview{height:400px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einkaufsliste: DIY Go-Kart Motor & Controller</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 750px;
+            background: #ffffff;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #16a085;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 25px;
+            font-size: 1.3rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .shop-group {
+            margin-bottom: 25px;
+        }
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            align-items: flex-start;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 5px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .item-title {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .item-desc {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        .info-box {
+            background-color: #e8f8f5;
+            border-left: 4px solid #16a085;
+            padding: 15px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
-
 <body>
 
-<header>
-<div class="logo">🟨 GHOST BEDROCK ADD-ON STUDIO</div>
-<div class="badge">RP + BP EDITOR</div>
-<div id="status">Bereit</div>
-</header>
+<div class="container">
+    <h1>🛒 Einkaufsliste: Go-Kart Antrieb</h1>
+    
+    <div class="info-box">
+        <strong>Tipp für die Anzeige:</strong> Du kannst diese Datei einfach auf deinem Handy öffnen und die Kästchen direkt im Browser als Erledigt-Haken nutzen!
+    </div>
 
-<div class="app">
+    <!-- ONLINE ELEKTRONIKVERSAND -->
+    <div class="shop-group">
+        <h2>🌐 1. Online-Fachhandel (z. B. Reichelt, Conrad)</h2>
+        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für die Mikroelektronik des Controllers</p>
+        <ul>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">NE555 Bipolarer Timer-IC</div>
+                    <div class="item-desc">Menge: 1 Stück (Taktgeber für das PWM-Signal)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">MOSFET IRFB3207</div>
+                    <div class="item-desc">Menge: 1 Stück (Leistungsschalter, min. 40V / 50A Belastbarkeit)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Drehpotentiometer 10k Ohm (linear)</div>
+                    <div class="item-desc">Menge: 1 Stück (Das mechanische Bauteil für dein Gaspedal)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Schottky-Diode MBR1645</div>
+                    <div class="item-desc">Menge: 1 Stück (Wichtige Freilaufdiode zum Schutz des MOSFETs)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Signal-Dioden 1N4148</div>
+                    <div class="item-desc">Menge: 3 Stück (Für die Steuerung am NE555 Chip)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Kondensatoren-Set (100nF und 10nF)</div>
+                    <div class="item-desc">Menge: Je 1 Stück (Keramik- oder Folienkondensatoren)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Widerstand 10 Ohm</div>
+                    <div class="item-desc">Menge: 1 Stück (Vorschaltwiderstand für das MOSFET-Gate)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Lochrasterplatine (Eurokarte)</div>
+                    <div class="item-desc">Menge: 1 Stück (Zum Bestücken und Zusammenlöten der Bauteile)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Spannungsregler LM7812</div>
+                    <div class="item-desc">Menge: 1 Stück (Schützt den NE555 vor den 24V der Batterie)</div>
+                </div>
+            </li>
+        </ul>
+    </div>
 
-<div class="sidebar">
+    <!-- AMAZON / EBAY -->
+    <div class="shop-group">
+        <h2>📦 2. Marktplätze (z. B. Amazon, eBay)</h2>
+        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für die Rohmaterialien des Motors</p>
+        <ul>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Kupferlackdraht 1,0 mm (isoliert)</div>
+                    <div class="item-desc">Menge: ca. 750g bis 1kg Spule (Entspricht ca. 100-140 Metern Länge)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Neodym-Magnete (Quaderform)</div>
+                    <div class="item-desc">Menge: 2 oder 4 Stück (Starke Permanentmagnete für das Statorgehäuse)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Antriebskette &amp; Kettenrad (z. B. Typ T8F)</div>
+                    <div class="item-desc">Menge: 1 Set (Großes Zahnrad für die Achse, passendes Ritzel für die Motorwelle)</div>
+                </div>
+            </li>
+        </ul>
+    </div>
 
-<h3>Projekt</h3>
-
-<button class="primary" onclick="createBlock()">🧱 New Block</button>
-<button class="primary" onclick="createMob()">👾 New Mob</button>
-
-<button onclick="saveProject()">💾 Projekt speichern</button>
-<button onclick="exportAddon()">📦 Export .mcaddon</button>
-
-<h3>Elemente</h3>
-
-<div id="elementList"></div>
-
+    <!-- BAUMARKT -->
+    <div class="shop-group">
+        <h2>🛠️ 3. Baumarkt (z. B. OBI)</h2>
+        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für Kabel, Schutzkomponenten und Werkzeug</p>
+        <ul>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">KFZ-Schmelzsicherung 30A mit Halter</div>
+                    <div class="item-desc">Menge: 1 Set (Absolut lebensnotwendiger Kurzschlussschutz!)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Dicke Stromkabel (mind. 2,5 mm² bis 4 mm²)</div>
+                    <div class="item-desc">Menge: ca. 2-3 Meter in Rot (+) und Schwarz (-)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Aluminium-Kühlkörper (TO-220 Profil)</div>
+                    <div class="item-desc">Menge: 1 Stück (Für die Kühlung des MOSFETs) + Wärmeleitpaste</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Kapton-Band oder hitzebeständiges Gewebeband</div>
+                    <div class="item-desc">Menge: 1 Rolle (Zur elektrischen Isolierung der scharfen Rotornuten)</div>
+                </div>
+            </li>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <div class="item-title">Elektronik-Lötzinn &amp; Schrumpfschläuche</div>
+                    <div class="item-desc">Menge: Je 1 Packung (Zum sicheren Verbinden und Isolieren der Kabel)</div>
+                </div>
+            </li>
+        </ul>
+    </div>
 </div>
-
-
-<div class="workspace">
-
-<div class="toolbar">
-<button onclick="rotateLeft()">↶</button>
-<button onclick="rotateRight()">↷</button>
-<button onclick="resetView()">⌖ Reset</button>
-</div>
-
-<div class="preview">
-<canvas id="canvas"></canvas>
-
-<div class="previewLabel" id="previewLabel">
-Keine Auswahl
-</div>
-
-<div class="info">
-🟨 Gelb = Oben<br>
-Ziehen = Drehen
-</div>
-</div>
-
-</div>
-
-
-<div class="properties">
-
-<div id="welcome">
-<h2>Willkommen</h2>
-<div class="small">
-Erstelle einen Block oder Mob.
-</div>
-</div>
-
-
-<div id="blockEditor" class="hidden">
-
-<h2>🧱 Block Editor</h2>
-
-<div class="tabbar">
-<button class="tab active" id="tabBasic" onclick="showBlockTab('basic')">Basis</button>
-<button class="tab" id="tabVisual" onclick="showBlockTab('visual')">Aussehen</button>
-<button class="tab" id="tabFunctions" onclick="showBlockTab('functions')">Funktionen</button>
-</div>
-
-
-<div id="blockBasic">
-
-<label>Name</label>
-<input id="blockName" oninput="updateBlock()" placeholder="Mein Block">
-
-<label>Identifier</label>
-<input id="blockId" oninput="updateBlock()" placeholder="ghost:mein_block">
-
-<label>Creative Kategorie</label>
-<select id="blockCategory" onchange="updateBlock()">
-<option value="construction">Construction</option>
-<option value="nature">Nature</option>
-<option value="equipment">Equipment</option>
-<option value="items">Items</option>
-</select>
-
-<div class="section">
-
-<label>Helligkeit</label>
-
-<input
-type="range"
-min="0"
-max="15"
-value="0"
-id="blockLight"
-oninput="updateBlock()">
-
-<div class="rangeValue" id="lightText">0 / 15</div>
-
-<label>Härte / Zerstörzeit</label>
-
-<input
-type="number"
-id="blockDestroy"
-value="1"
-min="0"
-step="0.1"
-oninput="updateBlock()">
-
-<label>Explosionsresistenz</label>
-
-<input
-type="number"
-id="blockExplosion"
-value="1"
-min="0"
-step="0.1"
-oninput="updateBlock()">
-
-<label>Reibung</label>
-
-<input
-type="number"
-id="blockFriction"
-value="0.6"
-min="0"
-max="1"
-step="0.05"
-oninput="updateBlock()">
-
-</div>
-
-<div class="section">
-
-<div class="checkbox">
-<input type="checkbox" id="blockCollision" checked onchange="updateBlock()">
-<label for="blockCollision">Kollision aktiviert</label>
-</div>
-
-<div class="checkbox">
-<input type="checkbox" id="blockTransparent" onchange="updateBlock()">
-<label for="blockTransparent">Transparent</label>
-</div>
-
-<div class="checkbox">
-<input type="checkbox" id="blockBurnable" onchange="updateBlock()">
-<label for="blockBurnable">Brennbar</label>
-</div>
-
-<div class="checkbox">
-<input type="checkbox" id="blockBreakable" checked onchange="updateBlock()">
-<label for="blockBreakable">Zerstörbar</label>
-</div>
-
-</div>
-
-</div>
-
-
-<div id="blockVisual" class="hidden">
-
-<div style="background:#493d08;padding:10px;border-radius:8px;font-size:12px;color:#ffe472;margin-bottom:10px">
-🟨 Die gelbe Seite im 3D-Modell ist immer OBEN.
-</div>
-
-<div class="textureGrid">
-
-<div class="texture textureTop">
-<div class="textureName">🟨 OBEN</div>
-<img class="texturePreview" id="previewTop">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'top')">
-</div>
-
-<div class="texture">
-<div class="textureName">⬛ UNTEN</div>
-<img class="texturePreview" id="previewBottom">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'bottom')">
-</div>
-
-<div class="texture">
-<div class="textureName">⬆ VORNE</div>
-<img class="texturePreview" id="previewFront">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'front')">
-</div>
-
-<div class="texture">
-<div class="textureName">⬇ HINTEN</div>
-<img class="texturePreview" id="previewBack">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'back')">
-</div>
-
-<div class="texture">
-<div class="textureName">⬅ LINKS</div>
-<img class="texturePreview" id="previewLeft">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'left')">
-</div>
-
-<div class="texture">
-<div class="textureName">➡ RECHTS</div>
-<img class="texturePreview" id="previewRight">
-<input type="file" accept="image/png,image/jpeg" onchange="loadTexture(event,'right')">
-</div>
-
-</div>
-
-</div>
-
-
-<div id="blockFunctions" class="hidden">
-
-<label>Drop Identifier</label>
-<input id="blockDrop" oninput="updateBlock()" placeholder="minecraft:diamond">
-
-<label>Beim Platzieren</label>
-<textarea id="onPlace" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
-
-<label>Beim Zerstören</label>
-<textarea id="onBreak" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
-
-<label>Beim Anklicken</label>
-<textarea id="onInteract" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
-
-<label>Wenn Spieler darauf steht</label>
-<textarea id="onStep" oninput="updateBlock()" placeholder="Eigene Funktion / Event"></textarea>
-
-<label>Custom Components</label>
-<textarea id="customComponents" oninput="updateBlock()" placeholder='{
-  "minecraft:light_emission": 15
-}'></textarea>
-
-</div>
-
-<div class="section">
-<button class="primary" onclick="saveCurrentBlock()">💾 Block speichern</button>
-</div>
-
-</div>
-
-
-<div id="mobEditor" class="hidden">
-
-<h2>👾 Mob Editor</h2>
-
-<label>Name</label>
-<input id="mobName" oninput="updateMob()" placeholder="Mein Mob">
-
-<label>Identifier</label>
-<input id="mobId" oninput="updateMob()" placeholder="ghost:mein_mob">
-
-<div class="row">
-
-<div>
-<label>Gesundheit</label>
-<input id="mobHealth" type="number" value="20" oninput="updateMob()">
-</div>
-
-<div>
-<label>Schaden</label>
-<input id="mobDamage" type="number" value="2" oninput="updateMob()">
-</div>
-
-</div>
-
-<label>Geschwindigkeit</label>
-<input id="mobSpeed" type="number" value="0.25" step="0.01" oninput="updateMob()">
-
-<label>Bedrock Geometry / Modell</label>
-<input
-type="file"
-accept=".json"
-id="mobModel"
-onchange="loadMobModel(event)">
-
-<div id="modelStatus" class="small">Kein Modell geladen</div>
-
-<label>Script / Funktionen</label>
-
-<textarea id="mobScript" oninput="updateMob()" placeholder="// Hier kannst du Code speichern
-
-// Beispiel:
-// Event oder Custom Component"></textarea>
-
-<div class="section">
-
-<div class="checkbox">
-<input type="checkbox" id="mobWander" checked onchange="updateMob()">
-<label for="mobWander">Wandern</label>
-</div>
-
-<div class="checkbox">
-<input type="checkbox" id="mobFollow" onchange="updateMob()">
-<label for="mobFollow">Spieler verfolgen</label>
-</div>
-
-<div class="checkbox">
-<input type="checkbox" id="mobAttack" onchange="updateMob()">
-<label for="mobAttack">Angreifen</label>
-</div>
-
-</div>
-
-<button class="primary" onclick="saveCurrentMob()">
-💾 Mob speichern
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-
-<script>
-
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
-
-let selected=null;
-let currentBlock=null;
-let currentMob=null;
-
-let blocks=[];
-let mobs=[];
-
-let rotation=0;
-let dragging=false;
-let lastX=0;
-
-function uuid(){
-
-return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
-
-const r=Math.random()*16|0;
-const v=c==="x"?r:(r&0x3|0x8);
-
-return v.toString(16);
-
-});
-
-}
-
-function status(text){
-
-document.getElementById("status").textContent=text;
-
-}
-
-function resize(){
-
-const rect=canvas.getBoundingClientRect();
-
-canvas.width=rect.width*devicePixelRatio;
-canvas.height=rect.height*devicePixelRatio;
-
-ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-
-}
-
-window.addEventListener("resize",resize);
-resize();
-
-
-canvas.addEventListener("mousedown",e=>{
-
-dragging=true;
-lastX=e.clientX;
-
-});
-
-window.addEventListener("mouseup",()=>dragging=false);
-
-window.addEventListener("mousemove",e=>{
-
-if(!dragging)return;
-
-rotation+=(e.clientX-lastX)*0.01;
-lastX=e.clientX;
-
-});
-
-
-function rotateLeft(){
-rotation-=0.3;
-}
-
-function rotateRight(){
-rotation+=0.3;
-}
-
-function resetView(){
-rotation=0;
-}
-
-
-function textureFor(side,fallback){
-
-if(!currentBlock)return null;
-
-const t=currentBlock.textures[side];
-
-if(!t)return null;
-
-return t.image;
-
-}
-
-
-function drawImagePolygon(img,points,fallback){
-
-ctx.save();
-
-ctx.beginPath();
-
-ctx.moveTo(points[0][0],points[0][1]);
-
-for(let i=1;i<points.length;i++){
-ctx.lineTo(points[i][0],points[i][1]);
-}
-
-ctx.closePath();
-
-ctx.clip();
-
-ctx.fillStyle=fallback;
-ctx.fillRect(-1000,-1000,3000,3000);
-
-if(img){
-
-const minX=Math.min(...points.map(p=>p[0]));
-const maxX=Math.max(...points.map(p=>p[0]));
-const minY=Math.min(...points.map(p=>p[1]));
-const maxY=Math.max(...points.map(p=>p[1]));
-
-ctx.drawImage(
-img,
-minX,
-minY,
-maxX-minX,
-maxY-minY
-);
-
-}
-
-ctx.restore();
-
-ctx.beginPath();
-ctx.moveTo(points[0][0],points[0][1]);
-
-for(let i=1;i<points.length;i++){
-ctx.lineTo(points[i][0],points[i][1]);
-}
-
-ctx.closePath();
-
-ctx.strokeStyle="#07090d";
-ctx.lineWidth=2;
-ctx.stroke();
-
-}
-
-
-function render(){
-
-const w=canvas.clientWidth;
-const h=canvas.clientHeight;
-
-ctx.clearRect(0,0,w,h);
-
-if(selected==="block"&&currentBlock){
-
-const x=w/2;
-const y=h/2;
-
-const size=Math.min(w,h)*0.23;
-
-const c=Math.cos(rotation)*0.7;
-const horizontal=size*c;
-
-const top=[
-[x,y-size],
-[x+horizontal,y-size*0.5],
-[x,y],
-[x-horizontal,y-size*0.5]
-];
-
-const left=[
-[x-horizontal,y-size*0.5],
-[x,y],
-[x,y+size],
-[x-horizontal,y+size*0.5]
-];
-
-const right=[
-[x+horizontal,y-size*0.5],
-[x,y],
-[x,y+size],
-[x+horizontal,y+size*0.5]
-];
-
-drawImagePolygon(
-textureFor("top"),
-top,
-"#e0bd00"
-);
-
-drawImagePolygon(
-textureFor("left"),
-left,
-"#697384"
-);
-
-drawImagePolygon(
-textureFor("right"),
-right,
-"#8e99aa"
-);
-
-ctx.fillStyle="white";
-ctx.font="bold 13px Arial";
-ctx.fillText("🟨 OBEN",x-28,y-size-15);
-
-}
-
-if(selected==="mob"&&currentMob){
-
-const x=w/2;
-const y=h/2;
-
-ctx.fillStyle="#30394a";
-ctx.fillRect(x-55,y-100,110,180);
-
-ctx.beginPath();
-ctx.arc(x,y-140,55,0,Math.PI*2);
-ctx.fillStyle="#566176";
-ctx.fill();
-
-ctx.fillStyle="white";
-ctx.font="15px Arial";
-ctx.fillText("👾 MOB VORSCHAU",x-65,y+120);
-
-}
-
-requestAnimationFrame(render);
-
-}
-
-render();
-
-
-function clearEditors(){
-
-document.getElementById("welcome").classList.add("hidden");
-document.getElementById("blockEditor").classList.add("hidden");
-document.getElementById("mobEditor").classList.add("hidden");
-
-}
-
-
-function createBlock(){
-
-selected="block";
-
-clearEditors();
-
-document.getElementById("blockEditor").classList.remove("hidden");
-
-currentBlock={
-name:"Neuer Block",
-id:"ghost:new_block",
-category:"construction",
-light:0,
-destroyTime:1,
-explosionResistance:1,
-friction:0.6,
-collision:true,
-transparent:false,
-burnable:false,
-breakable:true,
-drop:"",
-onPlace:"",
-onBreak:"",
-onInteract:"",
-onStep:"",
-customComponents:"",
-textures:{
-top:null,
-bottom:null,
-front:null,
-back:null,
-left:null,
-right:null
-}
-};
-
-document.getElementById("blockName").value=currentBlock.name;
-document.getElementById("blockId").value=currentBlock.id;
-document.getElementById("blockCategory").value=currentBlock.category;
-document.getElementById("blockLight").value=0;
-document.getElementById("blockDestroy").value=1;
-document.getElementById("blockExplosion").value=1;
-document.getElementById("blockFriction").value=0.6;
-
-document.getElementById("blockCollision").checked=true;
-document.getElementById("blockTransparent").checked=false;
-document.getElementById("blockBurnable").checked=false;
-document.getElementById("blockBreakable").checked=true;
-
-document.getElementById("lightText").textContent="0 / 15";
-
-document.getElementById("previewLabel").textContent="🧱 Neuer Block";
-
-status("Block wird bearbeitet");
-
-}
-
-
-function updateBlock(){
-
-if(!currentBlock)return;
-
-currentBlock.name=document.getElementById("blockName").value||"Block";
-currentBlock.id=document.getElementById("blockId").value||"ghost:block";
-currentBlock.category=document.getElementById("blockCategory").value;
-
-currentBlock.light=Number(document.getElementById("blockLight").value);
-currentBlock.destroyTime=Number(document.getElementById("blockDestroy").value);
-currentBlock.explosionResistance=Number(document.getElementById("blockExplosion").value);
-currentBlock.friction=Number(document.getElementById("blockFriction").value);
-
-currentBlock.collision=document.getElementById("blockCollision").checked;
-currentBlock.transparent=document.getElementById("blockTransparent").checked;
-currentBlock.burnable=document.getElementById("blockBurnable").checked;
-currentBlock.breakable=document.getElementById("blockBreakable").checked;
-
-currentBlock.drop=document.getElementById("blockDrop").value;
-currentBlock.onPlace=document.getElementById("onPlace").value;
-currentBlock.onBreak=document.getElementById("onBreak").value;
-currentBlock.onInteract=document.getElementById("onInteract").value;
-currentBlock.onStep=document.getElementById("onStep").value;
-currentBlock.customComponents=document.getElementById("customComponents").value;
-
-document.getElementById("lightText").textContent=currentBlock.light+" / 15";
-
-document.getElementById("previewLabel").textContent=
-"🧱 "+currentBlock.name;
-
-renderElementList();
-
-}
-
-
-function loadTexture(event,side){
-
-if(!currentBlock)return;
-
-const file=event.target.files[0];
-
-if(!file)return;
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-const image=new Image();
-
-image.onload=function(){
-
-currentBlock.textures[side]={
-name:file.name,
-data:e.target.result,
-image:image
-};
-
-const preview=document.getElementById(
-"preview"+
-side.charAt(0).toUpperCase()+
-side.slice(1)
-);
-
-preview.src=e.target.result;
-
-status("Textur geladen: "+side);
-
-};
-
-image.src=e.target.result;
-
-};
-
-reader.readAsDataURL(file);
-
-}
-
-
-function saveCurrentBlock(){
-
-if(!currentBlock)return;
-
-const index=blocks.findIndex(x=>x.uid===currentBlock.uid);
-
-if(!currentBlock.uid){
-
-currentBlock.uid=uuid();
-
-blocks.push(currentBlock);
-
-}else if(index>=0){
-
-blocks[index]=currentBlock;
-
-}
-
-status("Block gespeichert");
-
-renderElementList();
-
-}
-
-
-function createMob(){
-
-selected="mob";
-
-clearEditors();
-
-document.getElementById("mobEditor").classList.remove("hidden");
-
-currentMob={
-name:"Neuer Mob",
-id:"ghost:new_mob",
-health:20,
-damage:2,
-speed:0.25,
-model:null,
-script:"",
-wander:true,
-follow:false,
-attack:false
-};
-
-document.getElementById("mobName").value=currentMob.name;
-document.getElementById("mobId").value=currentMob.id;
-document.getElementById("mobHealth").value=20;
-document.getElementById("mobDamage").value=2;
-document.getElementById("mobSpeed").value=0.25;
-document.getElementById("mobScript").value="";
-document.getElementById("mobWander").checked=true;
-document.getElementById("mobFollow").checked=false;
-document.getElementById("mobAttack").checked=false;
-
-document.getElementById("modelStatus").textContent=
-"Kein Bedrock Geometry Modell geladen";
-
-document.getElementById("previewLabel").textContent=
-"👾 Neuer Mob";
-
-status("Mob wird bearbeitet");
-
-}
-
-
-function updateMob(){
-
-if(!currentMob)return;
-
-currentMob.name=document.getElementById("mobName").value||"Mob";
-currentMob.id=document.getElementById("mobId").value||"ghost:mob";
-currentMob.health=Number(document.getElementById("mobHealth").value);
-currentMob.damage=Number(document.getElementById("mobDamage").value);
-currentMob.speed=Number(document.getElementById("mobSpeed").value);
-
-currentMob.script=document.getElementById("mobScript").value;
-
-currentMob.wander=document.getElementById("mobWander").checked;
-currentMob.follow=document.getElementById("mobFollow").checked;
-currentMob.attack=document.getElementById("mobAttack").checked;
-
-document.getElementById("previewLabel").textContent=
-"👾 "+currentMob.name;
-
-renderElementList();
-
-}
-
-
-function loadMobModel(event){
-
-const file=event.target.files[0];
-
-if(!file||!currentMob)return;
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-currentMob.model={
-name:file.name,
-data:e.target.result
-};
-
-document.getElementById("modelStatus").textContent=
-"✓ Modell geladen: "+file.name;
-
-status("Bedrock Geometry geladen");
-
-};
-
-reader.readAsText(file);
-
-}
-
-
-function saveCurrentMob(){
-
-if(!currentMob)return;
-
-const index=mobs.findIndex(x=>x.uid===currentMob.uid);
-
-if(!currentMob.uid){
-
-currentMob.uid=uuid();
-
-mobs.push(currentMob);
-
-}else if(index>=0){
-
-mobs[index]=currentMob;
-
-}
-
-status("Mob gespeichert");
-
-renderElementList();
-
-}
-
-
-function renderElementList(){
-
-const list=document.getElementById("elementList");
-
-list.innerHTML="";
-
-blocks.forEach(block=>{
-
-const div=document.createElement("div");
-
-div.className="element";
-
-div.textContent="🧱 "+block.name;
-
-div.onclick=function(){
-
-selected="block";
-
-currentBlock=block;
-
-clearEditors();
-
-document.getElementById("blockEditor").classList.remove("hidden");
-
-loadBlockIntoEditor();
-
-};
-
-list.appendChild(div);
-
-});
-
-
-mobs.forEach(mob=>{
-
-const div=document.createElement("div");
-
-div.className="element";
-
-div.textContent="👾 "+mob.name;
-
-div.onclick=function(){
-
-selected="mob";
-
-currentMob=mob;
-
-clearEditors();
-
-document.getElementById("mobEditor").classList.remove("hidden");
-
-loadMobIntoEditor();
-
-};
-
-list.appendChild(div);
-
-});
-
-}
-
-
-function loadBlockIntoEditor(){
-
-document.getElementById("blockName").value=currentBlock.name;
-document.getElementById("blockId").value=currentBlock.id;
-document.getElementById("blockCategory").value=currentBlock.category;
-document.getElementById("blockLight").value=currentBlock.light;
-document.getElementById("blockDestroy").value=currentBlock.destroyTime;
-document.getElementById("blockExplosion").value=currentBlock.explosionResistance;
-document.getElementById("blockFriction").value=currentBlock.friction;
-
-document.getElementById("blockCollision").checked=currentBlock.collision;
-document.getElementById("blockTransparent").checked=currentBlock.transparent;
-document.getElementById("blockBurnable").checked=currentBlock.burnable;
-document.getElementById("blockBreakable").checked=currentBlock.breakable;
-
-document.getElementById("blockDrop").value=currentBlock.drop||"";
-document.getElementById("onPlace").value=currentBlock.onPlace||"";
-document.getElementById("onBreak").value=currentBlock.onBreak||"";
-document.getElementById("onInteract").value=currentBlock.onInteract||"";
-document.getElementById("onStep").value=currentBlock.onStep||"";
-document.getElementById("customComponents").value=currentBlock.customComponents||"";
-
-document.getElementById("lightText").textContent=currentBlock.light+" / 15";
-
-["top","bottom","front","back","left","right"].forEach(side=>{
-
-const tex=currentBlock.textures[side];
-
-if(tex){
-
-document.getElementById(
-"preview"+
-side.charAt(0).toUpperCase()+
-side.slice(1)
-).src=tex.data;
-
-}
-
-});
-
-}
-
-
-function loadMobIntoEditor(){
-
-document.getElementById("mobName").value=currentMob.name;
-document.getElementById("mobId").value=currentMob.id;
-document.getElementById("mobHealth").value=currentMob.health;
-document.getElementById("mobDamage").value=currentMob.damage;
-document.getElementById("mobSpeed").value=currentMob.speed;
-document.getElementById("mobScript").value=currentMob.script||"";
-
-document.getElementById("mobWander").checked=currentMob.wander;
-document.getElementById("mobFollow").checked=currentMob.follow;
-document.getElementById("mobAttack").checked=currentMob.attack;
-
-document.getElementById("modelStatus").textContent=
-currentMob.model
-?"✓ "+currentMob.model.name
-:"Kein Modell geladen";
-
-}
-
-
-function showBlockTab(tab){
-
-["basic","visual","functions"].forEach(name=>{
-
-document.getElementById(
-"block"+
-name.charAt(0).toUpperCase()+
-name.slice(1)
-).classList.toggle("hidden",name!==tab);
-
-document.getElementById(
-"tab"+
-name.charAt(0).toUpperCase()+
-name.slice(1)
-).classList.toggle("active",name===tab);
-
-});
-
-}
-
-
-function createManifest(name,type){
-
-return {
-format_version:2,
-header:{
-name:name,
-description:"Erstellt mit GHOST Bedrock Add-on Studio",
-uuid:uuid(),
-version:[1,0,0],
-min_engine_version:[1,20,0]
-},
-modules:[
-{
-type:type,
-uuid:uuid(),
-version:[1,0,0]
-}
-]
-};
-
-}
-
-
-function dataURLtoBlob(dataURL){
-
-const parts=dataURL.split(",");
-
-const mime=parts[0].match(/:(.*?);/)[1];
-
-const binary=atob(parts[1]);
-
-const array=new Uint8Array(binary.length);
-
-for(let i=0;i<binary.length;i++){
-
-array[i]=binary.charCodeAt(i);
-
-}
-
-return new Blob([array],{type:mime});
-
-}
-
-
-async function exportAddon(){
-
-if(currentBlock&&!blocks.includes(currentBlock)){
-
-saveCurrentBlock();
-
-}
-
-if(currentMob&&!mobs.includes(currentMob)){
-
-saveCurrentMob();
-
-}
-
-if(blocks.length===0&&mobs.length===0){
-
-alert("Erstelle mindestens einen Block oder Mob.");
-
-return;
-
-}
-
-if(typeof JSZip==="undefined"){
-
-alert("JSZip konnte nicht geladen werden. Internet wird für den Export benötigt.");
-
-return;
-
-}
-
-status("Export wird erstellt...");
-
-const addon=new JSZip();
-
-const rp=addon.folder("GHOST_RP");
-const bp=addon.folder("GHOST_BP");
-
-
-const rpManifest=createManifest(
-"GHOST Resource Pack",
-"resources"
-);
-
-const bpManifest=createManifest(
-"GHOST Behavior Pack",
-"data"
-);
-
-
-rp.file(
-"manifest.json",
-JSON.stringify(rpManifest,null,2)
-);
-
-bp.file(
-"manifest.json",
-JSON.stringify(bpManifest,null,2)
-);
-
-
-const terrainTexture={
-
-resource_pack_name:"ghost",
-texture_name:"atlas.terrain",
-
-texture_data:{}
-
-};
-
-
-blocks.forEach(block=>{
-
-const clean=block.id.replace(":","_");
-
-
-const blockData={
-
-format_version:"1.21.0",
-
-"minecraft:block":{
-
-description:{
-identifier:block.id
-},
-
-components:{
-
-"minecraft:destructible_by_mining":{
-seconds_to_destroy:block.destroyTime
-},
-
-"minecraft:destructible_by_explosion":{
-explosion_resistance:block.explosionResistance
-},
-
-"minecraft:friction":block.friction
-
-}
-
-}
-
-};
-
-
-if(block.light>0){
-
-blockData["minecraft:block"].components[
-"minecraft:light_emission"
-]=block.light;
-
-}
-
-
-if(!block.collision){
-
-blockData["minecraft:block"].components[
-"minecraft:collision_box"
-]=false;
-
-}
-
-
-if(!block.breakable){
-
-blockData["minecraft:block"].components[
-"minecraft:destructible_by_mining"
-]=false;
-
-}
-
-
-if(block.customComponents){
-
-try{
-
-const custom=JSON.parse(block.customComponents);
-
-Object.assign(
-blockData["minecraft:block"].components,
-custom
-);
-
-}catch(e){
-
-console.warn(
-"Custom Component JSON ungültig:",
-block.id
-);
-
-}
-
-}
-
-
-bp.file(
-"blocks/"+clean+".json",
-JSON.stringify(blockData,null,2)
-);
-
-
-const sides=[
-"top",
-"bottom",
-"front",
-"back",
-"left",
-"right"
-];
-
-
-sides.forEach(side=>{
-
-const tex=block.textures[side];
-
-if(!tex)return;
-
-const textureId=
-clean+"_"+side;
-
-
-terrainTexture.texture_data[
-textureId
-]={
-textures:"textures/blocks/"+textureId
-};
-
-
-rp.file(
-"textures/blocks/"+textureId+".png",
-dataURLtoBlob(tex.data)
-);
-
-});
-
-
-});
-
-
-rp.file(
-"textures/terrain_texture.json",
-JSON.stringify(terrainTexture,null,2)
-);
-
-
-mobs.forEach(mob=>{
-
-const clean=mob.id.replace(":","_");
-
-
-const entity={
-
-format_version:"1.21.0",
-
-"minecraft:entity":{
-
-description:{
-
-identifier:mob.id,
-
-is_spawnable:true,
-
-is_summonable:true
-
-},
-
-components:{
-
-"minecraft:type_family":{
-
-family:["ghost_mob"]
-
-},
-
-"minecraft:health":{
-
-value:mob.health,
-
-max:mob.health
-
-},
-
-"minecraft:movement":{
-
-value:mob.speed
-
-},
-
-"minecraft:attack":{
-
-damage:mob.damage
-
-}
-
-},
-
-component_groups:{},
-
-events:{}
-
-}
-
-};
-
-
-bp.file(
-"entities/"+clean+".json",
-JSON.stringify(entity,null,2)
-);
-
-
-if(mob.script){
-
-bp.file(
-"scripts/"+clean+".js",
-mob.script
-);
-
-}
-
-
-if(mob.model){
-
-try{
-
-rp.file(
-"models/entity/"+clean+".geo.json",
-mob.model.data
-);
-
-}catch(e){
-
-console.error(e);
-
-}
-
-}
-
-});
-
-
-const mcpackRP=await rp.generateAsync({
-type:"blob"
-});
-
-const mcpackBP=await bp.generateAsync({
-type:"blob"
-});
-
-
-addon.file(
-"GHOST_RP.mcpack",
-mcpackRP
-);
-
-addon.file(
-"GHOST_BP.mcpack",
-mcpackBP
-);
-
-
-const result=await addon.generateAsync({
-type:"blob"
-});
-
-
-const url=URL.createObjectURL(result);
-
-const a=document.createElement("a");
-
-a.href=url;
-
-a.download="GHOST_Addon.mcaddon";
-
-document.body.appendChild(a);
-
-a.click();
-
-a.remove();
-
-setTimeout(()=>URL.revokeObjectURL(url),1000);
-
-status("✓ .mcaddon exportiert");
-
-}
-
-
-function saveProject(){
-
-const data={
-
-blocks:blocks.map(block=>{
-
-const copy={...block};
-
-Object.keys(copy.textures).forEach(side=>{
-
-if(copy.textures[side]){
-
-delete copy.textures[side].image;
-
-}
-
-});
-
-return copy;
-
-}),
-
-mobs:mobs
-
-};
-
-
-const blob=new Blob(
-[
-JSON.stringify(data,null,2)
-],
-{
-type:"application/json"
-}
-);
-
-const url=URL.createObjectURL(blob);
-
-const a=document.createElement("a");
-
-a.href=url;
-a.download="ghost-project.json";
-
-a.click();
-
-URL.revokeObjectURL(url);
-
-status("Projekt gespeichert");
-
-}
-
-</script>
 
 </body>
 </html>
