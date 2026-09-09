@@ -3,230 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Einkaufsliste: DIY Go-Kart Motor & Controller</title>
+    <title>3D Lockpicking Set Generator</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f4f7f6;
-            color: #333;
             margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #121212;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(30, 30, 30, 0.85);
             padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            max-width: 320px;
         }
-        .container {
-            max-width: 750px;
-            background: #ffffff;
-            margin: 0 auto;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        h1 { margin: 0 0 5px 0; font-size: 18px; color: #00adb5; }
+        p { margin: 0 0 15px 0; font-size: 13px; opacity: 0.7; line-height: 1.4; }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 5px;
         }
-        h1 {
-            color: #2c3e50;
-            border-bottom: 3px solid #16a085;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        h2 {
-            color: #2980b9;
-            margin-top: 25px;
-            font-size: 1.3rem;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        .shop-group {
-            margin-bottom: 25px;
-        }
-        ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        li {
-            padding: 10px 0;
-            border-bottom: 1px dashed #eee;
-            display: flex;
-            align-items: flex-start;
-        }
-        li:last-child {
-            border-bottom: none;
-        }
-        input[type="checkbox"] {
-            margin-right: 12px;
-            margin-top: 5px;
-            transform: scale(1.2);
+        button {
+            background: #222831;
+            color: #eee;
+            border: 1px solid #393e46;
+            padding: 10px;
+            border-radius: 6px;
             cursor: pointer;
-        }
-        .item-title {
             font-weight: bold;
-            color: #2c3e50;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .item-desc {
-            font-size: 0.9rem;
-            color: #7f8c8d;
-            margin-top: 2px;
+        button:hover {
+            background: #00adb5;
+            color: #fff;
+            border-color: #00adb5;
         }
-        .info-box {
-            background-color: #e8f8f5;
-            border-left: 4px solid #16a085;
-            padding: 15px;
-            border-radius: 0 6px 6px 0;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
+        .download-icon { font-size: 12px; opacity: 0.6; }
+        #canvas-container { width: 100vw; height: 100vh; }
     </style>
+    <!-- Three.js, OrbitControls und STLExporter für den 3D-Druck -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
-<div class="container">
-    <h1>🛒 Einkaufsliste: Go-Kart Antrieb</h1>
-    
-    <div class="info-box">
-        <strong>Tipp für die Anzeige:</strong> Du kannst diese Datei einfach auf deinem Handy öffnen und die Kästchen direkt im Browser als Erledigt-Haken nutzen!
+    <div id="ui-container">
+        <h1>Lockpicking 3D-Preview</h1>
+        <p>Bediene die Vorschau mit der Maus. Jedes Tool hat ein 11mm Loch und ist 2mm dick. Klicke zum STL-Download:</p>
+        <div class="btn-group" id="controls">
+            <!-- Buttons werden dynamisch per JS erzeugt -->
+        </div>
     </div>
 
-    <!-- ONLINE ELEKTRONIKVERSAND -->
-    <div class="shop-group">
-        <h2>🌐 1. Online-Fachhandel (z. B. Reichelt, Conrad)</h2>
-        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für die Mikroelektronik des Controllers</p>
-        <ul>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">NE555 Bipolarer Timer-IC</div>
-                    <div class="item-desc">Menge: 1 Stück (Taktgeber für das PWM-Signal)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">MOSFET IRFB3207</div>
-                    <div class="item-desc">Menge: 1 Stück (Leistungsschalter, min. 40V / 50A Belastbarkeit)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Drehpotentiometer 10k Ohm (linear)</div>
-                    <div class="item-desc">Menge: 1 Stück (Das mechanische Bauteil für dein Gaspedal)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Schottky-Diode MBR1645</div>
-                    <div class="item-desc">Menge: 1 Stück (Wichtige Freilaufdiode zum Schutz des MOSFETs)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Signal-Dioden 1N4148</div>
-                    <div class="item-desc">Menge: 3 Stück (Für die Steuerung am NE555 Chip)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Kondensatoren-Set (100nF und 10nF)</div>
-                    <div class="item-desc">Menge: Je 1 Stück (Keramik- oder Folienkondensatoren)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Widerstand 10 Ohm</div>
-                    <div class="item-desc">Menge: 1 Stück (Vorschaltwiderstand für das MOSFET-Gate)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Lochrasterplatine (Eurokarte)</div>
-                    <div class="item-desc">Menge: 1 Stück (Zum Bestücken und Zusammenlöten der Bauteile)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Spannungsregler LM7812</div>
-                    <div class="item-desc">Menge: 1 Stück (Schützt den NE555 vor den 24V der Batterie)</div>
-                </div>
-            </li>
-        </ul>
-    </div>
+    <div id="canvas-container"></div>
 
-    <!-- AMAZON / EBAY -->
-    <div class="shop-group">
-        <h2>📦 2. Marktplätze (z. B. Amazon, eBay)</h2>
-        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für die Rohmaterialien des Motors</p>
-        <ul>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Kupferlackdraht 1,0 mm (isoliert)</div>
-                    <div class="item-desc">Menge: ca. 750g bis 1kg Spule (Entspricht ca. 100-140 Metern Länge)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Neodym-Magnete (Quaderform)</div>
-                    <div class="item-desc">Menge: 2 oder 4 Stück (Starke Permanentmagnete für das Statorgehäuse)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Antriebskette &amp; Kettenrad (z. B. Typ T8F)</div>
-                    <div class="item-desc">Menge: 1 Set (Großes Zahnrad für die Achse, passendes Ritzel für die Motorwelle)</div>
-                </div>
-            </li>
-        </ul>
-    </div>
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x121212);
 
-    <!-- BAUMARKT -->
-    <div class="shop-group">
-        <h2>🛠️ 3. Baumarkt (z. B. OBI)</h2>
-        <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -5px;">Für Kabel, Schutzkomponenten und Werkzeug</p>
-        <ul>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">KFZ-Schmelzsicherung 30A mit Halter</div>
-                    <div class="item-desc">Menge: 1 Set (Absolut lebensnotwendiger Kurzschlussschutz!)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Dicke Stromkabel (mind. 2,5 mm² bis 4 mm²)</div>
-                    <div class="item-desc">Menge: ca. 2-3 Meter in Rot (+) und Schwarz (-)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Aluminium-Kühlkörper (TO-220 Profil)</div>
-                    <div class="item-desc">Menge: 1 Stück (Für die Kühlung des MOSFETs) + Wärmeleitpaste</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Kapton-Band oder hitzebeständiges Gewebeband</div>
-                    <div class="item-desc">Menge: 1 Rolle (Zur elektrischen Isolierung der scharfen Rotornuten)</div>
-                </div>
-            </li>
-            <li>
-                <input type="checkbox">
-                <div>
-                    <div class="item-title">Elektronik-Lötzinn &amp; Schrumpfschläuche</div>
-                    <div class="item-desc">Menge: Je 1 Packung (Zum sicheren Verbinden und Isolieren der Kabel)</div>
-                </div>
-            </li>
-        </ul>
-    </div>
-</div>
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 120, 180);
 
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Chromebook-Schonung
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Licht-Setup für gute Plastizität der Werkzeuge
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(40, 100, 40);
+        scene.add(dirLight);
+
+        // Grid zur Orientierung (Druckbett-Sim)
+        const grid = new THREE.GridHelper(200, 20, 0x393e46, 0x222831);
+        grid.position.y = -0.1;
+        scene.add(grid);
+
+        // Filament-Material (Silber/Grau)
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x8892b0,
+            metalness: 0.5,
+            roughness: 0.4
+        });
+
+        // Basis-Form: Griff mit präzisem 11mm Schlüsselbund-Loch
+        function createBaseShape() {
+            const shape = new THREE.Shape();
+            const width = 15;
+            const length = 40;
+            const radius = 7.5;
+
+            shape.moveTo(-width/2, 0);
+            shape.lineTo(-width/2, length - radius);
+            shape.quadraticCurveTo(-width/2, length, 0, length);
+            shape.quadraticCurveTo(width/2, length, width/2, length - radius);
+            shape.lineTo(width/2, 0);
+            shape.lineTo(-width/2, 0);
+
+            // Loch: Durchmesser 11mm -> Radius 5.5mm
+            const hole = new THREE.Path();
+            hole.absarc(0, length - 10, 5.5, 0, Math.PI * 2, true);
+            shape.holes.push(hole);
+            return shape;
+        }
+
+        const extrudeSettings = { depth: 2, bevelEnabled: false, curveSegments: 32 };
+        const exporter = new THREE.STLExporter();
+        const tools = {};
+
+        // Hilfsfunktion zum Erstellen & Platzieren im Raum
+        function addTool(name, shape, posX, posZ) {
+            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = -Math.PI / 2; // Flach hinlegen
+            mesh.position.set(posX, 0, posZ);
+            scene.add(mesh);
+            tools[name] = mesh;
+
+            // UI Button erstellen
+            const btn = document.createElement('button');
+            btn.innerHTML = `<span>${name}</span> <span class="download-icon">💾 STL</span>`;
+            btn.onclick = () => downloadSTL(name);
+            document.getElementById('controls').appendChild(btn);
+        }
+
+        // --- 4 DIETRICHE (PICKS) ---
+        const pickXStart = -45;
+        
+        // 1. Hook
+        const hook = createBaseShape();
+        hook.moveTo(-1.5, 0); hook.lineTo(-1.5, -40);
+        hook.quadraticCurveTo(-1.5, -45, -5, -45); hook.lineTo(-5, -43);
+        hook.quadraticCurveTo(1.5, -42, 1.5, -40); hook.lineTo(1.5, 0);
+        addTool('Dietrich: Hook', hook, pickXStart, 0);
+
+        // 2. Snake
+        const snake = createBaseShape();
+        snake.moveTo(-1.5, 0); snake.lineTo(-1.5, -38);
+        snake.quadraticCurveTo(2.5, -41, -1.5, -44);
+        snake.quadraticCurveTo(2.5, -47, 1.5, -47); snake.lineTo(1.5, 0);
+        addTool('Dietrich: Snake', snake, pickXStart + 22, 0);
+
+        // 3. Half-Diamond
+        const diamond = createBaseShape();
+        diamond.moveTo(-1.5, 0); diamond.lineTo(-1.5, -40);
+        diamond.lineTo(-4.5, -43); diamond.lineTo(1.5, -40); diamond.lineTo(1.5, 0);
+        addTool('Dietrich: Half-Diamond', diamond, pickXStart + 44, 0);
+
+        // 4. City-Rake
+        const rake = createBaseShape();
+        rake.moveTo(-1.5, 0); rake.lineTo(-1.5, -38);
+        rake.lineTo(-3.5, -40); rake.lineTo(1.5, -41);
+        rake.lineTo(-3.5, -43); rake.lineTo(1.5, -44);
+        rake.lineTo(1.5, 0);
+        addTool('Dietrich: City-Rake', rake, pickXStart + 66, 0);
+
+
+        // --- 3 SPANNER (TENSION WRENCHES) ---
+        const tensionZ = 50;
+        const tensionXStart = -22;
+        const widths = [2.0, 2.8, 3.5];
+        const names = ['Schmal (2.0mm)', 'Medium (2.8mm)', 'Breit (3.5mm)'];
+
+        widths.forEach((w, i) => {
+            const spanner = createBaseShape();
+            spanner.moveTo(-w/2, 0);
+            spanner.lineTo(-w/2, -35);
+            spanner.lineTo(-w/2 - 10, -35); // 10mm Hebelarm zum Spannen
+            spanner.lineTo(-w/2 - 10, -35 + w);
+            spanner.lineTo(w/2, -35 + w);
+            spanner.lineTo(w/2, 0);
+            addTool(`Spanner: ${names[i]}`, spanner, tensionXStart + (i * 22), tensionZ);
+        });
+
+        // STL Download Logik
+        function downloadSTL(name) {
+            const mesh = tools[name];
+            
+            // Temporär auf den Nullpunkt setzen für sauberen STL-Nullpunkt im Slicer
+            const origX = mesh.position.x;
+            const origZ = mesh.position.z;
+            mesh.position.set(0,0,0);
+            
+            const result = exporter.parse(mesh, { binary: true });
+            
+            // Position zurücksetzen
+            mesh.position.set(origX, 0, origZ);
+
+            const blob = new Blob([result], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${name.replace(/[^a-zA-Z0-9]/g, "_")}.stl`;
+            link.click();
+        }
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize Handling
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
