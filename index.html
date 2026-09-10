@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lokaler Video Cutter</title>
-    <!-- Einbindung von FFmpeg.wasm über ein CDN -->
-    <script src="https://unpkg.com"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -97,12 +95,15 @@
     </div>
 
     <button id="cut-button" style="display:none;">Video jetzt kürzen</button>
-    <div id="status">Lade Videowerkzeuge... Bitte warten.</div>
+    <div id="status">Initialisiere App... Bitte warten.</div>
 </div>
 
-<script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
+<!-- Nutzt das moderne ESM Modulsystem statt alten unpkg Skript-Tags -->
+<script type="module">
+    import { FFmpeg } from "https://jsdelivr.net";
+    import { toBlobURL } from "https://jsdelivr.net";
+
+    const ffmpeg = new FFmpeg();
     
     const videoInput = document.getElementById('video-input');
     const videoPreview = document.getElementById('video-preview');
@@ -115,15 +116,26 @@
 
     let videoFile = null;
 
-    // FFmpeg beim Start laden
-    (async () => {
+    // FFmpeg sicher laden
+    async function loadFFmpeg() {
         try {
-            await ffmpeg.load();
+            statusDiv.innerText = "Lade Videowerkzeuge (WASM)...";
+            const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+            
+            // Verhindert das CORS/Blockade-Problem im Browser
+            await ffmpeg.load({
+                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+            });
+            
             statusDiv.innerText = "Bereit! Bitte wähle ein Video aus.";
         } catch (e) {
-            statusDiv.innerText = "Fehler beim Laden von FFmpeg. Nutze bitte einen modernen Browser wie Chrome oder Edge.";
+            console.error(e);
+            statusDiv.innerText = "Fehler beim Laden. Bitte stelle sicher, dass du die Seite über den Node-Server (Render) aufrufst.";
         }
-    })();
+    }
+
+    loadFFmpeg();
 
     // Video-Auswahl verarbeiten
     videoInput.addEventListener('change', (e) => {
@@ -137,7 +149,6 @@
         controlsGroup.style.display = "flex";
         cutButton.style.display = "block";
 
-        // Warte, bis Metadaten geladen sind, um die maximale Dauer einzustellen
         videoPreview.onloadedmetadata = () => {
             const duration = Math.floor(videoPreview.duration);
             endTimeInput.value = duration;
@@ -163,27 +174,28 @@
         statusDiv.innerText = "Video wird verarbeitet... Bitte hab einen Moment Geduld.";
 
         try {
-            // Datei in das virtuelle FFmpeg-Dateisystem schreiben
-            ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
+            // Datei einlesen und in das virtuelle System von FFmpeg schreiben
+            const inputData = await videoFile.arrayBuffer();
+            await ffmpeg.writeFile('input.mp4', new Uint8Array(inputData));
 
-            // FFmpeg Befehl zum Schneiden ohne Qualitätsverlust (-c copy)
-            await ffmpeg.run('-ss', start.toString(), '-i', 'input.mp4', '-t', duration.toString(), '-c', 'copy', 'output.mp4');
+            // Befehl ausführen (-ss für Startzeit, -t für Dauer)
+            await ffmpeg.exec(['-ss', start.toString(), '-i', 'input.mp4', '-t', duration.toString(), '-c', 'copy', 'output.mp4']);
 
             // Ergebnis auslesen
-            const data = ffmpeg.FS('readFile', 'output.mp4');
+            const outputData = await ffmpeg.readFile('output.mp4');
 
-            // Download-Link für den Benutzer erstellen
-            const resultBlob = new Blob([data.buffer], { type: 'video/mp4' });
+            // Download anstoßen
+            const resultBlob = new Blob([outputData.buffer], { type: 'video/mp4' });
             const resultUrl = URL.createObjectURL(resultBlob);
             
             const downloadAnchor = document.createElement('a');
             downloadAnchor.href = resultUrl;
-            downloadAnchor.download = `gekürzt_${videoFile.name}`;
+            downloadAnchor.download = `gekuerzt_${videoFile.name}`;
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             document.body.removeChild(downloadAnchor);
 
-            statusDiv.innerText = "Erfolgreich gekürzt! Der Download sollte gestartet sein.";
+            statusDiv.innerText = "Erfolgreich gekürzt! Der Download gestartet.";
         } catch (error) {
             console.error(error);
             statusDiv.innerText = "Fehler beim Verarbeiten des Videos.";
