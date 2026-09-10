@@ -2,162 +2,512 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GHOST Video Converter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Risky Life Studio – Dataset Trainer</title>
 
 <style>
-*{box-sizing:border-box}
+:root{
+    --bg:#090713;
+    --bg2:#100b20;
+    --panel:rgba(22,16,40,.78);
+    --panel-solid:#171126;
+    --input:#0d0a18;
+    --border:rgba(155,110,255,.20);
+    --border-focus:#8b5cf6;
+    --text:#f5f3ff;
+    --muted:#aaa2bd;
+    --purple:#8b5cf6;
+    --purple2:#b35cff;
+    --blue:#4f8cff;
+    --blue2:#65b7ff;
+    --danger:#ff5470;
+    --green:#4ade80;
+}
 
-body{
+*{
+    box-sizing:border-box;
+}
+
+html,body{
     margin:0;
-    min-height:100vh;
-    background:#0b0d10;
-    color:#fff;
-    font-family:Arial,sans-serif;
+    min-height:100%;
+    font-family:Inter,Arial,sans-serif;
+    color:var(--text);
+    background:
+        radial-gradient(circle at 15% 10%,rgba(79,140,255,.15),transparent 28%),
+        radial-gradient(circle at 85% 15%,rgba(179,92,255,.14),transparent 30%),
+        radial-gradient(circle at 50% 100%,rgba(79,140,255,.08),transparent 35%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+    background-size:42px 42px;
+    mask-image:linear-gradient(to bottom,black,transparent);
+}
+
+header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    height:76px;
     display:flex;
-    justify-content:center;
     align-items:center;
-}
-
-.app{
-    width:min(900px,94vw);
-    background:#181b20;
-    border:1px solid #30343d;
-    border-radius:22px;
-    padding:28px;
-    box-shadow:0 20px 70px #0008;
-}
-
-h1{
-    margin:0;
-    font-size:32px;
-}
-
-.subtitle{
-    color:#9da3ad;
-    margin:8px 0 25px;
-}
-
-.drop{
-    min-height:200px;
-    border:2px dashed #555b66;
-    border-radius:18px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:.2s;
-    text-align:center;
-}
-
-.drop:hover,
-.drop.drag{
-    background:#22262d;
-    border-color:#fff;
-}
-
-.icon{
-    font-size:52px;
-    margin-bottom:12px;
-}
-
-input{
-    display:none;
-}
-
-.file{
-    display:none;
-    margin-top:15px;
-    padding:15px;
-    background:#22252b;
-    border-radius:12px;
-    word-break:break-all;
-}
-
-.controls{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:15px;
-    margin-top:18px;
-}
-
-label{
-    color:#aaa;
-    font-size:14px;
-}
-
-select{
-    width:100%;
-    margin-top:7px;
-    padding:12px;
-    background:#101216;
-    color:white;
-    border:1px solid #383d46;
-    border-radius:10px;
-}
-
-button,
-.download{
-    width:100%;
-    padding:15px;
-    margin-top:20px;
-    border:0;
-    border-radius:12px;
-    background:white;
-    color:#111;
-    font-weight:bold;
-    font-size:16px;
-    cursor:pointer;
-    text-align:center;
-}
-
-button:disabled{
-    opacity:.4;
-    cursor:not-allowed;
-}
-
-.download{
-    display:none;
-    text-decoration:none;
-}
-
-.progress{
-    display:none;
-    margin-top:22px;
-}
-
-.progress-top{
-    display:flex;
     justify-content:space-between;
-    color:#aaa;
-    margin-bottom:8px;
+    padding:0 32px;
+    background:rgba(9,7,19,.72);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
 }
 
-.bar{
-    width:100%;
-    height:12px;
-    background:#292d34;
-    border-radius:20px;
-    overflow:hidden;
+.brand{
+    display:flex;
+    align-items:center;
+    gap:13px;
 }
 
-.fill{
-    width:0%;
-    height:100%;
-    background:#fff;
-    transition:width .15s;
+.brand-icon{
+    width:38px;
+    height:38px;
+    border-radius:13px;
+    display:grid;
+    place-items:center;
+    font-size:20px;
+    background:linear-gradient(135deg,var(--purple),var(--blue));
+    box-shadow:
+        0 0 30px rgba(139,92,246,.35),
+        0 0 45px rgba(79,140,255,.18);
+}
+
+.brand h1{
+    margin:0;
+    font-size:18px;
+    letter-spacing:-.4px;
+}
+
+.brand p{
+    margin:3px 0 0;
+    font-size:11px;
+    color:var(--muted);
 }
 
 .status{
-    text-align:center;
-    color:#aaa;
-    margin-top:12px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:9px 14px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:rgba(255,255,255,.025);
+    color:var(--muted);
+    font-size:12px;
 }
 
-@media(max-width:600px){
-    .controls{
+.dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 12px var(--green);
+}
+
+.app{
+    width:min(1500px,100%);
+    margin:auto;
+    padding:28px;
+}
+
+.hero{
+    margin-bottom:24px;
+    padding:28px;
+    border:1px solid var(--border);
+    border-radius:28px;
+    background:
+        linear-gradient(135deg,rgba(139,92,246,.10),rgba(79,140,255,.06)),
+        var(--panel);
+    box-shadow:0 0 70px rgba(79,140,255,.05);
+}
+
+.hero h2{
+    margin:0 0 10px;
+    font-size:30px;
+    letter-spacing:-1px;
+}
+
+.hero p{
+    margin:0;
+    color:var(--muted);
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 430px;
+    gap:22px;
+}
+
+.card{
+    border:1px solid var(--border);
+    border-radius:24px;
+    background:var(--panel);
+    backdrop-filter:blur(16px);
+    overflow:hidden;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        0 15px 50px rgba(0,0,0,.18);
+}
+
+.card-head{
+    padding:20px 22px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.card-head h3{
+    margin:0;
+    font-size:15px;
+}
+
+.card-head span{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.content{
+    padding:22px;
+}
+
+label{
+    display:block;
+    margin:0 0 8px;
+    color:#c9c2d9;
+    font-size:12px;
+    font-weight:600;
+}
+
+.field{
+    margin-bottom:17px;
+}
+
+input,textarea{
+    width:100%;
+    border:1px solid rgba(155,110,255,.18);
+    outline:none;
+    background:var(--input);
+    color:var(--text);
+    border-radius:14px;
+    padding:13px 14px;
+    font:inherit;
+    transition:.2s;
+}
+
+textarea{
+    min-height:125px;
+    resize:vertical;
+}
+
+input:focus,
+textarea:focus{
+    border-color:var(--border-focus);
+    box-shadow:
+        0 0 0 3px rgba(139,92,246,.12),
+        0 0 25px rgba(79,140,255,.08);
+}
+
+input[type="file"]{
+    cursor:pointer;
+    padding:12px;
+}
+
+input::file-selector-button{
+    border:0;
+    border-radius:9px;
+    padding:8px 12px;
+    margin-right:12px;
+    cursor:pointer;
+    color:white;
+    background:linear-gradient(90deg,var(--purple),var(--blue));
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.lyrics-box{
+    border:1px solid rgba(79,140,255,.16);
+    border-radius:16px;
+    padding:12px;
+    background:rgba(79,140,255,.025);
+}
+
+.lyrics-tools{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+}
+
+.tag-btn{
+    border:1px solid var(--border);
+    background:#14101f;
+    color:#c9c2d9;
+    border-radius:8px;
+    padding:6px 9px;
+    cursor:pointer;
+    font-size:11px;
+}
+
+.tag-btn:hover{
+    border-color:var(--blue);
+    color:white;
+}
+
+.actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:22px;
+}
+
+button{
+    border:0;
+    color:white;
+    border-radius:13px;
+    padding:12px 17px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.2s;
+}
+
+button:hover{
+    transform:translateY(-1px);
+}
+
+.primary{
+    background:linear-gradient(100deg,var(--purple),var(--blue));
+    box-shadow:
+        0 8px 28px rgba(139,92,246,.22),
+        0 4px 20px rgba(79,140,255,.15);
+}
+
+.secondary{
+    background:#211a32;
+    border:1px solid var(--border);
+}
+
+.danger{
+    background:rgba(255,84,112,.10);
+    border:1px solid rgba(255,84,112,.25);
+    color:#ff9aaa;
+}
+
+.batch{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:590px;
+    overflow:auto;
+}
+
+.sample{
+    position:relative;
+    padding:15px;
+    border:1px solid rgba(155,110,255,.16);
+    border-radius:16px;
+    background:
+        linear-gradient(135deg,rgba(139,92,246,.045),rgba(79,140,255,.025)),
+        #110d1c;
+}
+
+.sample-title{
+    font-size:14px;
+    font-weight:700;
+    margin-right:36px;
+    word-break:break-word;
+}
+
+.sample-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+}
+
+.pill{
+    font-size:10px;
+    padding:5px 8px;
+    border-radius:999px;
+    color:#bfc9ff;
+    background:rgba(79,140,255,.09);
+    border:1px solid rgba(79,140,255,.16);
+}
+
+.remove{
+    position:absolute;
+    top:11px;
+    right:11px;
+    width:28px;
+    height:28px;
+    padding:0;
+    border-radius:9px;
+    background:rgba(255,84,112,.08);
+    color:#ff98aa;
+}
+
+.empty{
+    text-align:center;
+    color:var(--muted);
+    padding:45px 15px;
+    border:1px dashed var(--border);
+    border-radius:17px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:18px;
+}
+
+.stat{
+    padding:14px;
+    border:1px solid var(--border);
+    border-radius:15px;
+    background:rgba(255,255,255,.018);
+}
+
+.stat b{
+    display:block;
+    font-size:19px;
+    margin-bottom:4px;
+}
+
+.stat span{
+    font-size:10px;
+    color:var(--muted);
+}
+
+.training{
+    margin-top:22px;
+}
+
+.training-box{
+    padding:22px;
+    border:1px solid var(--border);
+    border-radius:20px;
+    background:
+        radial-gradient(circle at 0% 0%,rgba(139,92,246,.08),transparent 35%),
+        #100c1b;
+}
+
+.training-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.training-title{
+    font-size:15px;
+    font-weight:700;
+}
+
+.training-status{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:5px;
+}
+
+.progress-bg{
+    height:11px;
+    overflow:hidden;
+    border-radius:999px;
+    background:#090711;
+    border:1px solid var(--border);
+    margin:18px 0 10px;
+}
+
+.progress{
+    width:0%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,var(--purple),var(--blue),var(--blue2));
+    box-shadow:0 0 18px rgba(79,140,255,.7);
+    transition:width .45s ease;
+}
+
+.epoch{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.training-controls{
+    display:flex;
+    gap:12px;
+    align-items:end;
+    margin-top:17px;
+}
+
+.training-controls .field{
+    flex:1;
+    margin:0;
+}
+
+.toast{
+    position:fixed;
+    z-index:100;
+    left:50%;
+    bottom:24px;
+    transform:translate(-50%,120px);
+    padding:13px 18px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:#181225;
+    color:white;
+    box-shadow:0 15px 45px rgba(0,0,0,.4);
+    transition:.3s;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+}
+
+@media(max-width:1000px){
+    .grid{
         grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:650px){
+    header{
+        padding:0 16px;
+    }
+
+    .app{
+        padding:16px;
+    }
+
+    .row{
+        grid-template-columns:1fr;
+    }
+
+    .hero h2{
+        font-size:24px;
+    }
+
+    .status{
+        display:none;
     }
 }
 </style>
@@ -165,385 +515,625 @@ button:disabled{
 
 <body>
 
-<div class="app">
-
-<h1>🎬 GHOST Video Converter</h1>
-
-<div class="subtitle">
-Videos direkt im Browser in MP4 umwandeln
-</div>
-
-<div class="drop" id="drop">
-    <div class="icon">📁</div>
-    <strong>Video auswählen</strong>
-    <span style="color:#888;margin-top:8px">
-        oder Video hier hineinziehen
-    </span>
-</div>
-
-<input
-    id="fileInput"
-    type="file"
-    accept="video/*"
->
-
-<div class="file" id="fileInfo"></div>
-
-<div class="controls">
-
-    <div>
-        <label>Qualität</label>
-
-        <select id="quality">
-            <option value="23">Sehr hoch</option>
-            <option value="26" selected>Hoch</option>
-            <option value="30">Mittel</option>
-            <option value="34">Kleine Datei</option>
-        </select>
+<header>
+    <div class="brand">
+        <div class="brand-icon">♪</div>
+        <div>
+            <h1>RISKY LIFE STUDIO</h1>
+            <p>Music Dataset Trainer</p>
+        </div>
     </div>
 
-    <div>
-        <label>Auflösung</label>
+    <div class="status">
+        <div class="dot"></div>
+        Lokales Dataset bereit
+    </div>
+</header>
 
-        <select id="resolution">
-            <option value="original">Original</option>
-            <option value="1080">1080p</option>
-            <option value="720">720p</option>
-            <option value="480">480p</option>
-            <option value="360">360p</option>
-        </select>
+<main class="app">
+
+    <section class="hero">
+        <h2>Trainingsdaten vorbereiten.</h2>
+        <p>Füge Audio-Samples mit strukturierten Metadaten hinzu und erstelle dein eigenes JSON-Dataset.</p>
+    </section>
+
+    <div class="grid">
+
+        <section class="card">
+
+            <div class="card-head">
+                <div>
+                    <h3>Neues Trainings-Sample</h3>
+                    <span>Audio + Metadaten</span>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <div class="field">
+                    <label>Audiodatei</label>
+                    <input id="audioFile" type="file" accept="audio/*">
+                </div>
+
+                <div class="field">
+                    <label>Titel</label>
+                    <input id="title" placeholder="z. B. Risky Life – Never Give Up">
+                </div>
+
+                <div class="row">
+
+                    <div class="field">
+                        <label>Stil-Tags</label>
+                        <input id="style" placeholder="Rock, Rap, Emotional">
+                    </div>
+
+                    <div class="field">
+                        <label>Stimmung</label>
+                        <input id="mood" placeholder="Energiegeladen">
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label>BPM</label>
+                    <input id="bpm" type="number" min="1" max="400" placeholder="120">
+                </div>
+
+                <div class="field">
+
+                    <label>Strukturierte Audio-Lyrics</label>
+
+                    <div class="lyrics-box">
+
+                        <div class="lyrics-tools">
+                            <button class="tag-btn" onclick="insertTag('[INTRO]')">INTRO</button>
+                            <button class="tag-btn" onclick="insertTag('[VERSE]')">VERSE</button>
+                            <button class="tag-btn" onclick="insertTag('[PRE-CHORUS]')">PRE-CHORUS</button>
+                            <button class="tag-btn" onclick="insertTag('[CHORUS]')">CHORUS</button>
+                            <button class="tag-btn" onclick="insertTag('[BRIDGE]')">BRIDGE</button>
+                            <button class="tag-btn" onclick="insertTag('[OUTRO]')">OUTRO</button>
+                        </div>
+
+                        <textarea
+                            id="lyrics"
+                            placeholder="[VERSE]
+Dein strukturierter Songtext...
+
+[CHORUS]
+..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+                <div class="actions">
+
+                    <button class="primary" onclick="addSample()">
+                        + Sample zum Batch hinzufügen
+                    </button>
+
+                    <button class="secondary" onclick="clearForm()">
+                        Formular leeren
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <aside class="card">
+
+            <div class="card-head">
+                <div>
+                    <h3>Aktueller Batch</h3>
+                    <span id="batchText">0 Samples</span>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <div id="batch" class="batch">
+                    <div class="empty">
+                        Noch keine Trainings-Samples im Batch.
+                    </div>
+                </div>
+
+                <div class="stats">
+
+                    <div class="stat">
+                        <b id="sampleCount">0</b>
+                        <span>SAMPLES</span>
+                    </div>
+
+                    <div class="stat">
+                        <b id="bpmAverage">0</b>
+                        <span>Ø BPM</span>
+                    </div>
+
+                </div>
+
+                <div class="actions">
+
+                    <button class="primary" onclick="downloadDataset()">
+                        Dataset als JSON downloaden
+                    </button>
+
+                    <button class="danger" onclick="clearBatch()">
+                        Batch leeren
+                    </button>
+
+                </div>
+
+            </div>
+
+        </aside>
+
     </div>
 
-</div>
+    <section class="training">
 
-<button id="convert" disabled>
-    🚀 IN MP4 UMWANDELN
-</button>
+        <div class="training-box">
 
-<div class="progress" id="progress">
+            <div class="training-top">
 
-    <div class="progress-top">
-        <span id="status">Vorbereitung...</span>
-        <span id="percent">0%</span>
-    </div>
+                <div>
+                    <div class="training-title">
+                        Interaktive Trainingssimulation
+                    </div>
 
-    <div class="bar">
-        <div class="fill" id="fill"></div>
-    </div>
+                    <div id="trainingStatus" class="training-status">
+                        Bereit zum Starten
+                    </div>
+                </div>
 
-</div>
+                <div id="epochText" class="epoch">
+                    Epoch 0 / 0
+                </div>
 
-<a
-    id="download"
-    class="download"
->
-    ⬇️ MP4 HERUNTERLADEN
-</a>
+            </div>
 
-</div>
+            <div class="progress-bg">
+                <div id="progress" class="progress"></div>
+            </div>
+
+            <div class="training-controls">
+
+                <div class="field">
+                    <label>Trainings-Epochen</label>
+                    <input id="epochs" type="number" min="1" max="500" value="10">
+                </div>
+
+                <button id="trainButton" class="primary" onclick="startTraining()">
+                    Training starten
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
 
 <script>
 
-const drop =
-    document.getElementById("drop");
+const dataset = [];
 
-const input =
-    document.getElementById("fileInput");
+let trainingTimer = null;
 
-const fileInfo =
-    document.getElementById("fileInfo");
+function escapeHTML(value){
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
 
-const convert =
-    document.getElementById("convert");
+function showToast(text){
 
-const progress =
-    document.getElementById("progress");
+    const toast = document.getElementById("toast");
 
-const fill =
-    document.getElementById("fill");
+    toast.textContent = text;
 
-const percent =
-    document.getElementById("percent");
+    toast.classList.add("show");
 
-const status =
-    document.getElementById("status");
+    clearTimeout(toast.timer);
 
-const download =
-    document.getElementById("download");
-
-let selectedFile = null;
-
-
-/* Datei auswählen */
-
-drop.addEventListener("click",()=>{
-    input.click();
-});
-
-
-input.addEventListener("change",()=>{
-
-    if(input.files.length > 0){
-        selectVideo(input.files[0]);
-    }
-
-});
-
-
-/* Drag & Drop */
-
-drop.addEventListener("dragover",(e)=>{
-
-    e.preventDefault();
-
-    drop.classList.add("drag");
-
-});
-
-
-drop.addEventListener("dragleave",()=>{
-
-    drop.classList.remove("drag");
-
-});
-
-
-drop.addEventListener("drop",(e)=>{
-
-    e.preventDefault();
-
-    drop.classList.remove("drag");
-
-    const file =
-        e.dataTransfer.files[0];
-
-    if(file && file.type.startsWith("video/")){
-        selectVideo(file);
-    }
-
-});
-
-
-/* Video speichern */
-
-function selectVideo(file){
-
-    selectedFile = file;
-
-    const size =
-        (file.size / 1024 / 1024).toFixed(2);
-
-    fileInfo.style.display = "block";
-
-    fileInfo.innerHTML =
-        "🎞️ <b>" +
-        escapeHTML(file.name) +
-        "</b><br>" +
-        "<span style='color:#888'>" +
-        size +
-        " MB</span>";
-
-    convert.disabled = false;
-
-    download.style.display = "none";
+    toast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+    },2800);
 
 }
 
+function insertTag(tag){
 
-/* HTML sicher darstellen */
+    const lyrics = document.getElementById("lyrics");
 
-function escapeHTML(text){
+    const start = lyrics.selectionStart;
+    const end = lyrics.selectionEnd;
 
-    return text.replace(/[&<>"']/g,(char)=>{
+    const before = lyrics.value.substring(0,start);
+    const after = lyrics.value.substring(end);
 
-        return {
-            "&":"&amp;",
-            "<":"&lt;",
-            ">":"&gt;",
-            '"':"&quot;",
-            "'":"&#039;"
-        }[char];
+    const text = `${before}${start > 0 ? "\n" : ""}${tag}\n${after}`;
 
-    });
+    lyrics.value = text;
+
+    lyrics.focus();
+
+    const position = before.length + tag.length + 2;
+
+    lyrics.setSelectionRange(position,position);
 
 }
 
+function getFormData(){
 
-/*
-=================================================
-KONVERTIERUNG
-=================================================
+    const file = document.getElementById("audioFile").files[0];
 
-Die eigentliche Konvertierung passiert hier.
+    return {
 
-Wichtig:
-Diese Version sendet das Video an deinen Render-
-Server.
+        id:
+            Date.now().toString() +
+            Math.random().toString(36).slice(2,8),
 
-Der Browser lädt also nicht selbst FFmpeg.
+        createdAt:
+            new Date().toISOString(),
 
-=================================================
-*/
+        audio:{
+            fileName:file ? file.name : null,
+            fileType:file ? file.type : null,
+            fileSize:file ? file.size : null
+        },
 
-convert.addEventListener("click",async()=>{
+        title:
+            document.getElementById("title").value.trim(),
 
-    if(!selectedFile){
+        styleTags:
+            document
+                .getElementById("style")
+                .value
+                .split(",")
+                .map(tag => tag.trim())
+                .filter(Boolean),
+
+        mood:
+            document.getElementById("mood").value.trim(),
+
+        bpm:
+            Number(document.getElementById("bpm").value) || null,
+
+        lyrics:
+            document.getElementById("lyrics").value.trim()
+
+    };
+
+}
+
+function addSample(){
+
+    const sample = getFormData();
+
+    if(!sample.title){
+        showToast("Bitte gib einen Titel ein.");
         return;
     }
 
-    convert.disabled = true;
+    if(!sample.styleTags.length){
+        showToast("Bitte gib mindestens einen Stil-Tag ein.");
+        return;
+    }
 
-    progress.style.display = "block";
+    dataset.push(sample);
 
-    download.style.display = "none";
+    renderBatch();
 
-    fill.style.width = "0%";
-    percent.textContent = "0%";
-    status.textContent = "Video wird hochgeladen...";
+    clearForm();
 
+    showToast("Sample wurde zum aktuellen Batch hinzugefügt.");
 
-    try{
+}
 
-        const formData =
-            new FormData();
+function clearForm(){
 
-        formData.append(
-            "video",
-            selectedFile
-        );
+    document.getElementById("audioFile").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("style").value = "";
+    document.getElementById("mood").value = "";
+    document.getElementById("bpm").value = "";
+    document.getElementById("lyrics").value = "";
 
+}
 
-        const response =
-            await fetch("/convert",{
-                method:"POST",
-                body:formData
-            });
+function removeSample(id){
 
+    const index = dataset.findIndex(
+        sample => sample.id === id
+    );
 
-        if(!response.ok){
+    if(index !== -1){
+        dataset.splice(index,1);
+    }
 
-            let message =
-                "Serverfehler";
+    renderBatch();
 
-            try{
-                const data =
-                    await response.json();
+    showToast("Sample wurde entfernt.");
 
-                if(data.error){
-                    message = data.error;
-                }
+}
 
-            }catch{}
+function clearBatch(){
 
-            throw new Error(message);
-        }
+    if(dataset.length === 0){
+        return;
+    }
 
+    dataset.length = 0;
 
-        status.textContent =
-            "MP4 wird erstellt...";
+    renderBatch();
 
+    showToast("Batch wurde geleert.");
 
-        /*
-        Fortschritt beim Download
-        */
+}
 
-        const reader =
-            response.body.getReader();
+function renderBatch(){
 
-        const contentLength =
-            Number(
-                response.headers.get(
-                    "Content-Length"
-                )
-            );
+    const batch = document.getElementById("batch");
 
-        let received = 0;
+    const count = dataset.length;
 
-        const chunks = [];
+    document.getElementById("batchText").textContent =
+        `${count} ${count === 1 ? "Sample" : "Samples"}`;
 
+    document.getElementById("sampleCount").textContent =
+        count;
 
-        while(true){
+    const bpmValues = dataset
+        .map(sample => sample.bpm)
+        .filter(Boolean);
 
-            const {
-                done,
-                value
-            } = await reader.read();
+    const average =
+        bpmValues.length
+            ? Math.round(
+                bpmValues.reduce((a,b) => a+b,0)
+                / bpmValues.length
+            )
+            : 0;
 
-            if(done) break;
+    document.getElementById("bpmAverage").textContent =
+        average;
 
-            chunks.push(value);
+    if(count === 0){
 
-            received += value.length;
+        batch.innerHTML = `
+            <div class="empty">
+                Noch keine Trainings-Samples im Batch.
+            </div>
+        `;
 
-
-            if(contentLength){
-
-                const p =
-                    Math.round(
-                        received /
-                        contentLength *
-                        100
-                    );
-
-                fill.style.width =
-                    p + "%";
-
-                percent.textContent =
-                    p + "%";
-            }
-
-        }
-
-
-        const blob =
-            new Blob(chunks,{
-                type:"video/mp4"
-            });
-
-
-        const url =
-            URL.createObjectURL(blob);
-
-
-        download.href = url;
-
-        download.download =
-            selectedFile.name
-            .replace(/\.[^/.]+$/,"")
-            + ".mp4";
-
-
-        fill.style.width =
-            "100%";
-
-        percent.textContent =
-            "100%";
-
-        status.textContent =
-            "✅ Konvertierung fertig!";
-
-        download.style.display =
-            "block";
-
-
-    }catch(error){
-
-        console.error(error);
-
-        status.textContent =
-            "❌ Konvertierung fehlgeschlagen";
-
-        alert(
-            "Fehler: " +
-            error.message
-        );
+        return;
 
     }
 
+    batch.innerHTML = dataset.map(sample => `
 
-    convert.disabled = false;
+        <div class="sample">
 
-});
+            <button
+                class="remove"
+                onclick="removeSample('${sample.id}')"
+                title="Sample löschen"
+            >
+                ×
+            </button>
+
+            <div class="sample-title">
+                ${escapeHTML(sample.title)}
+            </div>
+
+            <div class="sample-meta">
+
+                ${sample.styleTags.map(tag => `
+                    <span class="pill">
+                        ${escapeHTML(tag)}
+                    </span>
+                `).join("")}
+
+                ${sample.mood ? `
+                    <span class="pill">
+                        ${escapeHTML(sample.mood)}
+                    </span>
+                ` : ""}
+
+                ${sample.bpm ? `
+                    <span class="pill">
+                        ${sample.bpm} BPM
+                    </span>
+                ` : ""}
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
+function downloadDataset(){
+
+    if(dataset.length === 0){
+        showToast("Der Batch enthält noch keine Daten.");
+        return;
+    }
+
+    const output = {
+
+        datasetName:"Risky Life Studio Dataset",
+
+        version:"1.0",
+
+        createdAt:
+            new Date().toISOString(),
+
+        sampleCount:
+            dataset.length,
+
+        samples:
+            dataset
+
+    };
+
+    const blob = new Blob(
+        [
+            JSON.stringify(
+                output,
+                null,
+                2
+            )
+        ],
+        {
+            type:"application/json"
+        }
+    );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "risky-life-dataset.json";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+    showToast("JSON-Dataset wurde erstellt.");
+
+}
+
+function startTraining(){
+
+    if(dataset.length === 0){
+
+        showToast(
+            "Füge zuerst mindestens ein Sample zum Batch hinzu."
+        );
+
+        return;
+
+    }
+
+    if(trainingTimer){
+        return;
+    }
+
+    const total =
+        Math.max(
+            1,
+            Math.min(
+                500,
+                Number(
+                    document.getElementById("epochs").value
+                ) || 10
+            )
+        );
+
+    let epoch = 0;
+
+    const button =
+        document.getElementById("trainButton");
+
+    const progress =
+        document.getElementById("progress");
+
+    const status =
+        document.getElementById("trainingStatus");
+
+    const epochText =
+        document.getElementById("epochText");
+
+    button.disabled = true;
+
+    button.textContent =
+        "Training läuft...";
+
+    progress.style.width = "0%";
+
+    status.textContent =
+        "Batch wird vorbereitet...";
+
+    setTimeout(() => {
+
+        trainingTimer = setInterval(() => {
+
+            epoch++;
+
+            const percent =
+                Math.round(
+                    epoch / total * 100
+                );
+
+            progress.style.width =
+                percent + "%";
+
+            epochText.textContent =
+                `Epoch ${epoch} / ${total}`;
+
+            const phases = [
+                "Audio-Metriken werden verarbeitet...",
+                "Stil-Tags werden analysiert...",
+                "Lyrics-Struktur wird verarbeitet...",
+                "Batch-Daten werden vorbereitet...",
+                "Modell-Simulation aktualisiert..."
+            ];
+
+            status.textContent =
+                phases[
+                    (epoch - 1) % phases.length
+                ];
+
+            if(epoch >= total){
+
+                clearInterval(trainingTimer);
+
+                trainingTimer = null;
+
+                progress.style.width =
+                    "100%";
+
+                status.textContent =
+                    `Training abgeschlossen – ${dataset.length} Samples verarbeitet.`;
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Training starten";
+
+                showToast(
+                    "Trainingssimulation abgeschlossen."
+                );
+
+            }
+
+        },350);
+
+    },700);
+
+}
+
+renderBatch();
 
 </script>
 
