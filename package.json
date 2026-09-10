@@ -1,12 +1,14 @@
 {
-  "name": "ghost-block-studio",
+  "name": "risky-life-studio",
   "version": "1.0.0",
-  "description": "3D Block und Textur Editor",
+  "description": "Risky Life Studio - Music AI Training Prototype",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
   }
 }
