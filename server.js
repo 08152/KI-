@@ -10,8 +10,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Liefert alle statischen Dateien (wie index.html) aus dem aktuellen Ordner aus
-app.use(express.static(__path || __dirname));
+// KORREKTUR: __path entfernt, nur noch __dirname genutzt
+app.use(express.static(__dirname));
 
 // Falls die Hauptseite aufgerufen wird, sende die index.html
 app.get('/', (req, res) => {
