@@ -1,208 +1,291 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lokaler Video Cutter</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 { color: #333; margin-bottom: 20px; }
-        .input-group { margin: 20px 0; }
-        input[type="file"] { display: none; }
-        .custom-file-upload {
-            border: 2px dashed #007bff;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: inline-block;
-            color: #007bff;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .custom-file-upload:hover { background: #007bff; color: white; }
-        video { width: 100%; margin-top: 15px; border-radius: 8px; background: #000; }
-        .time-inputs {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-        }
-        .time-inputs label { display: flex; flex-direction: column; text-align: left; font-size: 14px; color: #555; }
-        input[type="number"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            margin-top: 5px;
-            width: 80px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-            width: 100%;
-        }
-        button:hover { background-color: #218838; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #status { margin-top: 15px; font-weight: bold; color: #666; }
-    </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<div class="container">
-    <h1>Video zuschneiden</h1>
-    
-    <div class="input-group">
-        <label class="custom-file-upload">
-            <input type="file" id="video-input" accept="video/*">
-            📁 Video auswählen
-        </label>
-        <div id="file-name" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
-    </div>
+<title>Direktlink Upload</title>
 
-    <video id="video-preview" controls style="display:none;"></video>
-
-    <div class="time-inputs" id="controls-group" style="display:none;">
-        <label>
-            Start (Sekunden):
-            <input type="number" id="start-time" value="0" min="0" step="1">
-        </label>
-        <label>
-            Ende (Sekunden):
-            <input type="number" id="end-time" value="10" min="1" step="1">
-        </label>
-    </div>
-
-    <button id="cut-button" style="display:none;">Video jetzt kürzen</button>
-    <div id="status">Initialisiere App... Bitte warten.</div>
-</div>
-
-<!-- Nutzt das moderne ESM Modulsystem statt alten unpkg Skript-Tags -->
-<script type="module">
-    import { FFmpeg } from "https://jsdelivr.net";
-    import { toBlobURL } from "https://jsdelivr.net";
-
-    const ffmpeg = new FFmpeg();
-    
-    const videoInput = document.getElementById('video-input');
-    const videoPreview = document.getElementById('video-preview');
-    const startTimeInput = document.getElementById('start-time');
-    const endTimeInput = document.getElementById('end-time');
-    const cutButton = document.getElementById('cut-button');
-    const statusDiv = document.getElementById('status');
-    const controlsGroup = document.getElementById('controls-group');
-    const fileNameDiv = document.getElementById('file-name');
-
-    let videoFile = null;
-
-    // FFmpeg sicher laden
-    async function loadFFmpeg() {
-        try {
-            statusDiv.innerText = "Lade Videowerkzeuge (WASM)...";
-            const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
-            
-            // Verhindert das CORS/Blockade-Problem im Browser
-            await ffmpeg.load({
-                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-            });
-            
-            statusDiv.innerText = "Bereit! Bitte wähle ein Video aus.";
-        } catch (e) {
-            console.error(e);
-            statusDiv.innerText = "Fehler beim Laden. Bitte stelle sicher, dass du die Seite über den Node-Server (Render) aufrufst.";
-        }
+<style>
+    * {
+        box-sizing: border-box;
     }
 
-    loadFFmpeg();
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        background: #101014;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-    // Video-Auswahl verarbeiten
-    videoInput.addEventListener('change', (e) => {
-        videoFile = e.target.files[0];
-        if (!videoFile) return;
+    .box {
+        width: min(600px, 92vw);
+        background: #1b1b22;
+        border: 1px solid #33333f;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+    }
 
-        fileNameDiv.innerText = videoFile.name;
-        const blobURL = URL.createObjectURL(videoFile);
-        videoPreview.src = blobURL;
-        videoPreview.style.display = "block";
-        controlsGroup.style.display = "flex";
-        cutButton.style.display = "block";
+    h1 {
+        margin-top: 0;
+        font-size: 28px;
+    }
 
-        videoPreview.onloadedmetadata = () => {
-            const duration = Math.floor(videoPreview.duration);
-            endTimeInput.value = duration;
-            endTimeInput.max = duration;
-            startTimeInput.max = duration - 1;
-        };
-    });
+    p {
+        color: #aaa;
+    }
 
-    // Schneidevorgang starten
-    cutButton.addEventListener('click', async () => {
-        if (!videoFile) return;
+    .upload {
+        display: block;
+        border: 2px dashed #6c63ff;
+        border-radius: 15px;
+        padding: 40px 20px;
+        margin: 25px 0;
+        cursor: pointer;
+        transition: 0.2s;
+    }
 
-        const start = parseFloat(startTimeInput.value);
-        const end = parseFloat(endTimeInput.value);
-        const duration = end - start;
+    .upload:hover {
+        background: #252532;
+        transform: scale(1.01);
+    }
 
-        if (start >= end) {
-            alert("Die Startzeit muss vor der Endzeit liegen!");
-            return;
+    input {
+        display: none;
+    }
+
+    button {
+        width: 100%;
+        border: 0;
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 17px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #6c63ff;
+        color: white;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    #status {
+        margin-top: 20px;
+        color: #bbb;
+    }
+
+    #result {
+        display: none;
+        margin-top: 25px;
+        padding: 20px;
+        background: #121217;
+        border-radius: 12px;
+    }
+
+    #link {
+        display: block;
+        margin-top: 12px;
+        padding: 12px;
+        background: #242430;
+        border-radius: 8px;
+        color: #8f88ff;
+        word-break: break-all;
+        text-decoration: none;
+    }
+
+    #copy {
+        margin-top: 12px;
+        background: #333344;
+    }
+
+    #preview {
+        max-width: 100%;
+        max-height: 300px;
+        margin-top: 20px;
+        border-radius: 10px;
+    }
+
+    video {
+        max-width: 100%;
+        max-height: 300px;
+        margin-top: 20px;
+        border-radius: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>📁 Bild & Video Direktlink</h1>
+
+    <p>Lade ein Bild oder Video hoch und erhalte einen direkten Link.</p>
+
+    <label class="upload">
+        <strong id="fileText">Datei auswählen</strong>
+        <br><br>
+        Bilder oder Videos
+        <input id="file" type="file" accept="image/*,video/*">
+    </label>
+
+    <button id="uploadButton" disabled>
+        Hochladen
+    </button>
+
+    <div id="status"></div>
+
+    <div id="result">
+
+        <strong>Dein Direktlink:</strong>
+
+        <a id="link" target="_blank"></a>
+
+        <button id="copy">
+            Direktlink kopieren
+        </button>
+
+    </div>
+
+    <div id="previewContainer"></div>
+
+</div>
+
+<script>
+
+const fileInput = document.getElementById("file");
+const uploadButton = document.getElementById("uploadButton");
+const fileText = document.getElementById("fileText");
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+const link = document.getElementById("link");
+const copyButton = document.getElementById("copy");
+const previewContainer = document.getElementById("previewContainer");
+
+let selectedFile = null;
+
+
+fileInput.addEventListener("change", () => {
+
+    selectedFile = fileInput.files[0];
+
+    if (!selectedFile) return;
+
+    fileText.textContent = selectedFile.name;
+
+    uploadButton.disabled = false;
+
+    previewContainer.innerHTML = "";
+
+    const url = URL.createObjectURL(selectedFile);
+
+    if (selectedFile.type.startsWith("image/")) {
+
+        const img = document.createElement("img");
+
+        img.src = url;
+        img.id = "preview";
+
+        previewContainer.appendChild(img);
+
+    }
+
+    else if (selectedFile.type.startsWith("video/")) {
+
+        const video = document.createElement("video");
+
+        video.src = url;
+        video.controls = true;
+
+        previewContainer.appendChild(video);
+
+    }
+
+});
+
+
+uploadButton.addEventListener("click", async () => {
+
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+
+    formData.append("file", selectedFile);
+
+    uploadButton.disabled = true;
+
+    status.textContent = "⬆️ Datei wird hochgeladen...";
+
+    result.style.display = "none";
+
+    try {
+
+        const response = await fetch("/upload", {
+
+            method: "POST",
+            body: formData
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(data.error || "Upload fehlgeschlagen");
+
         }
 
-        cutButton.disabled = true;
-        statusDiv.innerText = "Video wird verarbeitet... Bitte hab einen Moment Geduld.";
+        status.textContent = "✅ Upload erfolgreich!";
 
-        try {
-            // Datei einlesen und in das virtuelle System von FFmpeg schreiben
-            const inputData = await videoFile.arrayBuffer();
-            await ffmpeg.writeFile('input.mp4', new Uint8Array(inputData));
+        link.href = data.directLink;
+        link.textContent = data.directLink;
 
-            // Befehl ausführen (-ss für Startzeit, -t für Dauer)
-            await ffmpeg.exec(['-ss', start.toString(), '-i', 'input.mp4', '-t', duration.toString(), '-c', 'copy', 'output.mp4']);
+        result.style.display = "block";
 
-            // Ergebnis auslesen
-            const outputData = await ffmpeg.readFile('output.mp4');
+    }
 
-            // Download anstoßen
-            const resultBlob = new Blob([outputData.buffer], { type: 'video/mp4' });
-            const resultUrl = URL.createObjectURL(resultBlob);
-            
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.href = resultUrl;
-            downloadAnchor.download = `gekuerzt_${videoFile.name}`;
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            document.body.removeChild(downloadAnchor);
+    catch (error) {
 
-            statusDiv.innerText = "Erfolgreich gekürzt! Der Download gestartet.";
-        } catch (error) {
-            console.error(error);
-            statusDiv.innerText = "Fehler beim Verarbeiten des Videos.";
-        } finally {
-            cutButton.disabled = false;
-        }
-    });
+        status.textContent = "❌ Fehler: " + error.message;
+
+    }
+
+    uploadButton.disabled = false;
+
+});
+
+
+copyButton.addEventListener("click", async () => {
+
+    try {
+
+        await navigator.clipboard.writeText(link.href);
+
+        copyButton.textContent = "✅ Kopiert!";
+
+        setTimeout(() => {
+
+            copyButton.textContent = "Direktlink kopieren";
+
+        }, 2000);
+
+    }
+
+    catch {
+
+        alert("Kopiere diesen Link manuell:\n\n" + link.href);
+
+    }
+
+});
+
 </script>
 
 </body>
