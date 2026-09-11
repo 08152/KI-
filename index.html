@@ -2,289 +2,1377 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
 
-<title>Direktlink Upload</title>
+<title>Schrittzähler</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-    }
 
-    body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: Arial, sans-serif;
-        background: #101014;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+* {
+    box-sizing: border-box;
+}
 
-    .box {
-        width: min(600px, 92vw);
-        background: #1b1b22;
-        border: 1px solid #33333f;
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-    }
+body {
+    margin: 0;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
 
-    h1 {
-        margin-top: 0;
-        font-size: 28px;
-    }
+    background: #f2f4f7;
+    color: #111827;
+}
 
-    p {
-        color: #aaa;
-    }
+.app {
+    width: 100%;
+    max-width: 520px;
+    margin: auto;
+    padding: 20px 16px 40px;
+}
 
-    .upload {
-        display: block;
-        border: 2px dashed #6c63ff;
-        border-radius: 15px;
-        padding: 40px 20px;
-        margin: 25px 0;
-        cursor: pointer;
-        transition: 0.2s;
-    }
+h1 {
+    text-align: center;
+    font-size: 30px;
+    margin: 5px 0;
+}
 
-    .upload:hover {
-        background: #252532;
-        transform: scale(1.01);
-    }
+.subtitle {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
 
-    input {
-        display: none;
-    }
+.card {
+    background: white;
+    border-radius: 22px;
+    padding: 20px;
+    margin-bottom: 15px;
 
-    button {
-        width: 100%;
-        border: 0;
-        border-radius: 12px;
-        padding: 15px;
-        font-size: 17px;
-        font-weight: bold;
-        cursor: pointer;
-        background: #6c63ff;
-        color: white;
-    }
+    box-shadow:
+        0 5px 20px rgba(0,0,0,0.07);
+}
 
-    button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+.steps {
+    text-align: center;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+}
 
-    #status {
-        margin-top: 20px;
-        color: #bbb;
-    }
+.center {
+    text-align: center;
+    color: #6b7280;
+}
 
-    #result {
-        display: none;
-        margin-top: 25px;
-        padding: 20px;
-        background: #121217;
-        border-radius: 12px;
-    }
+.progress {
+    height: 13px;
+    background: #e5e7eb;
+    border-radius: 50px;
+    overflow: hidden;
+    margin-top: 16px;
+}
 
-    #link {
-        display: block;
-        margin-top: 12px;
-        padding: 12px;
-        background: #242430;
-        border-radius: 8px;
-        color: #8f88ff;
-        word-break: break-all;
-        text-decoration: none;
-    }
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #111827;
+    border-radius: 50px;
+    transition: width 0.3s ease;
+}
 
-    #copy {
-        margin-top: 12px;
-        background: #333344;
-    }
+.goal-percent {
+    text-align: center;
+    margin-top: 9px;
+    color: #6b7280;
+    font-size: 14px;
+}
 
-    #preview {
-        max-width: 100%;
-        max-height: 300px;
-        margin-top: 20px;
-        border-radius: 10px;
-    }
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
 
-    video {
-        max-width: 100%;
-        max-height: 300px;
-        margin-top: 20px;
-        border-radius: 10px;
-    }
+.stat {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.value {
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.name {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.goal-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+input {
+    flex: 1;
+    min-width: 0;
+
+    padding: 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+
+    font-size: 17px;
+    background: white;
+}
+
+button {
+    width: 100%;
+
+    padding: 15px;
+
+    border: none;
+    border-radius: 14px;
+
+    margin-top: 8px;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    background: #111827;
+    color: white;
+
+    cursor: pointer;
+}
+
+.goal-row button {
+    width: auto;
+    margin: 0;
+    padding: 14px 18px;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.pause {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.reset {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status {
+    text-align: center;
+
+    color: #6b7280;
+
+    margin-top: 13px;
+
+    font-size: 14px;
+}
+
+.info {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.55;
+}
+
+.goal-description {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
 </style>
+
 </head>
+
 
 <body>
 
-<div class="box">
 
-    <h1>📁 Bild & Video Direktlink</h1>
+<div class="app">
 
-    <p>Lade ein Bild oder Video hoch und erhalte einen direkten Link.</p>
 
-    <label class="upload">
-        <strong id="fileText">Datei auswählen</strong>
-        <br><br>
-        Bilder oder Videos
-        <input id="file" type="file" accept="image/*,video/*">
-    </label>
+<h1>🚶 Schrittzähler</h1>
 
-    <button id="uploadButton" disabled>
-        Hochladen
-    </button>
+<div class="subtitle">
+Für das Handy in der Hand optimiert
+</div>
 
-    <div id="status"></div>
 
-    <div id="result">
+<!-- SCHRITTE -->
 
-        <strong>Dein Direktlink:</strong>
+<div class="card">
 
-        <a id="link" target="_blank"></a>
+<div class="steps" id="steps">
+0
+</div>
 
-        <button id="copy">
-            Direktlink kopieren
-        </button>
+<div class="center">
+Schritte heute
+</div>
 
-    </div>
 
-    <div id="previewContainer"></div>
+<div class="progress">
+
+<div
+class="progress-bar"
+id="progress">
+</div>
 
 </div>
 
+
+<div
+class="goal-percent"
+id="goalPercent">
+0 % des Tagesziels
+</div>
+
+</div>
+
+
+
+<!-- TAGESZIEL -->
+
+<div class="card">
+
+<b>🎯 Tägliches Bewegungsziel</b>
+
+<div class="goal-description">
+Wie viele Schritte möchtest du jeden Tag erreichen?
+</div>
+
+
+<div class="goal-row">
+
+<input
+id="goalInput"
+type="number"
+min="100"
+max="100000"
+step="100"
+value="10000"
+inputmode="numeric"
+>
+
+
+<button id="saveGoal">
+Speichern
+</button>
+
+</div>
+
+</div>
+
+
+
+<!-- STATISTIK -->
+
+<div class="card grid">
+
+
+<div class="stat">
+
+<div
+class="value"
+id="distance">
+0 m
+</div>
+
+<div class="name">
+Distanz
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div
+class="value"
+id="calories">
+0 kcal
+</div>
+
+<div class="name">
+Kalorien
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div
+class="value"
+id="time">
+00:00:00
+</div>
+
+<div class="name">
+Gehzeit
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div
+class="value"
+id="cadence">
+0/min
+</div>
+
+<div class="name">
+Schritte/min
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<!-- SENSOR -->
+
+<div class="card">
+
+
+<button id="start">
+▶ Sensor starten
+</button>
+
+
+<button
+class="pause"
+id="pause">
+
+⏸ Pause
+
+</button>
+
+
+<button
+class="reset"
+id="reset">
+
+↺ Heute zurücksetzen
+
+</button>
+
+
+<div
+class="status"
+id="status">
+
+Sensor noch nicht gestartet.
+
+</div>
+
+</div>
+
+
+
+<!-- INFORMATION -->
+
+<div class="card info">
+
+<b>ℹ️ Über diesen Schrittzähler</b>
+
+<br><br>
+
+Die App verwendet den Bewegungssensor deines Smartphones,
+um Schritte zu erkennen.
+
+Der Algorithmus betrachtet die gesamte Beschleunigung des
+Handys und sucht nach typischen Bewegungs-Peaks.
+Dadurch funktioniert die Erkennung unabhängig davon,
+wie das Handy ausgerichtet ist.
+
+<br><br>
+
+Die App ist speziell für die Verwendung
+<b>in der Hand</b> ausgelegt.
+
+<br><br>
+
+<b>Wichtig:</b>
+
+Ein Browser kann nicht auf jedem Smartphone auf den
+systemweiten Schrittzähler zugreifen.
+
+Deshalb kann diese App nicht garantiert genauso genau
+sein wie Apple Health, Google Fit oder ein Fitness-Tracker.
+
+<br><br>
+
+Distanz und Kalorien sind Schätzwerte.
+
+</div>
+
+
+</div>
+
+
+
 <script>
 
-const fileInput = document.getElementById("file");
-const uploadButton = document.getElementById("uploadButton");
-const fileText = document.getElementById("fileText");
-const status = document.getElementById("status");
-const result = document.getElementById("result");
-const link = document.getElementById("link");
-const copyButton = document.getElementById("copy");
-const previewContainer = document.getElementById("previewContainer");
-
-let selectedFile = null;
+"use strict";
 
 
-fileInput.addEventListener("change", () => {
+/* =====================================================
+   EINSTELLUNGEN
+===================================================== */
 
-    selectedFile = fileInput.files[0];
 
-    if (!selectedFile) return;
+/*
+   Durchschnittliche Schrittlänge.
 
-    fileText.textContent = selectedFile.name;
+   Kann später angepasst werden.
+*/
 
-    uploadButton.disabled = false;
+const STEP_LENGTH = 0.72;
 
-    previewContainer.innerHTML = "";
 
-    const url = URL.createObjectURL(selectedFile);
+/*
+   Gewicht für die Kalorien-Schätzung.
 
-    if (selectedFile.type.startsWith("image/")) {
+   Kann später angepasst werden.
+*/
 
-        const img = document.createElement("img");
+const WEIGHT_KG = 60;
 
-        img.src = url;
-        img.id = "preview";
 
-        previewContainer.appendChild(img);
+/*
+   Speichername
+*/
+
+const STORAGE_KEY =
+"mein_schrittzaehler_v2";
+
+
+
+/* =====================================================
+   DATUM
+===================================================== */
+
+function getToday() {
+
+    const date = new Date();
+
+    return date.getFullYear()
+        + "-"
+        + String(date.getMonth() + 1).padStart(2, "0")
+        + "-"
+        + String(date.getDate()).padStart(2, "0");
+
+}
+
+
+const today = getToday();
+
+
+
+/* =====================================================
+   GESPEICHERTE DATEN
+===================================================== */
+
+let saved =
+JSON.parse(
+    localStorage.getItem(STORAGE_KEY) || "{}"
+);
+
+
+
+/*
+   Tagesziel
+
+   Standard:
+   10.000 Schritte
+*/
+
+let dailyGoal =
+saved.goal || 10000;
+
+
+
+/*
+   Wenn ein neuer Tag begonnen hat,
+   werden die Schritte automatisch auf 0 gesetzt.
+*/
+
+let steps =
+saved.date === today
+    ? (saved.steps || 0)
+    : 0;
+
+
+
+/*
+   Gehzeit
+*/
+
+let walkingSeconds =
+saved.date === today
+    ? (saved.time || 0)
+    : 0;
+
+
+
+/* =====================================================
+   SENSOR-VARIABLEN
+===================================================== */
+
+let running = false;
+
+let lastStepTime = 0;
+
+let samples = [];
+
+let minuteSteps = [];
+
+let timer = null;
+
+
+
+/* =====================================================
+   SPEICHERN
+===================================================== */
+
+function save() {
+
+    localStorage.setItem(
+
+        STORAGE_KEY,
+
+        JSON.stringify({
+
+            date: today,
+
+            steps: steps,
+
+            time: walkingSeconds,
+
+            goal: dailyGoal
+
+        })
+
+    );
+
+}
+
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+function setStatus(text) {
+
+    document.getElementById("status")
+        .textContent = text;
+
+}
+
+
+
+/* =====================================================
+   ANZEIGE AKTUALISIEREN
+===================================================== */
+
+function updateDisplay() {
+
+
+    /*
+       Schritte
+    */
+
+    document.getElementById("steps")
+        .textContent =
+        steps.toLocaleString("de-DE");
+
+
+
+    /*
+       DISTANZ
+    */
+
+    const meters =
+        steps * STEP_LENGTH;
+
+
+    if (meters >= 1000) {
+
+        document.getElementById("distance")
+            .textContent =
+            (meters / 1000)
+                .toFixed(2)
+                .replace(".", ",")
+            + " km";
 
     }
 
-    else if (selectedFile.type.startsWith("video/")) {
+    else {
 
-        const video = document.createElement("video");
-
-        video.src = url;
-        video.controls = true;
-
-        previewContainer.appendChild(video);
+        document.getElementById("distance")
+            .textContent =
+            Math.round(meters)
+            + " m";
 
     }
 
-});
 
 
-uploadButton.addEventListener("click", async () => {
+    /*
+       KALORIEN
 
-    if (!selectedFile) return;
+       Grobe Schätzung.
+    */
 
-    const formData = new FormData();
+    const calories =
+        (meters / 1000)
+        * WEIGHT_KG
+        * 0.045;
 
-    formData.append("file", selectedFile);
 
-    uploadButton.disabled = true;
+    document.getElementById("calories")
+        .textContent =
+        Math.round(calories)
+        + " kcal";
 
-    status.textContent = "⬆️ Datei wird hochgeladen...";
 
-    result.style.display = "none";
+
+    /*
+       GEHZEIT
+    */
+
+    const hours =
+        Math.floor(
+            walkingSeconds / 3600
+        );
+
+
+    const minutes =
+        Math.floor(
+            (walkingSeconds % 3600) / 60
+        );
+
+
+    const seconds =
+        walkingSeconds % 60;
+
+
+    document.getElementById("time")
+        .textContent =
+
+        String(hours).padStart(2, "0")
+        + ":"
+        + String(minutes).padStart(2, "0")
+        + ":"
+        + String(seconds).padStart(2, "0");
+
+
+
+    /*
+       SCHRITTE PRO MINUTE
+    */
+
+    const now = Date.now();
+
+
+    minuteSteps =
+        minuteSteps.filter(
+
+            time =>
+                now - time < 60000
+
+        );
+
+
+    document.getElementById("cadence")
+        .textContent =
+        minuteSteps.length
+        + "/min";
+
+
+
+    /*
+       TAGESZIEL
+    */
+
+    const percentage =
+
+        dailyGoal > 0
+
+        ? Math.min(
+            100,
+            (steps / dailyGoal) * 100
+          )
+
+        : 0;
+
+
+    document.getElementById("progress")
+        .style.width =
+        percentage + "%";
+
+
+    document.getElementById("goalPercent")
+        .textContent =
+
+        Math.round(percentage)
+        + " % des Tagesziels";
+
+}
+
+
+
+/* =====================================================
+   SCHRITT HINZUFÜGEN
+===================================================== */
+
+function addStep() {
+
+
+    steps++;
+
+
+    minuteSteps.push(
+        Date.now()
+    );
+
+
+    save();
+
+
+    updateDisplay();
+
+}
+
+
+
+/* =====================================================
+   BEWEGUNGSSENSOR
+===================================================== */
+
+function handleMotion(event) {
+
+
+    if (!running) {
+        return;
+    }
+
+
+    const acceleration =
+        event.accelerationIncludingGravity;
+
+
+    if (!acceleration) {
+        return;
+    }
+
+
+    const x =
+        acceleration.x || 0;
+
+
+    const y =
+        acceleration.y || 0;
+
+
+    const z =
+        acceleration.z || 0;
+
+
+
+    /*
+       Gesamte Beschleunigung.
+
+       Damit ist es egal,
+       ob das Handy leicht gedreht wird.
+    */
+
+    const magnitude =
+
+        Math.sqrt(
+
+            x * x
+            +
+            y * y
+            +
+            z * z
+
+        );
+
+
+
+    const now =
+        performance.now();
+
+
+
+    samples.push({
+
+        time: now,
+
+        value: magnitude
+
+    });
+
+
+
+    /*
+       Nur die letzten 900 ms behalten.
+    */
+
+    while (
+
+        samples.length > 0
+        &&
+        now - samples[0].time > 900
+
+    ) {
+
+        samples.shift();
+
+    }
+
+
+
+    /*
+       Zu wenige Messwerte.
+    */
+
+    if (samples.length < 8) {
+        return;
+    }
+
+
+
+    /*
+       Durchschnitt
+    */
+
+    let sum = 0;
+
+
+    for (const sample of samples) {
+
+        sum += sample.value;
+
+    }
+
+
+    const average =
+        sum / samples.length;
+
+
+
+    /*
+       Standardabweichung
+    */
+
+    let variance = 0;
+
+
+    for (const sample of samples) {
+
+        variance +=
+
+            Math.pow(
+
+                sample.value
+                -
+                average,
+
+                2
+
+            );
+
+    }
+
+
+    variance /=
+        samples.length;
+
+
+    const deviation =
+        Math.sqrt(variance);
+
+
+
+    /*
+       Letzte Messwerte
+    */
+
+    const current =
+        samples[samples.length - 1];
+
+
+    const previous =
+        samples[samples.length - 2];
+
+
+    const beforePrevious =
+        samples[samples.length - 3];
+
+
+
+    /*
+       Peak-Erkennung
+    */
+
+    const isPeak =
+
+        current.value >
+        previous.value
+
+        &&
+
+        previous.value >=
+        beforePrevious.value;
+
+
+
+    /*
+       Dynamische Schwelle.
+
+       Dadurch werden normale kleine Bewegungen
+       eher ignoriert.
+    */
+
+    const threshold =
+
+        average
+        +
+        Math.max(
+            0.75,
+            deviation * 1.15
+        );
+
+
+
+    /*
+       Verhindert Doppelzählungen.
+
+       Ein neuer Schritt muss mindestens
+       280 ms vom letzten Schritt entfernt sein.
+    */
+
+    const enoughTime =
+
+        now - lastStepTime
+        >
+        280;
+
+
+
+    if (
+
+        isPeak
+
+        &&
+
+        current.value >
+        threshold
+
+        &&
+
+        enoughTime
+
+    ) {
+
+        lastStepTime =
+            now;
+
+
+        addStep();
+
+    }
+
+}
+
+
+
+/* =====================================================
+   SENSOR STARTEN
+===================================================== */
+
+async function startSensor() {
+
 
     try {
 
-        const response = await fetch("/upload", {
 
-            method: "POST",
-            body: formData
+        /*
+           iPhone / Safari:
 
-        });
+           Benutzer muss Bewegungssensor
+           ausdrücklich erlauben.
+        */
 
-        const data = await response.json();
+        if (
 
-        if (!response.ok) {
+            typeof DeviceMotionEvent
+            !== "undefined"
 
-            throw new Error(data.error || "Upload fehlgeschlagen");
+            &&
+
+            typeof
+            DeviceMotionEvent.requestPermission
+            === "function"
+
+        ) {
+
+
+            const permission =
+
+                await
+                DeviceMotionEvent
+                .requestPermission();
+
+
+            if (
+                permission !== "granted"
+            ) {
+
+                setStatus(
+                    "❌ Bewegungssensor wurde nicht freigegeben."
+                );
+
+                return;
+
+            }
 
         }
 
-        status.textContent = "✅ Upload erfolgreich!";
 
-        link.href = data.directLink;
-        link.textContent = data.directLink;
 
-        result.style.display = "block";
+        /*
+           Sensor aktivieren
+        */
+
+        window.addEventListener(
+
+            "devicemotion",
+
+            handleMotion,
+
+            {
+                passive: true
+            }
+
+        );
+
+
+
+        running = true;
+
+
+
+        /*
+           Gehzeit-Timer
+        */
+
+        if (!timer) {
+
+
+            timer =
+
+                setInterval(
+
+                    function() {
+
+
+                        if (running) {
+
+
+                            walkingSeconds++;
+
+
+                            save();
+
+
+                            updateDisplay();
+
+                        }
+
+
+                    },
+
+                    1000
+
+                );
+
+        }
+
+
+
+        setStatus(
+            "🟢 Sensor läuft – los geht's!"
+        );
+
 
     }
 
     catch (error) {
 
-        status.textContent = "❌ Fehler: " + error.message;
+
+        console.error(error);
+
+
+        setStatus(
+
+            "❌ Sensor konnte nicht gestartet werden. "
+            +
+            "Öffne die Seite über HTTPS."
+
+        );
 
     }
 
-    uploadButton.disabled = false;
-
-});
+}
 
 
-copyButton.addEventListener("click", async () => {
 
-    try {
+/* =====================================================
+   PAUSE
+===================================================== */
 
-        await navigator.clipboard.writeText(link.href);
+function pauseSensor() {
 
-        copyButton.textContent = "✅ Kopiert!";
+    running = false;
 
-        setTimeout(() => {
+    setStatus(
+        "⏸ Pause – der Sensor zählt nicht."
+    );
 
-            copyButton.textContent = "Direktlink kopieren";
+}
 
-        }, 2000);
+
+
+/* =====================================================
+   TAGESZIEL SPEICHERN
+===================================================== */
+
+function saveGoal() {
+
+
+    const input =
+
+        Number(
+            document
+                .getElementById("goalInput")
+                .value
+        );
+
+
+    /*
+       Prüfung
+    */
+
+    if (
+        !input
+        ||
+        input < 100
+    ) {
+
+        alert(
+            "Bitte gib mindestens 100 Schritte ein."
+        );
+
+        return;
 
     }
 
-    catch {
 
-        alert("Kopiere diesen Link manuell:\n\n" + link.href);
+    if (
+        input > 100000
+    ) {
+
+        alert(
+            "Bitte gib höchstens 100.000 Schritte ein."
+        );
+
+        return;
 
     }
 
-});
+
+
+    /*
+       Auf ganze Schritte runden
+    */
+
+    dailyGoal =
+        Math.round(input);
+
+
+
+    /*
+       Speichern
+    */
+
+    save();
+
+
+
+    /*
+       Anzeige aktualisieren
+    */
+
+    updateDisplay();
+
+
+
+    setStatus(
+        "🎯 Tagesziel gespeichert!"
+    );
+
+}
+
+
+
+/* =====================================================
+   HEUTIGE SCHRITTE ZURÜCKSETZEN
+===================================================== */
+
+function resetSteps() {
+
+
+    const answer =
+
+        confirm(
+
+            "Möchtest du die heutigen Schritte "
+            +
+            "und die heutige Gehzeit wirklich "
+            +
+            "zurücksetzen?"
+
+        );
+
+
+    if (!answer) {
+        return;
+    }
+
+
+
+    steps = 0;
+
+    walkingSeconds = 0;
+
+    minuteSteps = [];
+
+    lastStepTime = 0;
+
+
+
+    save();
+
+
+    updateDisplay();
+
+
+    setStatus(
+        "Heute wurde zurückgesetzt."
+    );
+
+}
+
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+document
+    .getElementById("start")
+    .addEventListener(
+        "click",
+        startSensor
+    );
+
+
+document
+    .getElementById("pause")
+    .addEventListener(
+        "click",
+        pauseSensor
+    );
+
+
+document
+    .getElementById("saveGoal")
+    .addEventListener(
+        "click",
+        saveGoal
+    );
+
+
+document
+    .getElementById("reset")
+    .addEventListener(
+        "click",
+        resetSteps
+    );
+
+
+
+/*
+   Enter-Taste im Zielfeld
+*/
+
+document
+    .getElementById("goalInput")
+    .addEventListener(
+
+        "keydown",
+
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                saveGoal();
+
+            }
+
+        }
+
+    );
+
+
+
+/* =====================================================
+   START
+===================================================== */
+
+document
+    .getElementById("goalInput")
+    .value =
+    dailyGoal;
+
+
+updateDisplay();
+
 
 </script>
 
