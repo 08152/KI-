@@ -3,1376 +3,1475 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-
+<meta name="theme-color" content="#050507">
 <title>Schrittzähler</title>
 
 <style>
+:root {
+  --bg: #050507;
+  --card: #151518;
+  --card2: #1c1c20;
+  --text: #ffffff;
+  --muted: #9b9ba3;
+
+  --pink: #ff375f;
+  --green: #30d158;
+  --blue: #64d2ff;
+  --orange: #ff9f0a;
+  --purple: #bf5af2;
+
+  --radius: 26px;
+}
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    margin: 0;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
-
-    background: #f2f4f7;
-    color: #111827;
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% -10%, #25252d 0%, #0b0b0e 35%, var(--bg) 70%);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    Arial,
+    sans-serif;
+  min-height: 100vh;
 }
 
 .app {
-    width: 100%;
-    max-width: 520px;
-    margin: auto;
-    padding: 20px 16px 40px;
+  max-width: 650px;
+  margin: auto;
+  padding:
+    calc(22px + env(safe-area-inset-top))
+    18px
+    calc(35px + env(safe-area-inset-bottom));
 }
 
-h1 {
-    text-align: center;
-    font-size: 30px;
-    margin: 5px 0;
+/* HEADER */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
 }
 
-.subtitle {
-    text-align: center;
-    color: #6b7280;
-    margin-bottom: 20px;
+.header small {
+  color: var(--muted);
+  font-size: 14px;
 }
 
-.card {
-    background: white;
-    border-radius: 22px;
-    padding: 20px;
-    margin-bottom: 15px;
-
-    box-shadow:
-        0 5px 20px rgba(0,0,0,0.07);
-}
-
-.steps {
-    text-align: center;
-    font-size: 64px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.center {
-    text-align: center;
-    color: #6b7280;
-}
-
-.progress {
-    height: 13px;
-    background: #e5e7eb;
-    border-radius: 50px;
-    overflow: hidden;
-    margin-top: 16px;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #111827;
-    border-radius: 50px;
-    transition: width 0.3s ease;
-}
-
-.goal-percent {
-    text-align: center;
-    margin-top: 9px;
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.stat {
-    background: #f8fafc;
-    border-radius: 16px;
-    padding: 15px;
-}
-
-.value {
-    font-size: 22px;
-    font-weight: 750;
-}
-
-.name {
-    color: #6b7280;
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-.goal-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-input {
-    flex: 1;
-    min-width: 0;
-
-    padding: 14px;
-
-    border: 1px solid #d1d5db;
-    border-radius: 14px;
-
-    font-size: 17px;
-    background: white;
-}
-
-button {
-    width: 100%;
-
-    padding: 15px;
-
-    border: none;
-    border-radius: 14px;
-
-    margin-top: 8px;
-
-    font-size: 17px;
-    font-weight: 700;
-
-    background: #111827;
-    color: white;
-
-    cursor: pointer;
-}
-
-.goal-row button {
-    width: auto;
-    margin: 0;
-    padding: 14px 18px;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-.pause {
-    background: #e5e7eb;
-    color: #111827;
-}
-
-.reset {
-    background: #fee2e2;
-    color: #991b1b;
+.header h1 {
+  margin: 3px 0 0;
+  font-size: 31px;
+  letter-spacing: -1px;
 }
 
 .status {
-    text-align: center;
-
-    color: #6b7280;
-
-    margin-top: 13px;
-
-    font-size: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #666;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.04);
 }
+
+.status.active {
+  background: var(--green);
+  box-shadow: 0 0 16px rgba(48,209,88,.7);
+}
+
+/* ACTIVITY CARD */
+
+.activity-card {
+  background:
+    linear-gradient(145deg, #19191d, #0e0e11);
+  border-radius: 32px;
+  padding: 25px 18px 22px;
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  margin-bottom: 15px;
+}
+
+.activity-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.ring-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0 20px;
+}
+
+.rings {
+  width: 260px;
+  height: 260px;
+  position: relative;
+}
+
+.rings svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #29292e;
+}
+
+.ring {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .8s ease;
+}
+
+.ring-main {
+  stroke: var(--pink);
+  filter: drop-shadow(0 0 7px rgba(255,55,95,.4));
+}
+
+.ring-inner {
+  stroke: var(--green);
+  filter: drop-shadow(0 0 7px rgba(48,209,88,.35));
+}
+
+.ring-small {
+  stroke: var(--blue);
+  filter: drop-shadow(0 0 7px rgba(100,210,255,.35));
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.big-number {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.center-label {
+  color: var(--muted);
+  margin-top: 7px;
+  font-size: 14px;
+}
+
+.goal-text {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.goal-text strong {
+  color: white;
+}
+
+/* GRID */
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  margin-bottom: 15px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 19px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.stat-icon {
+  font-size: 21px;
+  margin-bottom: 13px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -.8px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* COLORS */
+
+.green {
+  color: var(--green);
+}
+
+.blue {
+  color: var(--blue);
+}
+
+.orange {
+  color: var(--orange);
+}
+
+.purple {
+  color: var(--purple);
+}
+
+/* STREAK */
+
+.streak-card {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  background:
+    linear-gradient(135deg, rgba(255,159,10,.14), rgba(255,55,95,.06));
+  border: 1px solid rgba(255,159,10,.12);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.fire {
+  width: 55px;
+  height: 55px;
+  border-radius: 18px;
+  background: rgba(255,159,10,.13);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 29px;
+}
+
+.streak-number {
+  font-size: 31px;
+  font-weight: 800;
+}
+
+.streak-description {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+/* HISTORY */
+
+.history-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 21px 18px;
+  margin-bottom: 15px;
+}
+
+.section-title {
+  font-size: 19px;
+  font-weight: 750;
+  margin-bottom: 20px;
+}
+
+.chart {
+  height: 190px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 7px;
+  position: relative;
+}
+
+.chart-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 91px;
+  border-top: 1px dashed rgba(255,255,255,.13);
+}
+
+.chart-label {
+  position: absolute;
+  right: 2px;
+  bottom: 96px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.bar-wrap {
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.bar {
+  width: 100%;
+  max-width: 35px;
+  min-height: 4px;
+  border-radius: 9px 9px 5px 5px;
+  background: linear-gradient(to top, #ff375f, #ff6b86);
+  transition: height .5s ease;
+}
+
+.bar.today {
+  background: linear-gradient(to top, #30d158, #63e681);
+}
+
+.bar-number {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+.day {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+/* GOAL */
+
+.goal-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 21px;
+  margin-bottom: 15px;
+}
+
+.goal-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  background: #29292e;
+  color: white;
+  border: 0;
+  outline: none;
+  border-radius: 15px;
+  padding: 14px;
+  font-size: 17px;
+}
+
+button {
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 17px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(.97);
+}
+
+.save-btn {
+  background: #303036;
+}
+
+/* MAIN BUTTONS */
+
+.buttons {
+  display: grid;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #ff375f, #bf5af2);
+  min-height: 56px;
+  font-size: 17px;
+  box-shadow: 0 10px 25px rgba(191,90,242,.18);
+}
+
+.pause-btn {
+  background: #29292e;
+}
+
+.share-btn {
+  background: #202024;
+}
+
+.reset-btn {
+  background: transparent;
+  color: #ff453a;
+  border: 1px solid rgba(255,69,58,.25);
+}
+
+/* INFO */
 
 .info {
-    font-size: 12px;
-    color: #6b7280;
-    line-height: 1.55;
+  text-align: center;
+  color: #77777f;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 18px;
 }
 
-.goal-description {
-    color: #6b7280;
-    font-size: 13px;
-    margin-top: 5px;
-}
+/* MOBILE */
 
+@media (max-width: 380px) {
+  .rings {
+    width: 225px;
+    height: 225px;
+  }
+
+  .big-number {
+    font-size: 41px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+}
 </style>
-
 </head>
-
 
 <body>
 
-
 <div class="app">
 
+  <header class="header">
+    <div>
+      <small>Deine Aktivität</small>
+      <h1>Heute</h1>
+    </div>
+    <div class="status" id="status"></div>
+  </header>
 
-<h1>🚶 Schrittzähler</h1>
+  <!-- AKTIVITÄT -->
+  <section class="activity-card">
 
-<div class="subtitle">
-Für das Handy in der Hand optimiert
+    <div class="activity-title">Aktivität</div>
+
+    <div class="ring-area">
+
+      <div class="rings">
+
+        <svg viewBox="0 0 260 260">
+
+          <!-- Äußerer Ring -->
+          <circle
+            class="ring-bg"
+            cx="130"
+            cy="130"
+            r="112"
+            stroke-width="15"
+          />
+
+          <circle
+            id="mainRing"
+            class="ring ring-main"
+            cx="130"
+            cy="130"
+            r="112"
+            stroke-width="15"
+          />
+
+          <!-- Mittlerer Ring -->
+          <circle
+            class="ring-bg"
+            cx="130"
+            cy="130"
+            r="88"
+            stroke-width="14"
+          />
+
+          <circle
+            id="streakRing"
+            class="ring ring-inner"
+            cx="130"
+            cy="130"
+            r="88"
+            stroke-width="14"
+          />
+
+          <!-- Innerer Ring -->
+          <circle
+            class="ring-bg"
+            cx="130"
+            cy="130"
+            r="65"
+            stroke-width="12"
+          />
+
+          <circle
+            id="timeRing"
+            class="ring ring-small"
+            cx="130"
+            cy="130"
+            r="65"
+            stroke-width="12"
+          />
+
+        </svg>
+
+        <div class="ring-center">
+          <div class="big-number" id="steps">0</div>
+          <div class="center-label">Schritte</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="goal-text">
+      <strong id="goalText">0 %</strong> deines Tagesziels
+    </div>
+
+  </section>
+
+
+  <!-- STATS -->
+
+  <section class="stats">
+
+    <div class="card">
+      <div class="stat-icon green">↔</div>
+      <div class="stat-value" id="distance">0,00</div>
+      <div class="stat-label">Kilometer</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-icon orange">🔥</div>
+      <div class="stat-value" id="calories">0</div>
+      <div class="stat-label">Kalorien ca.</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-icon blue">◷</div>
+      <div class="stat-value" id="walkingTime">0 min</div>
+      <div class="stat-label">Gehzeit</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-icon purple">⚡</div>
+      <div class="stat-value" id="stepsMinute">0</div>
+      <div class="stat-label">Schritte / Minute</div>
+    </div>
+
+  </section>
+
+
+  <!-- STREAK -->
+
+  <section class="streak-card">
+
+    <div class="fire">🔥</div>
+
+    <div>
+      <div class="streak-number">
+        <span id="streak">0</span> Tage
+      </div>
+
+      <div class="streak-description">
+        Serie mit mindestens 5.000 Schritten pro Tag
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section class="history-card">
+
+    <div class="section-title">Letzte 7 Tage</div>
+
+    <div class="chart">
+
+      <div class="chart-line"></div>
+      <div class="chart-label">5.000</div>
+
+      <div id="chartBars" style="
+        display:flex;
+        width:100%;
+        height:100%;
+        gap:7px;
+      "></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- GOAL -->
+
+  <section class="goal-card">
+
+    <div class="section-title">Tagesziel</div>
+
+    <div style="color:var(--muted);font-size:13px;">
+      Dein persönliches Schrittziel
+    </div>
+
+    <div class="goal-row">
+
+      <input
+        id="goalInput"
+        type="number"
+        min="100"
+        max="100000"
+        step="100"
+        value="10000"
+      >
+
+      <button class="save-btn" onclick="saveGoal()">
+        Speichern
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- BUTTONS -->
+
+  <div class="buttons">
+
+    <button class="start-btn" onclick="startSensor()">
+      ▶ Sensor starten
+    </button>
+
+    <button class="pause-btn" onclick="pauseSensor()">
+      ⏸ Pause
+    </button>
+
+    <button class="share-btn" onclick="shareResult()">
+      ↑ Ergebnis teilen
+    </button>
+
+    <button class="reset-btn" onclick="resetToday()">
+      Heute zurücksetzen
+    </button>
+
+  </div>
+
+  <div class="info">
+    Der Schrittzähler verwendet den Bewegungssensor deines Smartphones.
+    Für die genaueste Messung das iPhone beim Gehen in der Hand halten.
+  </div>
+
 </div>
-
-
-<!-- SCHRITTE -->
-
-<div class="card">
-
-<div class="steps" id="steps">
-0
-</div>
-
-<div class="center">
-Schritte heute
-</div>
-
-
-<div class="progress">
-
-<div
-class="progress-bar"
-id="progress">
-</div>
-
-</div>
-
-
-<div
-class="goal-percent"
-id="goalPercent">
-0 % des Tagesziels
-</div>
-
-</div>
-
-
-
-<!-- TAGESZIEL -->
-
-<div class="card">
-
-<b>🎯 Tägliches Bewegungsziel</b>
-
-<div class="goal-description">
-Wie viele Schritte möchtest du jeden Tag erreichen?
-</div>
-
-
-<div class="goal-row">
-
-<input
-id="goalInput"
-type="number"
-min="100"
-max="100000"
-step="100"
-value="10000"
-inputmode="numeric"
->
-
-
-<button id="saveGoal">
-Speichern
-</button>
-
-</div>
-
-</div>
-
-
-
-<!-- STATISTIK -->
-
-<div class="card grid">
-
-
-<div class="stat">
-
-<div
-class="value"
-id="distance">
-0 m
-</div>
-
-<div class="name">
-Distanz
-</div>
-
-</div>
-
-
-<div class="stat">
-
-<div
-class="value"
-id="calories">
-0 kcal
-</div>
-
-<div class="name">
-Kalorien
-</div>
-
-</div>
-
-
-<div class="stat">
-
-<div
-class="value"
-id="time">
-00:00:00
-</div>
-
-<div class="name">
-Gehzeit
-</div>
-
-</div>
-
-
-<div class="stat">
-
-<div
-class="value"
-id="cadence">
-0/min
-</div>
-
-<div class="name">
-Schritte/min
-</div>
-
-</div>
-
-
-</div>
-
-
-
-<!-- SENSOR -->
-
-<div class="card">
-
-
-<button id="start">
-▶ Sensor starten
-</button>
-
-
-<button
-class="pause"
-id="pause">
-
-⏸ Pause
-
-</button>
-
-
-<button
-class="reset"
-id="reset">
-
-↺ Heute zurücksetzen
-
-</button>
-
-
-<div
-class="status"
-id="status">
-
-Sensor noch nicht gestartet.
-
-</div>
-
-</div>
-
-
-
-<!-- INFORMATION -->
-
-<div class="card info">
-
-<b>ℹ️ Über diesen Schrittzähler</b>
-
-<br><br>
-
-Die App verwendet den Bewegungssensor deines Smartphones,
-um Schritte zu erkennen.
-
-Der Algorithmus betrachtet die gesamte Beschleunigung des
-Handys und sucht nach typischen Bewegungs-Peaks.
-Dadurch funktioniert die Erkennung unabhängig davon,
-wie das Handy ausgerichtet ist.
-
-<br><br>
-
-Die App ist speziell für die Verwendung
-<b>in der Hand</b> ausgelegt.
-
-<br><br>
-
-<b>Wichtig:</b>
-
-Ein Browser kann nicht auf jedem Smartphone auf den
-systemweiten Schrittzähler zugreifen.
-
-Deshalb kann diese App nicht garantiert genauso genau
-sein wie Apple Health, Google Fit oder ein Fitness-Tracker.
-
-<br><br>
-
-Distanz und Kalorien sind Schätzwerte.
-
-</div>
-
-
-</div>
-
 
 
 <script>
 
-"use strict";
-
-
-/* =====================================================
-   EINSTELLUNGEN
-===================================================== */
-
-
-/*
-   Durchschnittliche Schrittlänge.
-
-   Kann später angepasst werden.
-*/
-
 const STEP_LENGTH = 0.72;
-
-
-/*
-   Gewicht für die Kalorien-Schätzung.
-
-   Kann später angepasst werden.
-*/
-
 const WEIGHT_KG = 60;
 
+const STREAK_GOAL = 5000;
+const MAX_DAYS = 7;
 
-/*
-   Speichername
-*/
+const STORAGE_KEY = "schrittzaehler_7tage_v1";
 
-const STORAGE_KEY =
-"mein_schrittzaehler_v2";
+let data = loadData();
 
-
-
-/* =====================================================
-   DATUM
-===================================================== */
-
-function getToday() {
-
-    const date = new Date();
-
-    return date.getFullYear()
-        + "-"
-        + String(date.getMonth() + 1).padStart(2, "0")
-        + "-"
-        + String(date.getDate()).padStart(2, "0");
-
-}
-
-
-const today = getToday();
-
-
-
-/* =====================================================
-   GESPEICHERTE DATEN
-===================================================== */
-
-let saved =
-JSON.parse(
-    localStorage.getItem(STORAGE_KEY) || "{}"
-);
-
-
-
-/*
-   Tagesziel
-
-   Standard:
-   10.000 Schritte
-*/
-
-let dailyGoal =
-saved.goal || 10000;
-
-
-
-/*
-   Wenn ein neuer Tag begonnen hat,
-   werden die Schritte automatisch auf 0 gesetzt.
-*/
-
-let steps =
-saved.date === today
-    ? (saved.steps || 0)
-    : 0;
-
-
-
-/*
-   Gehzeit
-*/
-
-let walkingSeconds =
-saved.date === today
-    ? (saved.time || 0)
-    : 0;
-
-
-
-/* =====================================================
-   SENSOR-VARIABLEN
-===================================================== */
-
-let running = false;
-
+let sensorActive = false;
 let lastStepTime = 0;
 
 let samples = [];
 
-let minuteSteps = [];
+let todaySteps = 0;
+let walkingSeconds = 0;
 
-let timer = null;
+let lastWalkingTime = Date.now();
 
 
+// --------------------------------------------------
+// DATEN
+// --------------------------------------------------
 
-/* =====================================================
-   SPEICHERN
-===================================================== */
+function getDateString(date = new Date()) {
 
-function save() {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
 
-    localStorage.setItem(
+  return `${y}-${m}-${d}`;
+}
 
-        STORAGE_KEY,
 
-        JSON.stringify({
+function loadData() {
 
-            date: today,
+  try {
 
-            steps: steps,
+    const saved = localStorage.getItem(STORAGE_KEY);
 
-            time: walkingSeconds,
+    if (saved) {
 
-            goal: dailyGoal
+      const parsed = JSON.parse(saved);
 
-        })
+      if (!parsed.goal) parsed.goal = 10000;
+      if (!parsed.days) parsed.days = {};
 
+      return parsed;
+    }
+
+  } catch(e) {}
+
+  return {
+    goal: 10000,
+    days: {}
+  };
+}
+
+
+function saveData() {
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(data)
+  );
+}
+
+
+function ensureToday() {
+
+  const today = getDateString();
+
+  if (!data.days[today]) {
+
+    data.days[today] = {
+      steps: 0,
+      time: 0
+    };
+
+  }
+
+  todaySteps = data.days[today].steps || 0;
+  walkingSeconds = data.days[today].time || 0;
+}
+
+
+function cleanOldDays() {
+
+  const today = new Date();
+
+  for (const date in data.days) {
+
+    const d = new Date(date + "T00:00:00");
+
+    const difference =
+      Math.floor(
+        (today - d) / 86400000
+      );
+
+    if (difference > 6) {
+      delete data.days[date];
+    }
+
+  }
+
+}
+
+
+// --------------------------------------------------
+// UI
+// --------------------------------------------------
+
+function updateUI() {
+
+  ensureToday();
+
+  const goal = data.goal;
+
+  const progress =
+    Math.min(todaySteps / goal, 1);
+
+  const percentage =
+    Math.round((todaySteps / goal) * 100);
+
+  document.getElementById("steps").textContent =
+    todaySteps.toLocaleString("de-DE");
+
+  document.getElementById("goalText").textContent =
+    percentage + " %";
+
+
+  // Entfernung
+
+  const distance =
+    todaySteps * STEP_LENGTH / 1000;
+
+  document.getElementById("distance").textContent =
+    distance.toFixed(2).replace(".", ",");
+
+
+  // Kalorien grob geschätzt
+
+  const calories =
+    todaySteps * 0.04 * (WEIGHT_KG / 60);
+
+  document.getElementById("calories").textContent =
+    Math.round(calories);
+
+
+  // Gehzeit
+
+  const minutes =
+    Math.floor(walkingSeconds / 60);
+
+  document.getElementById("walkingTime").textContent =
+    minutes + " min";
+
+
+  // Schritte pro Minute
+
+  let spm = 0;
+
+  if (minutes > 0) {
+    spm = Math.round(todaySteps / minutes);
+  }
+
+  document.getElementById("stepsMinute").textContent =
+    spm;
+
+
+  updateRings(progress);
+
+  updateStreak();
+
+  updateChart();
+
+  document.getElementById("goalInput").value =
+    data.goal;
+
+}
+
+
+// --------------------------------------------------
+// RINGE
+// --------------------------------------------------
+
+function setRing(id, percentage, radius) {
+
+  const circle =
+    document.getElementById(id);
+
+  const circumference =
+    2 * Math.PI * radius;
+
+  circle.style.strokeDasharray =
+    circumference;
+
+  circle.style.strokeDashoffset =
+    circumference * (1 - percentage);
+
+}
+
+
+function updateRings(progress) {
+
+  // Hauptziel
+
+  setRing(
+    "mainRing",
+    progress,
+    112
+  );
+
+
+  // Streak-Ring:
+  // zeigt, wie nah du heute an 5000 bist
+
+  const streakProgress =
+    Math.min(todaySteps / STREAK_GOAL, 1);
+
+  setRing(
+    "streakRing",
+    streakProgress,
+    88
+  );
+
+
+  // Innerer Ring:
+  // basiert auf Gehzeit.
+  // 60 Minuten = voller Ring
+
+  const timeProgress =
+    Math.min(walkingSeconds / 3600, 1);
+
+  setRing(
+    "timeRing",
+    timeProgress,
+    65
+  );
+
+}
+
+
+// --------------------------------------------------
+// STREAK
+// --------------------------------------------------
+
+function updateStreak() {
+
+  let streak = 0;
+
+  const date = new Date();
+
+  while (true) {
+
+    const key = getDateString(date);
+
+    const day = data.days[key];
+
+    if (!day || day.steps < STREAK_GOAL) {
+      break;
+    }
+
+    streak++;
+
+    date.setDate(
+      date.getDate() - 1
     );
 
-}
+  }
 
-
-
-/* =====================================================
-   STATUS
-===================================================== */
-
-function setStatus(text) {
-
-    document.getElementById("status")
-        .textContent = text;
+  document.getElementById("streak").textContent =
+    streak;
 
 }
 
 
+// --------------------------------------------------
+// 7 TAGE CHART
+// --------------------------------------------------
 
-/* =====================================================
-   ANZEIGE AKTUALISIEREN
-===================================================== */
+function updateChart() {
 
-function updateDisplay() {
+  const container =
+    document.getElementById("chartBars");
 
+  container.innerHTML = "";
 
-    /*
-       Schritte
-    */
+  const days = [];
 
-    document.getElementById("steps")
-        .textContent =
-        steps.toLocaleString("de-DE");
+  for (let i = 6; i >= 0; i--) {
 
+    const date = new Date();
 
-
-    /*
-       DISTANZ
-    */
-
-    const meters =
-        steps * STEP_LENGTH;
-
-
-    if (meters >= 1000) {
-
-        document.getElementById("distance")
-            .textContent =
-            (meters / 1000)
-                .toFixed(2)
-                .replace(".", ",")
-            + " km";
-
-    }
-
-    else {
-
-        document.getElementById("distance")
-            .textContent =
-            Math.round(meters)
-            + " m";
-
-    }
-
-
-
-    /*
-       KALORIEN
-
-       Grobe Schätzung.
-    */
-
-    const calories =
-        (meters / 1000)
-        * WEIGHT_KG
-        * 0.045;
-
-
-    document.getElementById("calories")
-        .textContent =
-        Math.round(calories)
-        + " kcal";
-
-
-
-    /*
-       GEHZEIT
-    */
-
-    const hours =
-        Math.floor(
-            walkingSeconds / 3600
-        );
-
-
-    const minutes =
-        Math.floor(
-            (walkingSeconds % 3600) / 60
-        );
-
-
-    const seconds =
-        walkingSeconds % 60;
-
-
-    document.getElementById("time")
-        .textContent =
-
-        String(hours).padStart(2, "0")
-        + ":"
-        + String(minutes).padStart(2, "0")
-        + ":"
-        + String(seconds).padStart(2, "0");
-
-
-
-    /*
-       SCHRITTE PRO MINUTE
-    */
-
-    const now = Date.now();
-
-
-    minuteSteps =
-        minuteSteps.filter(
-
-            time =>
-                now - time < 60000
-
-        );
-
-
-    document.getElementById("cadence")
-        .textContent =
-        minuteSteps.length
-        + "/min";
-
-
-
-    /*
-       TAGESZIEL
-    */
-
-    const percentage =
-
-        dailyGoal > 0
-
-        ? Math.min(
-            100,
-            (steps / dailyGoal) * 100
-          )
-
-        : 0;
-
-
-    document.getElementById("progress")
-        .style.width =
-        percentage + "%";
-
-
-    document.getElementById("goalPercent")
-        .textContent =
-
-        Math.round(percentage)
-        + " % des Tagesziels";
-
-}
-
-
-
-/* =====================================================
-   SCHRITT HINZUFÜGEN
-===================================================== */
-
-function addStep() {
-
-
-    steps++;
-
-
-    minuteSteps.push(
-        Date.now()
+    date.setDate(
+      date.getDate() - i
     );
 
+    const key =
+      getDateString(date);
 
-    save();
+    const day =
+      data.days[key] || { steps: 0 };
 
-
-    updateDisplay();
-
-}
-
-
-
-/* =====================================================
-   BEWEGUNGSSENSOR
-===================================================== */
-
-function handleMotion(event) {
-
-
-    if (!running) {
-        return;
-    }
-
-
-    const acceleration =
-        event.accelerationIncludingGravity;
-
-
-    if (!acceleration) {
-        return;
-    }
-
-
-    const x =
-        acceleration.x || 0;
-
-
-    const y =
-        acceleration.y || 0;
-
-
-    const z =
-        acceleration.z || 0;
-
-
-
-    /*
-       Gesamte Beschleunigung.
-
-       Damit ist es egal,
-       ob das Handy leicht gedreht wird.
-    */
-
-    const magnitude =
-
-        Math.sqrt(
-
-            x * x
-            +
-            y * y
-            +
-            z * z
-
-        );
-
-
-
-    const now =
-        performance.now();
-
-
-
-    samples.push({
-
-        time: now,
-
-        value: magnitude
-
+    days.push({
+      date,
+      steps: day.steps || 0
     });
 
+  }
 
 
-    /*
-       Nur die letzten 900 ms behalten.
-    */
+  const maxSteps =
+    Math.max(
+      10000,
+      ...days.map(d => d.steps)
+    );
 
-    while (
 
-        samples.length > 0
-        &&
-        now - samples[0].time > 900
+  days.forEach((item, index) => {
 
-    ) {
+    const wrap =
+      document.createElement("div");
 
-        samples.shift();
+    wrap.className = "bar-wrap";
 
-    }
 
+    const number =
+      document.createElement("div");
 
+    number.className = "bar-number";
 
-    /*
-       Zu wenige Messwerte.
-    */
+    number.textContent =
+      item.steps >= 1000
+        ? (item.steps / 1000).toFixed(1).replace(".", ",") + "k"
+        : item.steps;
 
-    if (samples.length < 8) {
-        return;
-    }
 
+    const bar =
+      document.createElement("div");
 
+    bar.className =
+      "bar" + (index === 6 ? " today" : "");
 
-    /*
-       Durchschnitt
-    */
 
-    let sum = 0;
+    let height =
+      (item.steps / maxSteps) * 145;
 
+    height =
+      Math.max(4, height);
 
-    for (const sample of samples) {
 
-        sum += sample.value;
+    bar.style.height =
+      height + "px";
 
-    }
 
+    const day =
+      document.createElement("div");
 
-    const average =
-        sum / samples.length;
+    day.className = "day";
 
+    day.textContent =
+      item.date.toLocaleDateString(
+        "de-DE",
+        { weekday: "short" }
+      ).replace(".", "");
 
 
-    /*
-       Standardabweichung
-    */
+    wrap.appendChild(number);
+    wrap.appendChild(bar);
+    wrap.appendChild(day);
 
-    let variance = 0;
+    container.appendChild(wrap);
 
-
-    for (const sample of samples) {
-
-        variance +=
-
-            Math.pow(
-
-                sample.value
-                -
-                average,
-
-                2
-
-            );
-
-    }
-
-
-    variance /=
-        samples.length;
-
-
-    const deviation =
-        Math.sqrt(variance);
-
-
-
-    /*
-       Letzte Messwerte
-    */
-
-    const current =
-        samples[samples.length - 1];
-
-
-    const previous =
-        samples[samples.length - 2];
-
-
-    const beforePrevious =
-        samples[samples.length - 3];
-
-
-
-    /*
-       Peak-Erkennung
-    */
-
-    const isPeak =
-
-        current.value >
-        previous.value
-
-        &&
-
-        previous.value >=
-        beforePrevious.value;
-
-
-
-    /*
-       Dynamische Schwelle.
-
-       Dadurch werden normale kleine Bewegungen
-       eher ignoriert.
-    */
-
-    const threshold =
-
-        average
-        +
-        Math.max(
-            0.75,
-            deviation * 1.15
-        );
-
-
-
-    /*
-       Verhindert Doppelzählungen.
-
-       Ein neuer Schritt muss mindestens
-       280 ms vom letzten Schritt entfernt sein.
-    */
-
-    const enoughTime =
-
-        now - lastStepTime
-        >
-        280;
-
-
-
-    if (
-
-        isPeak
-
-        &&
-
-        current.value >
-        threshold
-
-        &&
-
-        enoughTime
-
-    ) {
-
-        lastStepTime =
-            now;
-
-
-        addStep();
-
-    }
+  });
 
 }
 
 
-
-/* =====================================================
-   SENSOR STARTEN
-===================================================== */
+// --------------------------------------------------
+// SENSOR
+// --------------------------------------------------
 
 async function startSensor() {
 
+  if (
+    typeof DeviceMotionEvent !== "undefined" &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
 
     try {
 
+      const permission =
+        await DeviceMotionEvent.requestPermission();
 
-        /*
-           iPhone / Safari:
+      if (permission !== "granted") {
 
-           Benutzer muss Bewegungssensor
-           ausdrücklich erlauben.
-        */
-
-        if (
-
-            typeof DeviceMotionEvent
-            !== "undefined"
-
-            &&
-
-            typeof
-            DeviceMotionEvent.requestPermission
-            === "function"
-
-        ) {
-
-
-            const permission =
-
-                await
-                DeviceMotionEvent
-                .requestPermission();
-
-
-            if (
-                permission !== "granted"
-            ) {
-
-                setStatus(
-                    "❌ Bewegungssensor wurde nicht freigegeben."
-                );
-
-                return;
-
-            }
-
-        }
-
-
-
-        /*
-           Sensor aktivieren
-        */
-
-        window.addEventListener(
-
-            "devicemotion",
-
-            handleMotion,
-
-            {
-                passive: true
-            }
-
+        alert(
+          "Bitte erlaube den Bewegungssensor in den Einstellungen bzw. im Browser."
         );
 
+        return;
+      }
 
+    } catch(error) {
 
-        running = true;
+      alert(
+        "Der Bewegungssensor konnte nicht aktiviert werden."
+      );
 
-
-
-        /*
-           Gehzeit-Timer
-        */
-
-        if (!timer) {
-
-
-            timer =
-
-                setInterval(
-
-                    function() {
-
-
-                        if (running) {
-
-
-                            walkingSeconds++;
-
-
-                            save();
-
-
-                            updateDisplay();
-
-                        }
-
-
-                    },
-
-                    1000
-
-                );
-
-        }
-
-
-
-        setStatus(
-            "🟢 Sensor läuft – los geht's!"
-        );
-
-
+      return;
     }
 
-    catch (error) {
+  }
 
 
-        console.error(error);
+  window.addEventListener(
+    "devicemotion",
+    handleMotion,
+    true
+  );
 
+  sensorActive = true;
 
-        setStatus(
-
-            "❌ Sensor konnte nicht gestartet werden. "
-            +
-            "Öffne die Seite über HTTPS."
-
-        );
-
-    }
+  document
+    .getElementById("status")
+    .classList.add("active");
 
 }
 
-
-
-/* =====================================================
-   PAUSE
-===================================================== */
 
 function pauseSensor() {
 
-    running = false;
+  window.removeEventListener(
+    "devicemotion",
+    handleMotion,
+    true
+  );
 
-    setStatus(
-        "⏸ Pause – der Sensor zählt nicht."
-    );
+  sensorActive = false;
+
+  document
+    .getElementById("status")
+    .classList.remove("active");
+
+  saveData();
 
 }
 
 
+// --------------------------------------------------
+// SCHRITTERKENNUNG
+// --------------------------------------------------
 
-/* =====================================================
-   TAGESZIEL SPEICHERN
-===================================================== */
+function handleMotion(event) {
+
+  if (!sensorActive) return;
+
+  const acc =
+    event.accelerationIncludingGravity;
+
+  if (!acc) return;
+
+
+  const x = acc.x || 0;
+  const y = acc.y || 0;
+  const z = acc.z || 0;
+
+
+  const magnitude =
+    Math.sqrt(
+      x*x + y*y + z*z
+    );
+
+
+  const now =
+    Date.now();
+
+
+  samples.push({
+    time: now,
+    value: magnitude
+  });
+
+
+  // Nur die letzten 900 ms behalten
+
+  samples =
+    samples.filter(
+      s => now - s.time < 900
+    );
+
+
+  if (samples.length < 8) {
+    return;
+  }
+
+
+  const values =
+    samples.map(
+      s => s.value
+    );
+
+
+  const average =
+    values.reduce(
+      (a,b) => a+b,
+      0
+    ) / values.length;
+
+
+  const variance =
+    values.reduce(
+      (sum,v) =>
+        sum + Math.pow(v-average,2),
+      0
+    ) / values.length;
+
+
+  const deviation =
+    Math.sqrt(variance);
+
+
+  const threshold =
+    average +
+    Math.max(
+      0.75,
+      deviation * 1.15
+    );
+
+
+  const latest =
+    values[values.length - 1];
+
+
+  const previous =
+    values[values.length - 2];
+
+
+  const before =
+    values[values.length - 3];
+
+
+  const isPeak =
+    latest > previous &&
+    previous >= before &&
+    latest > threshold;
+
+
+  const enoughTime =
+    now - lastStepTime > 280;
+
+
+  if (isPeak && enoughTime) {
+
+    registerStep();
+
+  }
+
+}
+
+
+// --------------------------------------------------
+// SCHRITT SPEICHERN
+// --------------------------------------------------
+
+function registerStep() {
+
+  const now =
+    Date.now();
+
+
+  // Zeit seit letztem Schritt
+
+  if (lastStepTime > 0) {
+
+    const difference =
+      (now - lastStepTime) / 1000;
+
+    // Nur sinnvolle Gehintervalle zählen
+
+    if (
+      difference > 0.25 &&
+      difference < 3
+    ) {
+
+      walkingSeconds +=
+        difference;
+
+    }
+
+  }
+
+
+  lastStepTime = now;
+
+  todaySteps++;
+
+
+  const today =
+    getDateString();
+
+
+  data.days[today] = {
+
+    steps: todaySteps,
+
+    time: walkingSeconds
+
+  };
+
+
+  saveData();
+
+  updateUI();
+
+}
+
+
+// --------------------------------------------------
+// ZIEL
+// --------------------------------------------------
 
 function saveGoal() {
 
-
-    const input =
-
-        Number(
-            document
-                .getElementById("goalInput")
-                .value
-        );
-
-
-    /*
-       Prüfung
-    */
-
-    if (
-        !input
-        ||
-        input < 100
-    ) {
-
-        alert(
-            "Bitte gib mindestens 100 Schritte ein."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        input > 100000
-    ) {
-
-        alert(
-            "Bitte gib höchstens 100.000 Schritte ein."
-        );
-
-        return;
-
-    }
-
-
-
-    /*
-       Auf ganze Schritte runden
-    */
-
-    dailyGoal =
-        Math.round(input);
-
-
-
-    /*
-       Speichern
-    */
-
-    save();
-
-
-
-    /*
-       Anzeige aktualisieren
-    */
-
-    updateDisplay();
-
-
-
-    setStatus(
-        "🎯 Tagesziel gespeichert!"
+  let goal =
+    parseInt(
+      document.getElementById("goalInput").value
     );
+
+
+  if (!goal || goal < 100) {
+    goal = 10000;
+  }
+
+
+  if (goal > 100000) {
+    goal = 100000;
+  }
+
+
+  data.goal = goal;
+
+  saveData();
+
+  updateUI();
 
 }
 
 
+// --------------------------------------------------
+// RESET
+// --------------------------------------------------
 
-/* =====================================================
-   HEUTIGE SCHRITTE ZURÜCKSETZEN
-===================================================== */
+function resetToday() {
 
-function resetSteps() {
-
-
-    const answer =
-
-        confirm(
-
-            "Möchtest du die heutigen Schritte "
-            +
-            "und die heutige Gehzeit wirklich "
-            +
-            "zurücksetzen?"
-
-        );
-
-
-    if (!answer) {
-        return;
-    }
-
-
-
-    steps = 0;
-
-    walkingSeconds = 0;
-
-    minuteSteps = [];
-
-    lastStepTime = 0;
-
-
-
-    save();
-
-
-    updateDisplay();
-
-
-    setStatus(
-        "Heute wurde zurückgesetzt."
+  const confirmReset =
+    confirm(
+      "Möchtest du die heutigen Schritte wirklich zurücksetzen?"
     );
+
+
+  if (!confirmReset) return;
+
+
+  const today =
+    getDateString();
+
+
+  data.days[today] = {
+    steps: 0,
+    time: 0
+  };
+
+
+  todaySteps = 0;
+  walkingSeconds = 0;
+
+  lastStepTime = 0;
+
+  saveData();
+
+  updateUI();
 
 }
 
 
+// --------------------------------------------------
+// TEILEN
+// --------------------------------------------------
 
-/* =====================================================
-   BUTTONS
-===================================================== */
+async function shareResult() {
 
-document
-    .getElementById("start")
-    .addEventListener(
-        "click",
-        startSensor
+  ensureToday();
+
+  const distance =
+    todaySteps * STEP_LENGTH / 1000;
+
+
+  const text =
+`🚶 Meine Aktivität heute
+
+👣 ${todaySteps.toLocaleString("de-DE")} Schritte
+📏 ${distance.toFixed(2).replace(".", ",")} km
+🔥 ca. ${Math.round(todaySteps * 0.04)} Kalorien
+⏱️ ${Math.floor(walkingSeconds / 60)} Minuten Gehzeit
+🔥 ${document.getElementById("streak").textContent} Tage Streak`;
+
+
+  if (
+    navigator.share
+  ) {
+
+    try {
+
+      await navigator.share({
+        title: "Meine Aktivität",
+        text: text
+      });
+
+      return;
+
+    } catch(e) {
+
+      // Benutzer hat Teilen abgebrochen
+
+    }
+
+  }
+
+
+  try {
+
+    await navigator.clipboard.writeText(text);
+
+    alert(
+      "Ergebnis wurde in die Zwischenablage kopiert."
     );
 
+  } catch(e) {
 
-document
-    .getElementById("pause")
-    .addEventListener(
-        "click",
-        pauseSensor
-    );
+    alert(text);
 
+  }
 
-document
-    .getElementById("saveGoal")
-    .addEventListener(
-        "click",
-        saveGoal
-    );
+}
 
 
-document
-    .getElementById("reset")
-    .addEventListener(
-        "click",
-        resetSteps
-    );
+// --------------------------------------------------
+// MITTERNACHT / DATEN AKTUALISIEREN
+// --------------------------------------------------
+
+function checkNewDay() {
+
+  const today =
+    getDateString();
+
+  const storedToday =
+    data.days[today];
 
 
+  if (!storedToday) {
 
-/*
-   Enter-Taste im Zielfeld
-*/
+    ensureToday();
 
-document
-    .getElementById("goalInput")
-    .addEventListener(
+    saveData();
 
-        "keydown",
+    updateUI();
 
-        function(event) {
+  }
 
-            if (
-                event.key === "Enter"
-            ) {
-
-                saveGoal();
-
-            }
-
-        }
-
-    );
+}
 
 
-
-/* =====================================================
-   START
-===================================================== */
-
-document
-    .getElementById("goalInput")
-    .value =
-    dailyGoal;
+setInterval(
+  checkNewDay,
+  30000
+);
 
 
-updateDisplay();
+// --------------------------------------------------
+// START
+// --------------------------------------------------
 
+cleanOldDays();
+
+ensureToday();
+
+saveData();
+
+updateUI();
 
 </script>
 
