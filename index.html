@@ -2,1476 +2,1264 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#050507">
-<title>Schrittzähler</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VOID HULK</title>
 
 <style>
-:root {
-  --bg: #050507;
-  --card: #151518;
-  --card2: #1c1c20;
-  --text: #ffffff;
-  --muted: #9b9ba3;
-
-  --pink: #ff375f;
-  --green: #30d158;
-  --blue: #64d2ff;
-  --orange: #ff9f0a;
-  --purple: #bf5af2;
-
-  --radius: 26px;
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+body{
+    margin:0;
+    background:#030508;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    overflow:hidden;
 }
 
-body {
-  margin: 0;
-  background:
-    radial-gradient(circle at 50% -10%, #25252d 0%, #0b0b0e 35%, var(--bg) 70%);
-  color: var(--text);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "SF Pro Text",
-    Arial,
-    sans-serif;
-  min-height: 100vh;
+#game{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
 }
 
-.app {
-  max-width: 650px;
-  margin: auto;
-  padding:
-    calc(22px + env(safe-area-inset-top))
-    18px
-    calc(35px + env(safe-area-inset-bottom));
+#hud{
+    height:62px;
+    flex-shrink:0;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    background:linear-gradient(#18212a,#090d12);
+    border-bottom:2px solid #3b4854;
 }
 
-/* HEADER */
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 22px;
+.stat{
+    text-align:center;
+    min-width:60px;
 }
 
-.header small {
-  color: var(--muted);
-  font-size: 14px;
+.label{
+    color:#7e919f;
+    font-size:10px;
+    letter-spacing:1px;
 }
 
-.header h1 {
-  margin: 3px 0 0;
-  font-size: 31px;
-  letter-spacing: -1px;
+.value{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:3px;
 }
 
-.status {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #666;
-  box-shadow: 0 0 0 5px rgba(255,255,255,.04);
+#screen{
+    flex:1;
+    min-height:0;
+    position:relative;
+    overflow:hidden;
+    background:#020304;
 }
 
-.status.active {
-  background: var(--green);
-  box-shadow: 0 0 16px rgba(48,209,88,.7);
+canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    touch-action:none;
 }
 
-/* ACTIVITY CARD */
-
-.activity-card {
-  background:
-    linear-gradient(145deg, #19191d, #0e0e11);
-  border-radius: 32px;
-  padding: 25px 18px 22px;
-  box-shadow:
-    0 20px 50px rgba(0,0,0,.35),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  margin-bottom: 15px;
+#message{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(5,8,12,.88);
+    border:1px solid #516575;
+    box-shadow:0 0 15px rgba(90,150,190,.15);
+    padding:7px 15px;
+    border-radius:7px;
+    font-size:11px;
+    white-space:nowrap;
+    pointer-events:none;
+    transition:opacity .4s;
 }
 
-.activity-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 10px;
+#controls{
+    height:230px;
+    flex-shrink:0;
+    background:linear-gradient(#111820,#070a0e);
+    border-top:2px solid #33404b;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px;
 }
 
-.ring-area {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px 0 20px;
+#move{
+    width:190px;
+    height:190px;
+    position:relative;
 }
 
-.rings {
-  width: 260px;
-  height: 260px;
-  position: relative;
+.btn{
+    position:absolute;
+    width:58px;
+    height:58px;
+    border-radius:15px;
+    border:2px solid #617181;
+    background:linear-gradient(#344352,#151d25);
+    color:white;
+    font-size:24px;
+    font-weight:bold;
+    box-shadow:
+        inset 0 1px 4px rgba(255,255,255,.12),
+        0 5px 0 #030506;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
-.rings svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+.btn:active{
+    transform:translateY(4px);
+    box-shadow:0 1px 0 #030506;
+    background:#52687b;
 }
 
-.ring-bg {
-  fill: none;
-  stroke: #29292e;
+#up{left:66px;top:0}
+#left{left:0;top:66px}
+#right{right:0;top:66px}
+#down{left:66px;bottom:0}
+
+#actions{
+    width:155px;
+    height:190px;
+    position:relative;
 }
 
-.ring {
-  fill: none;
-  stroke-linecap: round;
-  transition: stroke-dashoffset .8s ease;
+.action{
+    position:absolute;
+    width:78px;
+    height:78px;
+    border-radius:50%;
+    color:white;
+    font-weight:bold;
+    font-size:13px;
 }
 
-.ring-main {
-  stroke: var(--pink);
-  filter: drop-shadow(0 0 7px rgba(255,55,95,.4));
+#fire{
+    right:0;
+    top:14px;
+    border:3px solid #9d463d;
+    background:radial-gradient(circle at 35% 30%,#e25d4f,#731f21 60%,#351012);
+    box-shadow:0 5px 0 #1b0708;
 }
 
-.ring-inner {
-  stroke: var(--green);
-  filter: drop-shadow(0 0 7px rgba(48,209,88,.35));
+#reload{
+    left:0;
+    bottom:8px;
+    border:3px solid #397193;
+    background:radial-gradient(circle at 35% 30%,#3d87ae,#174057 65%,#0a1d2a);
+    box-shadow:0 5px 0 #061018;
 }
 
-.ring-small {
-  stroke: var(--blue);
-  filter: drop-shadow(0 0 7px rgba(100,210,255,.35));
+.action:active{
+    transform:translateY(4px);
 }
 
-.ring-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+#new{
+    position:absolute;
+    bottom:7px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#17212a;
+    border:1px solid #526473;
+    color:white;
+    border-radius:7px;
+    padding:7px 13px;
+    font-size:11px;
+    font-weight:bold;
 }
 
-.big-number {
-  font-size: 48px;
-  font-weight: 800;
-  letter-spacing: -2px;
-  line-height: 1;
+#dead{
+    display:none;
+    position:absolute;
+    inset:0;
+    z-index:20;
+    background:rgba(0,0,0,.88);
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
 }
 
-.center-label {
-  color: var(--muted);
-  margin-top: 7px;
-  font-size: 14px;
+#dead h1{
+    color:#ef554b;
+    letter-spacing:3px;
 }
 
-.goal-text {
-  text-align: center;
-  color: var(--muted);
-  font-size: 14px;
+#dead button{
+    padding:14px 22px;
+    border:none;
+    border-radius:9px;
+    font-weight:bold;
 }
 
-.goal-text strong {
-  color: white;
-}
-
-/* GRID */
-
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 13px;
-  margin-bottom: 15px;
-}
-
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 19px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
-}
-
-.stat-icon {
-  font-size: 21px;
-  margin-bottom: 13px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 750;
-  letter-spacing: -.8px;
-}
-
-.stat-label {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-/* COLORS */
-
-.green {
-  color: var(--green);
-}
-
-.blue {
-  color: var(--blue);
-}
-
-.orange {
-  color: var(--orange);
-}
-
-.purple {
-  color: var(--purple);
-}
-
-/* STREAK */
-
-.streak-card {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-  background:
-    linear-gradient(135deg, rgba(255,159,10,.14), rgba(255,55,95,.06));
-  border: 1px solid rgba(255,159,10,.12);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 15px;
-}
-
-.fire {
-  width: 55px;
-  height: 55px;
-  border-radius: 18px;
-  background: rgba(255,159,10,.13);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 29px;
-}
-
-.streak-number {
-  font-size: 31px;
-  font-weight: 800;
-}
-
-.streak-description {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 3px;
-}
-
-/* HISTORY */
-
-.history-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 21px 18px;
-  margin-bottom: 15px;
-}
-
-.section-title {
-  font-size: 19px;
-  font-weight: 750;
-  margin-bottom: 20px;
-}
-
-.chart {
-  height: 190px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 7px;
-  position: relative;
-}
-
-.chart-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 91px;
-  border-top: 1px dashed rgba(255,255,255,.13);
-}
-
-.chart-label {
-  position: absolute;
-  right: 2px;
-  bottom: 96px;
-  font-size: 10px;
-  color: var(--muted);
-}
-
-.bar-wrap {
-  height: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.bar {
-  width: 100%;
-  max-width: 35px;
-  min-height: 4px;
-  border-radius: 9px 9px 5px 5px;
-  background: linear-gradient(to top, #ff375f, #ff6b86);
-  transition: height .5s ease;
-}
-
-.bar.today {
-  background: linear-gradient(to top, #30d158, #63e681);
-}
-
-.bar-number {
-  font-size: 10px;
-  color: var(--muted);
-  margin-bottom: 5px;
-  white-space: nowrap;
-}
-
-.day {
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 8px;
-}
-
-/* GOAL */
-
-.goal-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 21px;
-  margin-bottom: 15px;
-}
-
-.goal-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-input {
-  flex: 1;
-  min-width: 0;
-  background: #29292e;
-  color: white;
-  border: 0;
-  outline: none;
-  border-radius: 15px;
-  padding: 14px;
-  font-size: 17px;
-}
-
-button {
-  border: 0;
-  border-radius: 16px;
-  padding: 14px 17px;
-  font-size: 16px;
-  font-weight: 700;
-  color: white;
-  cursor: pointer;
-}
-
-button:active {
-  transform: scale(.97);
-}
-
-.save-btn {
-  background: #303036;
-}
-
-/* MAIN BUTTONS */
-
-.buttons {
-  display: grid;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-.start-btn {
-  background: linear-gradient(135deg, #ff375f, #bf5af2);
-  min-height: 56px;
-  font-size: 17px;
-  box-shadow: 0 10px 25px rgba(191,90,242,.18);
-}
-
-.pause-btn {
-  background: #29292e;
-}
-
-.share-btn {
-  background: #202024;
-}
-
-.reset-btn {
-  background: transparent;
-  color: #ff453a;
-  border: 1px solid rgba(255,69,58,.25);
-}
-
-/* INFO */
-
-.info {
-  text-align: center;
-  color: #77777f;
-  font-size: 11px;
-  line-height: 1.5;
-  margin-top: 18px;
-}
-
-/* MOBILE */
-
-@media (max-width: 380px) {
-  .rings {
-    width: 225px;
-    height: 225px;
-  }
-
-  .big-number {
-    font-size: 41px;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-
-  .card {
-    padding: 16px;
-  }
+@media(max-width:390px){
+    #controls{height:210px}
+    #move{transform:scale(.9)}
+    #actions{transform:scale(.9)}
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div id="game">
 
-  <header class="header">
-    <div>
-      <small>Deine Aktivität</small>
-      <h1>Heute</h1>
-    </div>
-    <div class="status" id="status"></div>
-  </header>
-
-  <!-- AKTIVITÄT -->
-  <section class="activity-card">
-
-    <div class="activity-title">Aktivität</div>
-
-    <div class="ring-area">
-
-      <div class="rings">
-
-        <svg viewBox="0 0 260 260">
-
-          <!-- Äußerer Ring -->
-          <circle
-            class="ring-bg"
-            cx="130"
-            cy="130"
-            r="112"
-            stroke-width="15"
-          />
-
-          <circle
-            id="mainRing"
-            class="ring ring-main"
-            cx="130"
-            cy="130"
-            r="112"
-            stroke-width="15"
-          />
-
-          <!-- Mittlerer Ring -->
-          <circle
-            class="ring-bg"
-            cx="130"
-            cy="130"
-            r="88"
-            stroke-width="14"
-          />
-
-          <circle
-            id="streakRing"
-            class="ring ring-inner"
-            cx="130"
-            cy="130"
-            r="88"
-            stroke-width="14"
-          />
-
-          <!-- Innerer Ring -->
-          <circle
-            class="ring-bg"
-            cx="130"
-            cy="130"
-            r="65"
-            stroke-width="12"
-          />
-
-          <circle
-            id="timeRing"
-            class="ring ring-small"
-            cx="130"
-            cy="130"
-            r="65"
-            stroke-width="12"
-          />
-
-        </svg>
-
-        <div class="ring-center">
-          <div class="big-number" id="steps">0</div>
-          <div class="center-label">Schritte</div>
-        </div>
-
-      </div>
-
+<div id="hud">
+    <div class="stat">
+        <div class="label">LEBEN</div>
+        <div class="value" id="health">100</div>
     </div>
 
-    <div class="goal-text">
-      <strong id="goalText">0 %</strong> deines Tagesziels
+    <div class="stat">
+        <div class="label">MUNITION</div>
+        <div class="value" id="ammo">12</div>
     </div>
 
-  </section>
-
-
-  <!-- STATS -->
-
-  <section class="stats">
-
-    <div class="card">
-      <div class="stat-icon green">↔</div>
-      <div class="stat-value" id="distance">0,00</div>
-      <div class="stat-label">Kilometer</div>
+    <div class="stat">
+        <div class="label">SEKTOR</div>
+        <div class="value" id="sector">1</div>
     </div>
 
-    <div class="card">
-      <div class="stat-icon orange">🔥</div>
-      <div class="stat-value" id="calories">0</div>
-      <div class="stat-label">Kalorien ca.</div>
+    <div class="stat">
+        <div class="label">GEGNER</div>
+        <div class="value" id="enemies">0</div>
+    </div>
+</div>
+
+<div id="screen">
+    <canvas id="canvas"></canvas>
+    <div id="message">SCHIFFSSYSTEM ONLINE</div>
+
+    <div id="dead">
+        <h1>MISSION GESCHEITERT</h1>
+        <p id="deadText"></p>
+        <button onclick="newGame()">NEUE MISSION</button>
+    </div>
+</div>
+
+<div id="controls">
+
+    <div id="move">
+        <button class="btn" id="up">▲</button>
+        <button class="btn" id="left">◀</button>
+        <button class="btn" id="right">▶</button>
+        <button class="btn" id="down">▼</button>
     </div>
 
-    <div class="card">
-      <div class="stat-icon blue">◷</div>
-      <div class="stat-value" id="walkingTime">0 min</div>
-      <div class="stat-label">Gehzeit</div>
+    <div id="actions">
+        <button class="action" id="fire">FEUER</button>
+        <button class="action" id="reload">LADEN</button>
     </div>
-
-    <div class="card">
-      <div class="stat-icon purple">⚡</div>
-      <div class="stat-value" id="stepsMinute">0</div>
-      <div class="stat-label">Schritte / Minute</div>
-    </div>
-
-  </section>
-
-
-  <!-- STREAK -->
-
-  <section class="streak-card">
-
-    <div class="fire">🔥</div>
-
-    <div>
-      <div class="streak-number">
-        <span id="streak">0</span> Tage
-      </div>
-
-      <div class="streak-description">
-        Serie mit mindestens 5.000 Schritten pro Tag
-      </div>
-    </div>
-
-  </section>
-
-
-  <!-- HISTORY -->
-
-  <section class="history-card">
-
-    <div class="section-title">Letzte 7 Tage</div>
-
-    <div class="chart">
-
-      <div class="chart-line"></div>
-      <div class="chart-label">5.000</div>
-
-      <div id="chartBars" style="
-        display:flex;
-        width:100%;
-        height:100%;
-        gap:7px;
-      "></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- GOAL -->
-
-  <section class="goal-card">
-
-    <div class="section-title">Tagesziel</div>
-
-    <div style="color:var(--muted);font-size:13px;">
-      Dein persönliches Schrittziel
-    </div>
-
-    <div class="goal-row">
-
-      <input
-        id="goalInput"
-        type="number"
-        min="100"
-        max="100000"
-        step="100"
-        value="10000"
-      >
-
-      <button class="save-btn" onclick="saveGoal()">
-        Speichern
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- BUTTONS -->
-
-  <div class="buttons">
-
-    <button class="start-btn" onclick="startSensor()">
-      ▶ Sensor starten
-    </button>
-
-    <button class="pause-btn" onclick="pauseSensor()">
-      ⏸ Pause
-    </button>
-
-    <button class="share-btn" onclick="shareResult()">
-      ↑ Ergebnis teilen
-    </button>
-
-    <button class="reset-btn" onclick="resetToday()">
-      Heute zurücksetzen
-    </button>
-
-  </div>
-
-  <div class="info">
-    Der Schrittzähler verwendet den Bewegungssensor deines Smartphones.
-    Für die genaueste Messung das iPhone beim Gehen in der Hand halten.
-  </div>
 
 </div>
 
+<button id="new">NEUES SCHIFF</button>
+
+</div>
 
 <script>
 
-const STEP_LENGTH = 0.72;
-const WEIGHT_KG = 60;
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-const STREAK_GOAL = 5000;
-const MAX_DAYS = 7;
+let map=[];
+let mapSize;
+let player;
+let enemyList=[];
+let sector=1;
+let gameRunning=true;
 
-const STORAGE_KEY = "schrittzaehler_7tage_v1";
+const TILE=58;
+const VIEW_DISTANCE=7;
+const ENEMY_VISIBILITY=4;
 
-let data = loadData();
+let lastTime=performance.now();
 
-let sensorActive = false;
-let lastStepTime = 0;
+function resize(){
 
-let samples = [];
+    canvas.width=window.innerWidth*devicePixelRatio;
 
-let todaySteps = 0;
-let walkingSeconds = 0;
+    const screen=document.getElementById("screen");
 
-let lastWalkingTime = Date.now();
+    canvas.height=screen.clientHeight*devicePixelRatio;
 
-
-// --------------------------------------------------
-// DATEN
-// --------------------------------------------------
-
-function getDateString(date = new Date()) {
-
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-
-  return `${y}-${m}-${d}`;
+    ctx.setTransform(
+        devicePixelRatio,0,
+        0,devicePixelRatio,
+        0,0
+    );
 }
 
+window.addEventListener("resize",resize);
 
-function loadData() {
+setTimeout(resize,100);
 
-  try {
+function rand(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
 
-    const saved = localStorage.getItem(STORAGE_KEY);
+function createMap(){
 
-    if (saved) {
+    const w=51;
+    const h=51;
 
-      const parsed = JSON.parse(saved);
+    map=[];
 
-      if (!parsed.goal) parsed.goal = 10000;
-      if (!parsed.days) parsed.days = {};
+    for(let y=0;y<h;y++){
 
-      return parsed;
+        map[y]=[];
+
+        for(let x=0;x<w;x++){
+
+            map[y][x]=1;
+
+        }
     }
 
-  } catch(e) {}
+    let x=Math.floor(w/2);
+    let y=Math.floor(h/2);
 
-  return {
-    goal: 10000,
-    days: {}
-  };
+    map[y][x]=0;
+
+    for(let i=0;i<1700;i++){
+
+        const dir=rand(0,3);
+
+        if(dir===0&&y>1)y--;
+        if(dir===1&&y<h-2)y++;
+        if(dir===2&&x>1)x--;
+        if(dir===3&&x<w-2)x++;
+
+        map[y][x]=0;
+
+        if(Math.random()<0.18){
+
+            if(dir===0||dir===1){
+
+                if(x>1)map[y][x-1]=0;
+
+                if(x<w-2)map[y][x+1]=0;
+
+            }else{
+
+                if(y>1)map[y-1][x]=0;
+
+                if(y<h-2)map[y+1][x]=0;
+            }
+        }
+    }
+
+    for(let r=0;r<25;r++){
+
+        const rx=rand(2,w-7);
+        const ry=rand(2,h-7);
+
+        const rw=rand(2,6);
+        const rh=rand(2,6);
+
+        for(let yy=ry;yy<ry+rh;yy++){
+
+            for(let xx=rx;xx<rx+rw;xx++){
+
+                if(xx<w-1&&yy<h-1){
+
+                    map[yy][xx]=0;
+
+                }
+            }
+        }
+    }
+
+    return {w,h};
 }
 
+function newGame(){
 
-function saveData() {
+    sector=1;
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(data)
-  );
+    document.getElementById("dead").style.display="none";
+
+    startSector();
 }
 
+function startSector(){
 
-function ensureToday() {
+    mapSize=createMap();
 
-  const today = getDateString();
-
-  if (!data.days[today]) {
-
-    data.days[today] = {
-      steps: 0,
-      time: 0
+    player={
+        x:Math.floor(mapSize.w/2),
+        y:Math.floor(mapSize.h/2),
+        health:100,
+        ammo:12,
+        direction:0
     };
 
-  }
+    enemyList=[];
 
-  todaySteps = data.days[today].steps || 0;
-  walkingSeconds = data.days[today].time || 0;
-}
+    const amount=9+sector*3;
 
+    for(let i=0;i<amount;i++){
 
-function cleanOldDays() {
+        let x,y;
 
-  const today = new Date();
+        do{
 
-  for (const date in data.days) {
+            x=rand(1,mapSize.w-2);
+            y=rand(1,mapSize.h-2);
 
-    const d = new Date(date + "T00:00:00");
+        }while(
 
-    const difference =
-      Math.floor(
-        (today - d) / 86400000
-      );
+            map[y][x]===1||
 
-    if (difference > 6) {
-      delete data.days[date];
-    }
+            Math.abs(x-player.x)+
+            Math.abs(y-player.y)<9
 
-  }
-
-}
-
-
-// --------------------------------------------------
-// UI
-// --------------------------------------------------
-
-function updateUI() {
-
-  ensureToday();
-
-  const goal = data.goal;
-
-  const progress =
-    Math.min(todaySteps / goal, 1);
-
-  const percentage =
-    Math.round((todaySteps / goal) * 100);
-
-  document.getElementById("steps").textContent =
-    todaySteps.toLocaleString("de-DE");
-
-  document.getElementById("goalText").textContent =
-    percentage + " %";
-
-
-  // Entfernung
-
-  const distance =
-    todaySteps * STEP_LENGTH / 1000;
-
-  document.getElementById("distance").textContent =
-    distance.toFixed(2).replace(".", ",");
-
-
-  // Kalorien grob geschätzt
-
-  const calories =
-    todaySteps * 0.04 * (WEIGHT_KG / 60);
-
-  document.getElementById("calories").textContent =
-    Math.round(calories);
-
-
-  // Gehzeit
-
-  const minutes =
-    Math.floor(walkingSeconds / 60);
-
-  document.getElementById("walkingTime").textContent =
-    minutes + " min";
-
-
-  // Schritte pro Minute
-
-  let spm = 0;
-
-  if (minutes > 0) {
-    spm = Math.round(todaySteps / minutes);
-  }
-
-  document.getElementById("stepsMinute").textContent =
-    spm;
-
-
-  updateRings(progress);
-
-  updateStreak();
-
-  updateChart();
-
-  document.getElementById("goalInput").value =
-    data.goal;
-
-}
-
-
-// --------------------------------------------------
-// RINGE
-// --------------------------------------------------
-
-function setRing(id, percentage, radius) {
-
-  const circle =
-    document.getElementById(id);
-
-  const circumference =
-    2 * Math.PI * radius;
-
-  circle.style.strokeDasharray =
-    circumference;
-
-  circle.style.strokeDashoffset =
-    circumference * (1 - percentage);
-
-}
-
-
-function updateRings(progress) {
-
-  // Hauptziel
-
-  setRing(
-    "mainRing",
-    progress,
-    112
-  );
-
-
-  // Streak-Ring:
-  // zeigt, wie nah du heute an 5000 bist
-
-  const streakProgress =
-    Math.min(todaySteps / STREAK_GOAL, 1);
-
-  setRing(
-    "streakRing",
-    streakProgress,
-    88
-  );
-
-
-  // Innerer Ring:
-  // basiert auf Gehzeit.
-  // 60 Minuten = voller Ring
-
-  const timeProgress =
-    Math.min(walkingSeconds / 3600, 1);
-
-  setRing(
-    "timeRing",
-    timeProgress,
-    65
-  );
-
-}
-
-
-// --------------------------------------------------
-// STREAK
-// --------------------------------------------------
-
-function updateStreak() {
-
-  let streak = 0;
-
-  const date = new Date();
-
-  while (true) {
-
-    const key = getDateString(date);
-
-    const day = data.days[key];
-
-    if (!day || day.steps < STREAK_GOAL) {
-      break;
-    }
-
-    streak++;
-
-    date.setDate(
-      date.getDate() - 1
-    );
-
-  }
-
-  document.getElementById("streak").textContent =
-    streak;
-
-}
-
-
-// --------------------------------------------------
-// 7 TAGE CHART
-// --------------------------------------------------
-
-function updateChart() {
-
-  const container =
-    document.getElementById("chartBars");
-
-  container.innerHTML = "";
-
-  const days = [];
-
-  for (let i = 6; i >= 0; i--) {
-
-    const date = new Date();
-
-    date.setDate(
-      date.getDate() - i
-    );
-
-    const key =
-      getDateString(date);
-
-    const day =
-      data.days[key] || { steps: 0 };
-
-    days.push({
-      date,
-      steps: day.steps || 0
-    });
-
-  }
-
-
-  const maxSteps =
-    Math.max(
-      10000,
-      ...days.map(d => d.steps)
-    );
-
-
-  days.forEach((item, index) => {
-
-    const wrap =
-      document.createElement("div");
-
-    wrap.className = "bar-wrap";
-
-
-    const number =
-      document.createElement("div");
-
-    number.className = "bar-number";
-
-    number.textContent =
-      item.steps >= 1000
-        ? (item.steps / 1000).toFixed(1).replace(".", ",") + "k"
-        : item.steps;
-
-
-    const bar =
-      document.createElement("div");
-
-    bar.className =
-      "bar" + (index === 6 ? " today" : "");
-
-
-    let height =
-      (item.steps / maxSteps) * 145;
-
-    height =
-      Math.max(4, height);
-
-
-    bar.style.height =
-      height + "px";
-
-
-    const day =
-      document.createElement("div");
-
-    day.className = "day";
-
-    day.textContent =
-      item.date.toLocaleDateString(
-        "de-DE",
-        { weekday: "short" }
-      ).replace(".", "");
-
-
-    wrap.appendChild(number);
-    wrap.appendChild(bar);
-    wrap.appendChild(day);
-
-    container.appendChild(wrap);
-
-  });
-
-}
-
-
-// --------------------------------------------------
-// SENSOR
-// --------------------------------------------------
-
-async function startSensor() {
-
-  if (
-    typeof DeviceMotionEvent !== "undefined" &&
-    typeof DeviceMotionEvent.requestPermission === "function"
-  ) {
-
-    try {
-
-      const permission =
-        await DeviceMotionEvent.requestPermission();
-
-      if (permission !== "granted") {
-
-        alert(
-          "Bitte erlaube den Bewegungssensor in den Einstellungen bzw. im Browser."
         );
 
+        enemyList.push({
+
+            x:x,
+            y:y,
+            health:2,
+            moveTimer:rand(400,1000),
+            attackTimer:0
+
+        });
+    }
+
+    gameRunning=true;
+
+    updateHUD();
+
+    showMessage("NEUER SCHIFFSBEREICH ERKANNT");
+}
+
+function isFree(x,y){
+
+    if(
+        x<0||
+        y<0||
+        x>=mapSize.w||
+        y>=mapSize.h
+    )return false;
+
+    return map[y][x]===0;
+}
+
+function movePlayer(dx,dy){
+
+    if(!gameRunning)return;
+
+    const nx=player.x+dx;
+    const ny=player.y+dy;
+
+    if(isFree(nx,ny)){
+
+        player.x=nx;
+        player.y=ny;
+
+        if(dy===-1)player.direction=0;
+        if(dx===1)player.direction=1;
+        if(dy===1)player.direction=2;
+        if(dx===-1)player.direction=3;
+
+    }else{
+
+        showMessage("METALLWAND");
+
+    }
+}
+
+function reload(){
+
+    if(!gameRunning)return;
+
+    if(player.ammo>=12){
+
+        showMessage("MAGAZIN IST VOLL");
+
         return;
-      }
-
-    } catch(error) {
-
-      alert(
-        "Der Bewegungssensor konnte nicht aktiviert werden."
-      );
-
-      return;
     }
 
-  }
+    player.ammo=12;
 
+    showMessage("NACHGELADEN");
 
-  window.addEventListener(
-    "devicemotion",
-    handleMotion,
-    true
-  );
-
-  sensorActive = true;
-
-  document
-    .getElementById("status")
-    .classList.add("active");
-
+    updateHUD();
 }
 
+function fire(){
 
-function pauseSensor() {
+    if(!gameRunning)return;
 
-  window.removeEventListener(
-    "devicemotion",
-    handleMotion,
-    true
-  );
+    if(player.ammo<=0){
 
-  sensorActive = false;
+        showMessage("KEINE MUNITION");
 
-  document
-    .getElementById("status")
-    .classList.remove("active");
+        return;
+    }
 
-  saveData();
+    player.ammo--;
 
-}
+    let dx=0;
+    let dy=0;
 
+    if(player.direction===0)dy=-1;
+    if(player.direction===1)dx=1;
+    if(player.direction===2)dy=1;
+    if(player.direction===3)dx=-1;
 
-// --------------------------------------------------
-// SCHRITTERKENNUNG
-// --------------------------------------------------
+    let bx=player.x;
+    let by=player.y;
 
-function handleMotion(event) {
+    let hit=false;
 
-  if (!sensorActive) return;
+    for(let i=0;i<8;i++){
 
-  const acc =
-    event.accelerationIncludingGravity;
+        bx+=dx;
+        by+=dy;
 
-  if (!acc) return;
+        if(!isFree(bx,by))break;
 
+        for(let e=enemyList.length-1;e>=0;e--){
 
-  const x = acc.x || 0;
-  const y = acc.y || 0;
-  const z = acc.z || 0;
+            if(
+                enemyList[e].x===bx&&
+                enemyList[e].y===by
+            ){
 
+                enemyList[e].health--;
 
-  const magnitude =
-    Math.sqrt(
-      x*x + y*y + z*z
-    );
+                hit=true;
 
+                if(enemyList[e].health<=0){
 
-  const now =
-    Date.now();
+                    enemyList.splice(e,1);
 
+                    showMessage("ZIEL AUSGESCHALTET");
 
-  samples.push({
-    time: now,
-    value: magnitude
-  });
+                }else{
 
+                    showMessage("TREFFER");
 
-  // Nur die letzten 900 ms behalten
+                }
 
-  samples =
-    samples.filter(
-      s => now - s.time < 900
-    );
+                break;
+            }
+        }
 
+        if(hit)break;
+    }
 
-  if (samples.length < 8) {
-    return;
-  }
+    if(!hit){
 
-
-  const values =
-    samples.map(
-      s => s.value
-    );
-
-
-  const average =
-    values.reduce(
-      (a,b) => a+b,
-      0
-    ) / values.length;
-
-
-  const variance =
-    values.reduce(
-      (sum,v) =>
-        sum + Math.pow(v-average,2),
-      0
-    ) / values.length;
-
-
-  const deviation =
-    Math.sqrt(variance);
-
-
-  const threshold =
-    average +
-    Math.max(
-      0.75,
-      deviation * 1.15
-    );
-
-
-  const latest =
-    values[values.length - 1];
-
-
-  const previous =
-    values[values.length - 2];
-
-
-  const before =
-    values[values.length - 3];
-
-
-  const isPeak =
-    latest > previous &&
-    previous >= before &&
-    latest > threshold;
-
-
-  const enoughTime =
-    now - lastStepTime > 280;
-
-
-  if (isPeak && enoughTime) {
-
-    registerStep();
-
-  }
-
-}
-
-
-// --------------------------------------------------
-// SCHRITT SPEICHERN
-// --------------------------------------------------
-
-function registerStep() {
-
-  const now =
-    Date.now();
-
-
-  // Zeit seit letztem Schritt
-
-  if (lastStepTime > 0) {
-
-    const difference =
-      (now - lastStepTime) / 1000;
-
-    // Nur sinnvolle Gehintervalle zählen
-
-    if (
-      difference > 0.25 &&
-      difference < 3
-    ) {
-
-      walkingSeconds +=
-        difference;
+        showMessage("SCHUSS INS DUNKLE");
 
     }
 
-  }
-
-
-  lastStepTime = now;
-
-  todaySteps++;
-
-
-  const today =
-    getDateString();
-
-
-  data.days[today] = {
-
-    steps: todaySteps,
-
-    time: walkingSeconds
-
-  };
-
-
-  saveData();
-
-  updateUI();
-
+    updateHUD();
 }
 
+function canSeeEnemy(enemy){
 
-// --------------------------------------------------
-// ZIEL
-// --------------------------------------------------
+    const dx=enemy.x-player.x;
+    const dy=enemy.y-player.y;
 
-function saveGoal() {
+    const distance=Math.sqrt(dx*dx+dy*dy);
 
-  let goal =
-    parseInt(
-      document.getElementById("goalInput").value
+    if(distance>ENEMY_VISIBILITY)return false;
+
+    return hasLineOfSight(
+        player.x,
+        player.y,
+        enemy.x,
+        enemy.y
+    );
+}
+
+function hasLineOfSight(x0,y0,x1,y1){
+
+    let dx=Math.abs(x1-x0);
+    let dy=Math.abs(y1-y0);
+
+    let sx=x0<x1?1:-1;
+    let sy=y0<y1?1:-1;
+
+    let err=dx-dy;
+
+    while(true){
+
+        if(x0===x1&&y0===y1)return true;
+
+        if(!(x0===player.x&&y0===player.y)){
+
+            if(!isFree(x0,y0))return false;
+
+        }
+
+        let e2=2*err;
+
+        if(e2>-dy){
+
+            err-=dy;
+            x0+=sx;
+
+        }
+
+        if(e2<dx){
+
+            err+=dx;
+            y0+=sy;
+
+        }
+    }
+}
+
+function updateEnemies(dt){
+
+    for(const enemy of enemyList){
+
+        enemy.moveTimer-=dt;
+        enemy.attackTimer-=dt;
+
+        const distance=
+            Math.abs(enemy.x-player.x)+
+            Math.abs(enemy.y-player.y);
+
+        if(distance<=1){
+
+            if(enemy.attackTimer<=0){
+
+                player.health-=7;
+
+                enemy.attackTimer=850;
+
+                showMessage("ETWAS IST GANZ NAH!");
+
+                if(player.health<=0){
+
+                    player.health=0;
+
+                    gameOver();
+
+                }
+            }
+
+            continue;
+        }
+
+        if(enemy.moveTimer<=0){
+
+            enemy.moveTimer=rand(400,900);
+
+            let dx=0;
+            let dy=0;
+
+            if(distance<10){
+
+                if(
+                    Math.abs(player.x-enemy.x)>
+                    Math.abs(player.y-enemy.y)
+                ){
+
+                    dx=Math.sign(
+                        player.x-enemy.x
+                    );
+
+                }else{
+
+                    dy=Math.sign(
+                        player.y-enemy.y
+                    );
+                }
+
+            }else{
+
+                const d=rand(0,3);
+
+                if(d===0)dy=-1;
+                if(d===1)dy=1;
+                if(d===2)dx=-1;
+                if(d===3)dx=1;
+            }
+
+            const nx=enemy.x+dx;
+            const ny=enemy.y+dy;
+
+            const occupied=enemyList.some(e=>
+                e!==enemy&&
+                e.x===nx&&
+                e.y===ny
+            );
+
+            if(
+                isFree(nx,ny)&&
+                !occupied&&
+                !(nx===player.x&&ny===player.y)
+            ){
+
+                enemy.x=nx;
+                enemy.y=ny;
+
+            }
+        }
+    }
+
+    if(enemyList.length===0&&gameRunning){
+
+        sector++;
+
+        showMessage("SEKTOR GESÄUBERT");
+
+        setTimeout(()=>{
+
+            if(gameRunning){
+
+                startSector();
+
+            }
+
+        },1200);
+    }
+
+    updateHUD();
+}
+
+function gameOver(){
+
+    gameRunning=false;
+
+    document.getElementById("deadText").textContent=
+        "Du hast Sektor "+sector+" erreicht.";
+
+    document.getElementById("dead").style.display="flex";
+}
+
+function updateHUD(){
+
+    document.getElementById("health").textContent=
+        Math.max(0,player.health);
+
+    document.getElementById("ammo").textContent=
+        player.ammo;
+
+    document.getElementById("sector").textContent=
+        sector;
+
+    document.getElementById("enemies").textContent=
+        enemyList.length;
+}
+
+let messageTimeout;
+
+function showMessage(text){
+
+    const m=document.getElementById("message");
+
+    m.textContent=text;
+
+    m.style.opacity="1";
+
+    clearTimeout(messageTimeout);
+
+    messageTimeout=setTimeout(()=>{
+
+        m.style.opacity=".25";
+
+    },1500);
+}
+
+function tileVisible(mx,my){
+
+    const dx=mx-player.x;
+    const dy=my-player.y;
+
+    const distance=Math.sqrt(dx*dx+dy*dy);
+
+    if(distance>VIEW_DISTANCE)return false;
+
+    return hasLineOfSight(
+        player.x,
+        player.y,
+        mx,
+        my
+    );
+}
+
+function drawFloor(px,py,mx,my){
+
+    ctx.fillStyle="#30363a";
+
+    ctx.fillRect(px,py,TILE,TILE);
+
+    const plate=TILE/2;
+
+    for(let yy=0;yy<2;yy++){
+
+        for(let xx=0;xx<2;xx++){
+
+            const bx=px+xx*plate;
+            const by=py+yy*plate;
+
+            const variation=
+                ((mx*13+my*7+xx*3+yy*5)%3);
+
+            ctx.fillStyle=
+                variation===0?"#353c40":
+                variation===1?"#2b3237":
+                "#3b4245";
+
+            ctx.fillRect(
+                bx+1,
+                by+1,
+                plate-2,
+                plate-2
+            );
+
+            ctx.strokeStyle="rgba(5,8,10,.7)";
+            ctx.lineWidth=1;
+
+            ctx.strokeRect(
+                bx+1,
+                by+1,
+                plate-2,
+                plate-2
+            );
+
+            ctx.fillStyle="#111719";
+
+            ctx.beginPath();
+            ctx.arc(
+                bx+5,
+                by+5,
+                1.5,
+                0,
+                Math.PI*2
+            );
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(
+                bx+plate-5,
+                by+5,
+                1.5,
+                0,
+                Math.PI*2
+            );
+            ctx.fill();
+        }
+    }
+
+    if((mx+my)%4===0){
+
+        ctx.fillStyle=
+            "rgba(95,145,165,.12)";
+
+        ctx.fillRect(
+            px+4,
+            py+TILE/2-1,
+            TILE-8,
+            2
+        );
+    }
+}
+
+function drawWall(px,py,mx,my){
+
+    ctx.fillStyle="#11181e";
+
+    ctx.fillRect(px,py,TILE,TILE);
+
+    ctx.fillStyle="#202b33";
+
+    ctx.fillRect(
+        px+2,
+        py+2,
+        TILE-4,
+        TILE-4
     );
 
+    ctx.strokeStyle="#43515a";
 
-  if (!goal || goal < 100) {
-    goal = 10000;
-  }
+    ctx.lineWidth=2;
 
-
-  if (goal > 100000) {
-    goal = 100000;
-  }
-
-
-  data.goal = goal;
-
-  saveData();
-
-  updateUI();
-
-}
-
-
-// --------------------------------------------------
-// RESET
-// --------------------------------------------------
-
-function resetToday() {
-
-  const confirmReset =
-    confirm(
-      "Möchtest du die heutigen Schritte wirklich zurücksetzen?"
+    ctx.strokeRect(
+        px+4,
+        py+4,
+        TILE-8,
+        TILE-8
     );
 
+    ctx.fillStyle="#10161b";
 
-  if (!confirmReset) return;
+    ctx.fillRect(
+        px+8,
+        py+8,
+        TILE-16,
+        TILE-16
+    );
 
+    if((mx+my)%3===0){
 
-  const today =
-    getDateString();
+        ctx.fillStyle="#3c4b53";
 
+        ctx.fillRect(
+            px+TILE/2-2,
+            py+4,
+            4,
+            TILE-8
+        );
+    }
 
-  data.days[today] = {
-    steps: 0,
-    time: 0
-  };
+    if((mx*3+my)%7===0){
 
+        ctx.fillStyle="#7a382c";
 
-  todaySteps = 0;
-  walkingSeconds = 0;
-
-  lastStepTime = 0;
-
-  saveData();
-
-  updateUI();
-
+        ctx.fillRect(
+            px+6,
+            py+6,
+            TILE-12,
+            3
+        );
+    }
 }
 
+function draw(){
 
-// --------------------------------------------------
-// TEILEN
-// --------------------------------------------------
+    const cw=canvas.clientWidth;
+    const ch=canvas.clientHeight;
 
-async function shareResult() {
+    ctx.fillStyle="#010203";
 
-  ensureToday();
+    ctx.fillRect(0,0,cw,ch);
 
-  const distance =
-    todaySteps * STEP_LENGTH / 1000;
+    const tilesX=Math.ceil(cw/TILE)+4;
+    const tilesY=Math.ceil(ch/TILE)+4;
 
+    const offsetX=
+        Math.floor(player.x-tilesX/2);
 
-  const text =
-`🚶 Meine Aktivität heute
+    const offsetY=
+        Math.floor(player.y-tilesY/2);
 
-👣 ${todaySteps.toLocaleString("de-DE")} Schritte
-📏 ${distance.toFixed(2).replace(".", ",")} km
-🔥 ca. ${Math.round(todaySteps * 0.04)} Kalorien
-⏱️ ${Math.floor(walkingSeconds / 60)} Minuten Gehzeit
-🔥 ${document.getElementById("streak").textContent} Tage Streak`;
+    for(let sy=0;sy<tilesY;sy++){
 
+        for(let sx=0;sx<tilesX;sx++){
 
-  if (
-    navigator.share
-  ) {
+            const mx=offsetX+sx;
+            const my=offsetY+sy;
 
-    try {
+            const px=sx*TILE;
+            const py=sy*TILE;
 
-      await navigator.share({
-        title: "Meine Aktivität",
-        text: text
-      });
+            if(
+                mx<0||
+                my<0||
+                mx>=mapSize.w||
+                my>=mapSize.h
+            ){
 
-      return;
+                continue;
+            }
 
-    } catch(e) {
+            const visible=
+                tileVisible(mx,my);
 
-      // Benutzer hat Teilen abgebrochen
+            if(map[my][mx]===0){
+
+                drawFloor(px,py,mx,my);
+
+            }else{
+
+                drawWall(px,py,mx,my);
+
+            }
+
+            if(!visible){
+
+                const dx=mx-player.x;
+                const dy=my-player.y;
+
+                const distance=
+                    Math.sqrt(dx*dx+dy*dy);
+
+                let darkness=.75;
+
+                if(distance>VIEW_DISTANCE){
+
+                    darkness=.96;
+
+                }
+
+                ctx.fillStyle=
+                    "rgba(0,0,0,"+darkness+")";
+
+                ctx.fillRect(
+                    px,
+                    py,
+                    TILE,
+                    TILE
+                );
+            }
+        }
+    }
+
+    for(const enemy of enemyList){
+
+        if(!canSeeEnemy(enemy))continue;
+
+        const sx=
+            (enemy.x-offsetX)*TILE;
+
+        const sy=
+            (enemy.y-offsetY)*TILE;
+
+        const dx=enemy.x-player.x;
+        const dy=enemy.y-player.y;
+
+        const distance=Math.sqrt(
+            dx*dx+dy*dy
+        );
+
+        const alpha=Math.max(
+            .25,
+            1-distance/ENEMY_VISIBILITY
+        );
+
+        ctx.save();
+
+        ctx.globalAlpha=
+            Math.min(1,alpha*2.3);
+
+        ctx.shadowBlur=18;
+        ctx.shadowColor="#a82424";
+
+        ctx.fillStyle="#7d252b";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            sx+TILE/2,
+            sy+TILE/2,
+            TILE*.30,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        ctx.fillStyle="#e65b43";
+
+        ctx.fillRect(
+            sx+TILE*.30,
+            sy+TILE*.34,
+            TILE*.12,
+            TILE*.09
+        );
+
+        ctx.fillRect(
+            sx+TILE*.58,
+            sy+TILE*.34,
+            TILE*.12,
+            TILE*.09
+        );
+
+        ctx.restore();
+    }
+
+    const psx=
+        (player.x-offsetX)*TILE;
+
+    const psy=
+        (player.y-offsetY)*TILE;
+
+    ctx.save();
+
+    ctx.shadowBlur=25;
+    ctx.shadowColor="#2187c8";
+
+    ctx.fillStyle="#1d6fa8";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        psx+TILE/2,
+        psy+TILE/2,
+        TILE*.36,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle="#8ecfff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        psx+TILE/2,
+        psy+TILE/2,
+        TILE*.16,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    let gx=psx+TILE/2;
+    let gy=psy+TILE/2;
+
+    if(player.direction===0)gy-=TILE*.32;
+    if(player.direction===1)gx+=TILE*.32;
+    if(player.direction===2)gy+=TILE*.32;
+    if(player.direction===3)gx-=TILE*.32;
+
+    ctx.fillStyle="#e4f7ff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        gx,
+        gy,
+        TILE*.09,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+    const gradient=ctx.createRadialGradient(
+        cw/2,
+        ch/2,
+        Math.min(cw,ch)*.15,
+        cw/2,
+        ch/2,
+        Math.max(cw,ch)*.72
+    );
+
+    gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,.45)"
+    );
+
+    ctx.fillStyle=gradient;
+
+    ctx.fillRect(0,0,cw,ch);
+
+    requestAnimationFrame(draw);
+}
+
+function loop(now){
+
+    const dt=Math.min(
+        60,
+        now-lastTime
+    );
+
+    lastTime=now;
+
+    if(gameRunning){
+
+        updateEnemies(dt);
 
     }
 
-  }
+    requestAnimationFrame(loop);
+}
 
+function bind(id,fn){
 
-  try {
+    const el=document.getElementById(id);
 
-    await navigator.clipboard.writeText(text);
+    el.addEventListener(
+        "pointerdown",
+        e=>{
 
-    alert(
-      "Ergebnis wurde in die Zwischenablage kopiert."
+            e.preventDefault();
+
+            fn();
+
+        }
     );
-
-  } catch(e) {
-
-    alert(text);
-
-  }
-
 }
 
+bind("up",()=>movePlayer(0,-1));
+bind("down",()=>movePlayer(0,1));
+bind("left",()=>movePlayer(-1,0));
+bind("right",()=>movePlayer(1,0));
 
-// --------------------------------------------------
-// MITTERNACHT / DATEN AKTUALISIEREN
-// --------------------------------------------------
+bind("fire",fire);
+bind("reload",reload);
 
-function checkNewDay() {
-
-  const today =
-    getDateString();
-
-  const storedToday =
-    data.days[today];
-
-
-  if (!storedToday) {
-
-    ensureToday();
-
-    saveData();
-
-    updateUI();
-
-  }
-
-}
-
-
-setInterval(
-  checkNewDay,
-  30000
+document
+.getElementById("new")
+.addEventListener(
+    "click",
+    ()=>newGame()
 );
 
+window.addEventListener(
+    "keydown",
+    e=>{
 
-// --------------------------------------------------
-// START
-// --------------------------------------------------
+        if(
+            e.key==="ArrowUp"||
+            e.key==="w"
+        )movePlayer(0,-1);
 
-cleanOldDays();
+        if(
+            e.key==="ArrowDown"||
+            e.key==="s"
+        )movePlayer(0,1);
 
-ensureToday();
+        if(
+            e.key==="ArrowLeft"||
+            e.key==="a"
+        )movePlayer(-1,0);
 
-saveData();
+        if(
+            e.key==="ArrowRight"||
+            e.key==="d"
+        )movePlayer(1,0);
 
-updateUI();
+        if(e.key===" ")fire();
+
+        if(e.key==="r")reload();
+
+    }
+);
+
+newGame();
+
+setTimeout(resize,100);
+
+draw();
+
+requestAnimationFrame(loop);
 
 </script>
 
