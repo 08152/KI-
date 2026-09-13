@@ -1,1266 +1,266 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>VOID HULK</title>
-
-<style>
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-    user-select:none;
-}
-
-body{
-    margin:0;
-    background:#030508;
-    color:white;
-    font-family:Arial,Helvetica,sans-serif;
-    overflow:hidden;
-}
-
-#game{
-    position:fixed;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-}
-
-#hud{
-    height:62px;
-    flex-shrink:0;
-    display:flex;
-    justify-content:space-around;
-    align-items:center;
-    background:linear-gradient(#18212a,#090d12);
-    border-bottom:2px solid #3b4854;
-}
-
-.stat{
-    text-align:center;
-    min-width:60px;
-}
-
-.label{
-    color:#7e919f;
-    font-size:10px;
-    letter-spacing:1px;
-}
-
-.value{
-    font-size:18px;
-    font-weight:bold;
-    margin-top:3px;
-}
-
-#screen{
-    flex:1;
-    min-height:0;
-    position:relative;
-    overflow:hidden;
-    background:#020304;
-}
-
-canvas{
-    width:100%;
-    height:100%;
-    display:block;
-    touch-action:none;
-}
-
-#message{
-    position:absolute;
-    top:10px;
-    left:50%;
-    transform:translateX(-50%);
-    background:rgba(5,8,12,.88);
-    border:1px solid #516575;
-    box-shadow:0 0 15px rgba(90,150,190,.15);
-    padding:7px 15px;
-    border-radius:7px;
-    font-size:11px;
-    white-space:nowrap;
-    pointer-events:none;
-    transition:opacity .4s;
-}
-
-#controls{
-    height:230px;
-    flex-shrink:0;
-    background:linear-gradient(#111820,#070a0e);
-    border-top:2px solid #33404b;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px;
-}
-
-#move{
-    width:190px;
-    height:190px;
-    position:relative;
-}
-
-.btn{
-    position:absolute;
-    width:58px;
-    height:58px;
-    border-radius:15px;
-    border:2px solid #617181;
-    background:linear-gradient(#344352,#151d25);
-    color:white;
-    font-size:24px;
-    font-weight:bold;
-    box-shadow:
-        inset 0 1px 4px rgba(255,255,255,.12),
-        0 5px 0 #030506;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.btn:active{
-    transform:translateY(4px);
-    box-shadow:0 1px 0 #030506;
-    background:#52687b;
-}
-
-#up{left:66px;top:0}
-#left{left:0;top:66px}
-#right{right:0;top:66px}
-#down{left:66px;bottom:0}
-
-#actions{
-    width:155px;
-    height:190px;
-    position:relative;
-}
-
-.action{
-    position:absolute;
-    width:78px;
-    height:78px;
-    border-radius:50%;
-    color:white;
-    font-weight:bold;
-    font-size:13px;
-}
-
-#fire{
-    right:0;
-    top:14px;
-    border:3px solid #9d463d;
-    background:radial-gradient(circle at 35% 30%,#e25d4f,#731f21 60%,#351012);
-    box-shadow:0 5px 0 #1b0708;
-}
-
-#reload{
-    left:0;
-    bottom:8px;
-    border:3px solid #397193;
-    background:radial-gradient(circle at 35% 30%,#3d87ae,#174057 65%,#0a1d2a);
-    box-shadow:0 5px 0 #061018;
-}
-
-.action:active{
-    transform:translateY(4px);
-}
-
-#new{
-    position:absolute;
-    bottom:7px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#17212a;
-    border:1px solid #526473;
-    color:white;
-    border-radius:7px;
-    padding:7px 13px;
-    font-size:11px;
-    font-weight:bold;
-}
-
-#dead{
-    display:none;
-    position:absolute;
-    inset:0;
-    z-index:20;
-    background:rgba(0,0,0,.88);
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-}
-
-#dead h1{
-    color:#ef554b;
-    letter-spacing:3px;
-}
-
-#dead button{
-    padding:14px 22px;
-    border:none;
-    border-radius:9px;
-    font-weight:bold;
-}
-
-@media(max-width:390px){
-    #controls{height:210px}
-    #move{transform:scale(.9)}
-    #actions{transform:scale(.9)}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D MakerLab Blaster-Konstrukteur</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* UI-Overlay über der 3D-Szene */
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 320px;
+            pointer-events: auto;
+            z-index: 10;
+        }
+        h1 { margin: 0 0 10px 0; font-size: 20px; color: #2c3e50; }
+        p { font-size: 14px; margin: 0 0 15px 0; color: #555; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-load { background: #3498db; color: white; }
+        .btn-load:hover { background: #2980b9; }
+        .btn-fire { background: #e74c3c; color: white; }
+        .btn-fire:hover { background: #c0392b; }
+        .btn-fire:disabled { background: #bdc3c7; cursor: not-allowed; }
+        
+        /* GitHub Link Panel */
+        .github-panel {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+        .github-link {
+            display: inline-block;
+            background: #24292e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .github-link:hover { background: #444; }
+    </style>
+    <!-- Three.js via CDN laden -->
+    <script src="https://cloudflare.com"></script>
 </head>
-
 <body>
 
-<div id="game">
-
-<div id="hud">
-    <div class="stat">
-        <div class="label">LEBEN</div>
-        <div class="value" id="health">100</div>
+<div id="ui-container">
+    <h1>🛠️ 3D MakerLab Blaster</h1>
+    <p>Bewege die Maus mit gedrückter Taste, um die Kamera um das 3D-Modell zu drehen.</p>
+    
+    <button class="btn btn-load" id="loadBtn" onclick="loadBlaster()">1. Feder spannen</button>
+    <button class="btn btn-fire" id="fireBtn" onclick="fireBlaster()" disabled>2. Dart abfeuern!</button>
+    
+    <div class="github-panel">
+        <p style="margin-bottom:8px; font-size:12px;">Echte Baupläne & Codes findest du hier:</p>
+        <!-- Link direkt zu Open-Source-Projekten auf GitHub -->
+        <a href="https://github.com" target="_blank" class="github-link">
+            🔍 Auf GitHub ansehen
+        </a>
     </div>
-
-    <div class="stat">
-        <div class="label">MUNITION</div>
-        <div class="value" id="ammo">12</div>
-    </div>
-
-    <div class="stat">
-        <div class="label">SEKTOR</div>
-        <div class="value" id="sector">1</div>
-    </div>
-
-    <div class="stat">
-        <div class="label">GEGNER</div>
-        <div class="value" id="enemies">0</div>
-    </div>
-</div>
-
-<div id="screen">
-    <canvas id="canvas"></canvas>
-    <div id="message">SCHIFFSSYSTEM ONLINE</div>
-
-    <div id="dead">
-        <h1>MISSION GESCHEITERT</h1>
-        <p id="deadText"></p>
-        <button onclick="newGame()">NEUE MISSION</button>
-    </div>
-</div>
-
-<div id="controls">
-
-    <div id="move">
-        <button class="btn" id="up">▲</button>
-        <button class="btn" id="left">◀</button>
-        <button class="btn" id="right">▶</button>
-        <button class="btn" id="down">▼</button>
-    </div>
-
-    <div id="actions">
-        <button class="action" id="fire">FEUER</button>
-        <button class="action" id="reload">LADEN</button>
-    </div>
-
-</div>
-
-<button id="new">NEUES SCHIFF</button>
-
 </div>
 
 <script>
+/* DEINE INITIALISIERUNG */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87cfff);
 
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+// Kamera etwas zurücksetzen und anwinkeln für besseren 3D-Blick
+camera.position.set(0, 3, 10); 
+camera.lookAt(0, 0, 0);
 
-let map=[];
-let mapSize;
-let player;
-let enemyList=[];
-let sector=1;
-let gameRunning=true;
+const renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-const TILE=58;
-const VIEW_DISTANCE=7;
-const ENEMY_VISIBILITY=4;
+/* LIGHT */
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
-let lastTime=performance.now();
+const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+sun.position.set(10, 20, 10);
+scene.add(sun);
 
-function resize(){
 
-    canvas.width=window.innerWidth*devicePixelRatio;
+/* 3D-MODELL-ERSTELLUNG (Federdruck-Blaster) */
 
-    const screen=document.getElementById("screen");
+// 1. Das Gehäuse (Halbtransparent, um das Innere zu sehen)
+const bodyGeo = new THREE.BoxGeometry(4, 1.5, 1.2);
+const bodyMat = new THREE.MeshStandardMaterial({ 
+    color: 0xf39c12, 
+    transparent: true, 
+    opacity: 0.7,
+    roughness: 0.3
+});
+const blasterBody = new THREE.Mesh(bodyGeo, bodyMat);
+scene.add(blasterBody);
 
-    canvas.height=screen.clientHeight*devicePixelRatio;
+// 2. Der Griff
+const gripGeo = new THREE.BoxGeometry(0.8, 2, 0.8);
+const gripMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+const grip = new THREE.Mesh(gripGeo, gripMat);
+grip.position.set(-1.2, -1.5, 0);
+grip.rotation.z = -0.2; // Leicht schräg
+scene.add(grip);
 
-    ctx.setTransform(
-        devicePixelRatio,0,
-        0,devicePixelRatio,
-        0,0
-    );
+// 3. Der Lauf (Vorne angebracht)
+const barrelGeo = new THREE.CylinderGeometry(0.4, 0.4, 3, 32);
+const barrelMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7 });
+const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+barrel.rotation.z = Math.PI / 2; // Horizontal drehen
+barrel.position.set(3.5, 0, 0);
+scene.add(barrel);
+
+// 4. Die Feder (Im Inneren des Gehäuses)
+const springGroup = new THREE.Group();
+const numCoils = 10;
+const springRadius = 0.3;
+for(let i = 0; i < numCoils; i++) {
+    const coilGeo = new THREE.TorusGeometry(springRadius, 0.05, 8, 24);
+    const coilMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, metalness: 0.8 });
+    const coil = new THREE.Mesh(coilGeo, coilMat);
+    coil.rotation.y = Math.PI / 2;
+    coil.position.x = (i * 0.2) - 1.5;
+    springGroup.add(coil);
+}
+scene.add(springGroup);
+
+// 5. Der Kolben / Plunger (Sitzt vor der Feder)
+const plungerGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 32);
+const plungerMat = new THREE.MeshStandardMaterial({ color: 0xc0392b });
+const plunger = new THREE.Mesh(plungerGeo, plungerMat);
+plunger.rotation.z = Math.PI / 2;
+plunger.position.set(0.6, 0, 0);
+scene.add(plunger);
+
+// 6. Die stumpfe Plastikpatrone (Dart mit dicker Kappe)
+const dartGroup = new THREE.Group();
+const dartBodyGeo = new THREE.CylinderGeometry(0.25, 0.25, 1.5, 24);
+const dartBodyMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
+const dartBody = new THREE.Mesh(dartBodyGeo, dartBodyMat);
+dartBody.rotation.z = Math.PI / 2;
+dartGroup.add(dartBody);
+
+const dartCapGeo = new THREE.SphereGeometry(0.25, 24, 24);
+const dartCapMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
+const dartCap = new THREE.Mesh(dartCapGeo, dartCapMat);
+dartCap.position.x = 0.75; // Vorne auf den Dart-Körper setzen
+dartGroup.add(dartCap);
+
+// Dart in den Lauf laden
+dartGroup.position.set(3, 0, 0);
+scene.add(dartGroup);
+
+
+/* MECHANIK-LOGIK (ANIMATIONEN) */
+let isLoaded = false;
+let isFlying = false;
+let dartVelocity = 0;
+
+function loadBlaster() {
+    if (isLoaded) return;
+    
+    // Feder visuell zusammenstauchen (Skalierung auf X-Achse)
+    springGroup.scale.x = 0.5;
+    springGroup.position.x = -0.4;
+    
+    // Kolben fährt nach hinten
+    plunger.position.x = -0.3;
+    
+    document.getElementById('loadBtn').disabled = true;
+    document.getElementById('fireBtn').disabled = false;
+    isLoaded = true;
 }
 
-window.addEventListener("resize",resize);
-
-setTimeout(resize,100);
-
-function rand(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
+function fireBlaster() {
+    if (!isLoaded) return;
+    
+    // Feder entspannt sich schlagartig
+    springGroup.scale.x = 1.0;
+    springGroup.position.x = 0;
+    
+    // Kolben schnellt nach vorne
+    plunger.position.x = 0.6;
+    
+    // Dart bekommt Fluggeschwindigkeit
+    isFlying = true;
+    dartVelocity = 0.8; 
+    
+    document.getElementById('fireBtn').disabled = true;
 }
 
-function createMap(){
 
-    const w=51;
-    const h=51;
+/* ANIMATIONS-LOOP & MAUS-INTERAKTION */
+let angle = 0;
+window.addEventListener('mousemove', (e) => {
+    // Wenn die Maus gedrückt gehalten wird, rotiert die Kamera um die Szene
+    if(e.buttons === 1) {
+        angle += e.movementX * 0.005;
+        camera.position.x = Math.sin(angle) * 10;
+        camera.position.z = Math.cos(angle) * 10;
+        camera.lookAt(0, 0, 0);
+    }
+});
 
-    map=[];
-
-    for(let y=0;y<h;y++){
-
-        map[y]=[];
-
-        for(let x=0;x<w;x++){
-
-            map[y][x]=1;
-
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // Flugphysik für den Dart simulieren
+    if (isFlying) {
+        dartGroup.position.x += dartVelocity;
+        // Schwerkraft zieht den stumpfen Dart langsam nach unten
+        if(dartGroup.position.x > 5) {
+            dartVelocity -= 0.01;
+            dartGroup.position.y -= 0.05;
+            dartGroup.rotation.z -= 0.02; // Dreht sich im Flug leicht nach unten
+        }
+        
+        // Reset nach dem Flug aus dem Sichtfeld
+        if (dartGroup.position.x > 25) {
+            isFlying = false;
+            isLoaded = false;
+            dartGroup.position.set(3, 0, 0);
+            dartGroup.rotation.z = 0;
+            dartGroup.position.y = 0;
+            document.getElementById('loadBtn').disabled = false;
         }
     }
-
-    let x=Math.floor(w/2);
-    let y=Math.floor(h/2);
-
-    map[y][x]=0;
-
-    for(let i=0;i<1700;i++){
-
-        const dir=rand(0,3);
-
-        if(dir===0&&y>1)y--;
-        if(dir===1&&y<h-2)y++;
-        if(dir===2&&x>1)x--;
-        if(dir===3&&x<w-2)x++;
-
-        map[y][x]=0;
-
-        if(Math.random()<0.18){
-
-            if(dir===0||dir===1){
-
-                if(x>1)map[y][x-1]=0;
-
-                if(x<w-2)map[y][x+1]=0;
-
-            }else{
-
-                if(y>1)map[y-1][x]=0;
-
-                if(y<h-2)map[y+1][x]=0;
-            }
-        }
-    }
-
-    for(let r=0;r<25;r++){
-
-        const rx=rand(2,w-7);
-        const ry=rand(2,h-7);
-
-        const rw=rand(2,6);
-        const rh=rand(2,6);
-
-        for(let yy=ry;yy<ry+rh;yy++){
-
-            for(let xx=rx;xx<rx+rw;xx++){
-
-                if(xx<w-1&&yy<h-1){
-
-                    map[yy][xx]=0;
-
-                }
-            }
-        }
-    }
-
-    return {w,h};
+    
+    renderer.render(scene, camera);
 }
 
-function newGame(){
-
-    sector=1;
-
-    document.getElementById("dead").style.display="none";
-
-    startSector();
-}
-
-function startSector(){
-
-    mapSize=createMap();
-
-    player={
-        x:Math.floor(mapSize.w/2),
-        y:Math.floor(mapSize.h/2),
-        health:100,
-        ammo:12,
-        direction:0
-    };
-
-    enemyList=[];
-
-    const amount=9+sector*3;
-
-    for(let i=0;i<amount;i++){
-
-        let x,y;
-
-        do{
-
-            x=rand(1,mapSize.w-2);
-            y=rand(1,mapSize.h-2);
-
-        }while(
-
-            map[y][x]===1||
-
-            Math.abs(x-player.x)+
-            Math.abs(y-player.y)<9
-
-        );
-
-        enemyList.push({
-
-            x:x,
-            y:y,
-            health:2,
-            moveTimer:rand(400,1000),
-            attackTimer:0
-
-        });
-    }
-
-    gameRunning=true;
-
-    updateHUD();
-
-    showMessage("NEUER SCHIFFSBEREICH ERKANNT");
-}
-
-function isFree(x,y){
-
-    if(
-        x<0||
-        y<0||
-        x>=mapSize.w||
-        y>=mapSize.h
-    )return false;
-
-    return map[y][x]===0;
-}
-
-function movePlayer(dx,dy){
-
-    if(!gameRunning)return;
-
-    const nx=player.x+dx;
-    const ny=player.y+dy;
-
-    if(isFree(nx,ny)){
-
-        player.x=nx;
-        player.y=ny;
-
-        if(dy===-1)player.direction=0;
-        if(dx===1)player.direction=1;
-        if(dy===1)player.direction=2;
-        if(dx===-1)player.direction=3;
-
-    }else{
-
-        showMessage("METALLWAND");
-
-    }
-}
-
-function reload(){
-
-    if(!gameRunning)return;
-
-    if(player.ammo>=12){
-
-        showMessage("MAGAZIN IST VOLL");
-
-        return;
-    }
-
-    player.ammo=12;
-
-    showMessage("NACHGELADEN");
-
-    updateHUD();
-}
-
-function fire(){
-
-    if(!gameRunning)return;
-
-    if(player.ammo<=0){
-
-        showMessage("KEINE MUNITION");
-
-        return;
-    }
-
-    player.ammo--;
-
-    let dx=0;
-    let dy=0;
-
-    if(player.direction===0)dy=-1;
-    if(player.direction===1)dx=1;
-    if(player.direction===2)dy=1;
-    if(player.direction===3)dx=-1;
-
-    let bx=player.x;
-    let by=player.y;
-
-    let hit=false;
-
-    for(let i=0;i<8;i++){
-
-        bx+=dx;
-        by+=dy;
-
-        if(!isFree(bx,by))break;
-
-        for(let e=enemyList.length-1;e>=0;e--){
-
-            if(
-                enemyList[e].x===bx&&
-                enemyList[e].y===by
-            ){
-
-                enemyList[e].health--;
-
-                hit=true;
-
-                if(enemyList[e].health<=0){
-
-                    enemyList.splice(e,1);
-
-                    showMessage("ZIEL AUSGESCHALTET");
-
-                }else{
-
-                    showMessage("TREFFER");
-
-                }
-
-                break;
-            }
-        }
-
-        if(hit)break;
-    }
-
-    if(!hit){
-
-        showMessage("SCHUSS INS DUNKLE");
-
-    }
-
-    updateHUD();
-}
-
-function canSeeEnemy(enemy){
-
-    const dx=enemy.x-player.x;
-    const dy=enemy.y-player.y;
-
-    const distance=Math.sqrt(dx*dx+dy*dy);
-
-    if(distance>ENEMY_VISIBILITY)return false;
-
-    return hasLineOfSight(
-        player.x,
-        player.y,
-        enemy.x,
-        enemy.y
-    );
-}
-
-function hasLineOfSight(x0,y0,x1,y1){
-
-    let dx=Math.abs(x1-x0);
-    let dy=Math.abs(y1-y0);
-
-    let sx=x0<x1?1:-1;
-    let sy=y0<y1?1:-1;
-
-    let err=dx-dy;
-
-    while(true){
-
-        if(x0===x1&&y0===y1)return true;
-
-        if(!(x0===player.x&&y0===player.y)){
-
-            if(!isFree(x0,y0))return false;
-
-        }
-
-        let e2=2*err;
-
-        if(e2>-dy){
-
-            err-=dy;
-            x0+=sx;
-
-        }
-
-        if(e2<dx){
-
-            err+=dx;
-            y0+=sy;
-
-        }
-    }
-}
-
-function updateEnemies(dt){
-
-    for(const enemy of enemyList){
-
-        enemy.moveTimer-=dt;
-        enemy.attackTimer-=dt;
-
-        const distance=
-            Math.abs(enemy.x-player.x)+
-            Math.abs(enemy.y-player.y);
-
-        if(distance<=1){
-
-            if(enemy.attackTimer<=0){
-
-                player.health-=7;
-
-                enemy.attackTimer=850;
-
-                showMessage("ETWAS IST GANZ NAH!");
-
-                if(player.health<=0){
-
-                    player.health=0;
-
-                    gameOver();
-
-                }
-            }
-
-            continue;
-        }
-
-        if(enemy.moveTimer<=0){
-
-            enemy.moveTimer=rand(400,900);
-
-            let dx=0;
-            let dy=0;
-
-            if(distance<10){
-
-                if(
-                    Math.abs(player.x-enemy.x)>
-                    Math.abs(player.y-enemy.y)
-                ){
-
-                    dx=Math.sign(
-                        player.x-enemy.x
-                    );
-
-                }else{
-
-                    dy=Math.sign(
-                        player.y-enemy.y
-                    );
-                }
-
-            }else{
-
-                const d=rand(0,3);
-
-                if(d===0)dy=-1;
-                if(d===1)dy=1;
-                if(d===2)dx=-1;
-                if(d===3)dx=1;
-            }
-
-            const nx=enemy.x+dx;
-            const ny=enemy.y+dy;
-
-            const occupied=enemyList.some(e=>
-                e!==enemy&&
-                e.x===nx&&
-                e.y===ny
-            );
-
-            if(
-                isFree(nx,ny)&&
-                !occupied&&
-                !(nx===player.x&&ny===player.y)
-            ){
-
-                enemy.x=nx;
-                enemy.y=ny;
-
-            }
-        }
-    }
-
-    if(enemyList.length===0&&gameRunning){
-
-        sector++;
-
-        showMessage("SEKTOR GESÄUBERT");
-
-        setTimeout(()=>{
-
-            if(gameRunning){
-
-                startSector();
-
-            }
-
-        },1200);
-    }
-
-    updateHUD();
-}
-
-function gameOver(){
-
-    gameRunning=false;
-
-    document.getElementById("deadText").textContent=
-        "Du hast Sektor "+sector+" erreicht.";
-
-    document.getElementById("dead").style.display="flex";
-}
-
-function updateHUD(){
-
-    document.getElementById("health").textContent=
-        Math.max(0,player.health);
-
-    document.getElementById("ammo").textContent=
-        player.ammo;
-
-    document.getElementById("sector").textContent=
-        sector;
-
-    document.getElementById("enemies").textContent=
-        enemyList.length;
-}
-
-let messageTimeout;
-
-function showMessage(text){
-
-    const m=document.getElementById("message");
-
-    m.textContent=text;
-
-    m.style.opacity="1";
-
-    clearTimeout(messageTimeout);
-
-    messageTimeout=setTimeout(()=>{
-
-        m.style.opacity=".25";
-
-    },1500);
-}
-
-function tileVisible(mx,my){
-
-    const dx=mx-player.x;
-    const dy=my-player.y;
-
-    const distance=Math.sqrt(dx*dx+dy*dy);
-
-    if(distance>VIEW_DISTANCE)return false;
-
-    return hasLineOfSight(
-        player.x,
-        player.y,
-        mx,
-        my
-    );
-}
-
-function drawFloor(px,py,mx,my){
-
-    ctx.fillStyle="#30363a";
-
-    ctx.fillRect(px,py,TILE,TILE);
-
-    const plate=TILE/2;
-
-    for(let yy=0;yy<2;yy++){
-
-        for(let xx=0;xx<2;xx++){
-
-            const bx=px+xx*plate;
-            const by=py+yy*plate;
-
-            const variation=
-                ((mx*13+my*7+xx*3+yy*5)%3);
-
-            ctx.fillStyle=
-                variation===0?"#353c40":
-                variation===1?"#2b3237":
-                "#3b4245";
-
-            ctx.fillRect(
-                bx+1,
-                by+1,
-                plate-2,
-                plate-2
-            );
-
-            ctx.strokeStyle="rgba(5,8,10,.7)";
-            ctx.lineWidth=1;
-
-            ctx.strokeRect(
-                bx+1,
-                by+1,
-                plate-2,
-                plate-2
-            );
-
-            ctx.fillStyle="#111719";
-
-            ctx.beginPath();
-            ctx.arc(
-                bx+5,
-                by+5,
-                1.5,
-                0,
-                Math.PI*2
-            );
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(
-                bx+plate-5,
-                by+5,
-                1.5,
-                0,
-                Math.PI*2
-            );
-            ctx.fill();
-        }
-    }
-
-    if((mx+my)%4===0){
-
-        ctx.fillStyle=
-            "rgba(95,145,165,.12)";
-
-        ctx.fillRect(
-            px+4,
-            py+TILE/2-1,
-            TILE-8,
-            2
-        );
-    }
-}
-
-function drawWall(px,py,mx,my){
-
-    ctx.fillStyle="#11181e";
-
-    ctx.fillRect(px,py,TILE,TILE);
-
-    ctx.fillStyle="#202b33";
-
-    ctx.fillRect(
-        px+2,
-        py+2,
-        TILE-4,
-        TILE-4
-    );
-
-    ctx.strokeStyle="#43515a";
-
-    ctx.lineWidth=2;
-
-    ctx.strokeRect(
-        px+4,
-        py+4,
-        TILE-8,
-        TILE-8
-    );
-
-    ctx.fillStyle="#10161b";
-
-    ctx.fillRect(
-        px+8,
-        py+8,
-        TILE-16,
-        TILE-16
-    );
-
-    if((mx+my)%3===0){
-
-        ctx.fillStyle="#3c4b53";
-
-        ctx.fillRect(
-            px+TILE/2-2,
-            py+4,
-            4,
-            TILE-8
-        );
-    }
-
-    if((mx*3+my)%7===0){
-
-        ctx.fillStyle="#7a382c";
-
-        ctx.fillRect(
-            px+6,
-            py+6,
-            TILE-12,
-            3
-        );
-    }
-}
-
-function draw(){
-
-    const cw=canvas.clientWidth;
-    const ch=canvas.clientHeight;
-
-    ctx.fillStyle="#010203";
-
-    ctx.fillRect(0,0,cw,ch);
-
-    const tilesX=Math.ceil(cw/TILE)+4;
-    const tilesY=Math.ceil(ch/TILE)+4;
-
-    const offsetX=
-        Math.floor(player.x-tilesX/2);
-
-    const offsetY=
-        Math.floor(player.y-tilesY/2);
-
-    for(let sy=0;sy<tilesY;sy++){
-
-        for(let sx=0;sx<tilesX;sx++){
-
-            const mx=offsetX+sx;
-            const my=offsetY+sy;
-
-            const px=sx*TILE;
-            const py=sy*TILE;
-
-            if(
-                mx<0||
-                my<0||
-                mx>=mapSize.w||
-                my>=mapSize.h
-            ){
-
-                continue;
-            }
-
-            const visible=
-                tileVisible(mx,my);
-
-            if(map[my][mx]===0){
-
-                drawFloor(px,py,mx,my);
-
-            }else{
-
-                drawWall(px,py,mx,my);
-
-            }
-
-            if(!visible){
-
-                const dx=mx-player.x;
-                const dy=my-player.y;
-
-                const distance=
-                    Math.sqrt(dx*dx+dy*dy);
-
-                let darkness=.75;
-
-                if(distance>VIEW_DISTANCE){
-
-                    darkness=.96;
-
-                }
-
-                ctx.fillStyle=
-                    "rgba(0,0,0,"+darkness+")";
-
-                ctx.fillRect(
-                    px,
-                    py,
-                    TILE,
-                    TILE
-                );
-            }
-        }
-    }
-
-    for(const enemy of enemyList){
-
-        if(!canSeeEnemy(enemy))continue;
-
-        const sx=
-            (enemy.x-offsetX)*TILE;
-
-        const sy=
-            (enemy.y-offsetY)*TILE;
-
-        const dx=enemy.x-player.x;
-        const dy=enemy.y-player.y;
-
-        const distance=Math.sqrt(
-            dx*dx+dy*dy
-        );
-
-        const alpha=Math.max(
-            .25,
-            1-distance/ENEMY_VISIBILITY
-        );
-
-        ctx.save();
-
-        ctx.globalAlpha=
-            Math.min(1,alpha*2.3);
-
-        ctx.shadowBlur=18;
-        ctx.shadowColor="#a82424";
-
-        ctx.fillStyle="#7d252b";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            sx+TILE/2,
-            sy+TILE/2,
-            TILE*.30,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        ctx.shadowBlur=0;
-
-        ctx.fillStyle="#e65b43";
-
-        ctx.fillRect(
-            sx+TILE*.30,
-            sy+TILE*.34,
-            TILE*.12,
-            TILE*.09
-        );
-
-        ctx.fillRect(
-            sx+TILE*.58,
-            sy+TILE*.34,
-            TILE*.12,
-            TILE*.09
-        );
-
-        ctx.restore();
-    }
-
-    const psx=
-        (player.x-offsetX)*TILE;
-
-    const psy=
-        (player.y-offsetY)*TILE;
-
-    ctx.save();
-
-    ctx.shadowBlur=25;
-    ctx.shadowColor="#2187c8";
-
-    ctx.fillStyle="#1d6fa8";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        psx+TILE/2,
-        psy+TILE/2,
-        TILE*.36,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-    ctx.shadowBlur=0;
-
-    ctx.fillStyle="#8ecfff";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        psx+TILE/2,
-        psy+TILE/2,
-        TILE*.16,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-    let gx=psx+TILE/2;
-    let gy=psy+TILE/2;
-
-    if(player.direction===0)gy-=TILE*.32;
-    if(player.direction===1)gx+=TILE*.32;
-    if(player.direction===2)gy+=TILE*.32;
-    if(player.direction===3)gx-=TILE*.32;
-
-    ctx.fillStyle="#e4f7ff";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        gx,
-        gy,
-        TILE*.09,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-
-    const gradient=ctx.createRadialGradient(
-        cw/2,
-        ch/2,
-        Math.min(cw,ch)*.15,
-        cw/2,
-        ch/2,
-        Math.max(cw,ch)*.72
-    );
-
-    gradient.addColorStop(
-        0,
-        "rgba(0,0,0,0)"
-    );
-
-    gradient.addColorStop(
-        1,
-        "rgba(0,0,0,.45)"
-    );
-
-    ctx.fillStyle=gradient;
-
-    ctx.fillRect(0,0,cw,ch);
-
-    requestAnimationFrame(draw);
-}
-
-function loop(now){
-
-    const dt=Math.min(
-        60,
-        now-lastTime
-    );
-
-    lastTime=now;
-
-    if(gameRunning){
-
-        updateEnemies(dt);
-
-    }
-
-    requestAnimationFrame(loop);
-}
-
-function bind(id,fn){
-
-    const el=document.getElementById(id);
-
-    el.addEventListener(
-        "pointerdown",
-        e=>{
-
-            e.preventDefault();
-
-            fn();
-
-        }
-    );
-}
-
-bind("up",()=>movePlayer(0,-1));
-bind("down",()=>movePlayer(0,1));
-bind("left",()=>movePlayer(-1,0));
-bind("right",()=>movePlayer(1,0));
-
-bind("fire",fire);
-bind("reload",reload);
-
-document
-.getElementById("new")
-.addEventListener(
-    "click",
-    ()=>newGame()
-);
-
-window.addEventListener(
-    "keydown",
-    e=>{
-
-        if(
-            e.key==="ArrowUp"||
-            e.key==="w"
-        )movePlayer(0,-1);
-
-        if(
-            e.key==="ArrowDown"||
-            e.key==="s"
-        )movePlayer(0,1);
-
-        if(
-            e.key==="ArrowLeft"||
-            e.key==="a"
-        )movePlayer(-1,0);
-
-        if(
-            e.key==="ArrowRight"||
-            e.key==="d"
-        )movePlayer(1,0);
-
-        if(e.key===" ")fire();
-
-        if(e.key==="r")reload();
-
-    }
-);
-
-newGame();
-
-setTimeout(resize,100);
-
-draw();
-
-requestAnimationFrame(loop);
-
+// Fenstergröße automatisch anpassen
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Start des Loops
+animate();
 </script>
 
 </body>
