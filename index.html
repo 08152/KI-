@@ -10,30 +10,35 @@
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        /* UI-Overlay über der 3D-Szene */
         #ui-container {
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            max-width: 320px;
-            pointer-events: auto;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+            width: 320px;
+            max-height: 90vh;
+            overflow-y: auto;
             z-index: 10;
         }
-        h1 { margin: 0 0 10px 0; font-size: 20px; color: #2c3e50; }
-        p { font-size: 14px; margin: 0 0 15px 0; color: #555; }
+        h1 { margin: 0 0 5px 0; font-size: 20px; color: #2c3e50; text-align: center; }
+        .subtitle { font-size: 12px; margin: 0 0 15px 0; color: #7f8c8d; text-align: center; }
+        .section-title { font-weight: bold; font-size: 14px; margin: 15px 0 5px 0; color: #34495e; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+        .control-group { margin-bottom: 12px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #2c3e50; }
+        select, input[type="range"] { width: 100%; box-sizing: border-box; }
+        .range-val { font-size: 11px; color: #7f8c8d; float: right; }
         .btn {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
+            padding: 10px;
+            margin-bottom: 6px;
             border: none;
             border-radius: 6px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -42,57 +47,64 @@
         .btn-fire { background: #e74c3c; color: white; }
         .btn-fire:hover { background: #c0392b; }
         .btn-fire:disabled { background: #bdc3c7; cursor: not-allowed; }
-        
-        /* GitHub Link Panel */
-        .github-panel {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-        }
-        .github-link {
-            display: inline-block;
-            background: #24292e;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-        }
+        .btn-download { background: #27ae60; color: white; margin-top: 10px; }
+        .btn-download:hover { background: #219a52; }
+        .github-panel { margin-top: 15px; padding-top: 12px; border-top: 2px dashed #ddd; text-align: center; }
+        .github-link { display: inline-block; background: #24292e; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; }
         .github-link:hover { background: #444; }
     </style>
-    <!-- Three.js via CDN laden -->
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
 <div id="ui-container">
-    <h1>🛠️ 3D MakerLab Blaster</h1>
-    <p>Bewege die Maus mit gedrückter Taste, um die Kamera um das 3D-Modell zu drehen.</p>
+    <h1>🛠️ MakerLab 3D Builder</h1>
+    <div class="subtitle">Sichere Federdruck-Modelle entwerfen</div>
     
+    <div class="section-title">Modell-Typ</div>
+    <div class="control-group">
+        <label for="blaster-type">Waffentyp:</label>
+        <select id="blaster-type" onchange="updateBlasterType()">
+            <option value="pistol">Kompakte Pistole</option>
+            <option value="rifle">Sturmgewehr (mit Schulterstütze)</option>
+        </select>
+    </div>
+
+    <div class="section-title">Abmessungen (Details)</div>
+    <div class="control-group">
+        <label for="grip-length">Grifflänge: <span id="val-grip-length" class="range-val">2.0</span></label>
+        <input type="range" id="grip-length" min="1.2" max="3.5" step="0.1" value="2.0" oninput="rebuildModel()">
+    </div>
+    <div class="control-group">
+        <label for="grip-thickness">Griffdicke: <span id="val-grip-thickness" class="range-val">0.8</span></label>
+        <input type="range" id="grip-thickness" min="0.5" max="1.5" step="0.1" value="0.8" oninput="rebuildModel()">
+    </div>
+    <div class="control-group">
+        <label for="barrel-length">Lauflänge: <span id="val-barrel-length" class="range-val">3.0</span></label>
+        <input type="range" id="barrel-length" min="1.5" max="6.0" step="0.1" value="3.0" oninput="rebuildModel()">
+    </div>
+
+    <div class="section-title">Mechanik-Test</div>
     <button class="btn btn-load" id="loadBtn" onclick="loadBlaster()">1. Feder spannen</button>
     <button class="btn btn-fire" id="fireBtn" onclick="fireBlaster()" disabled>2. Dart abfeuern!</button>
     
+    <div class="section-title">Exportieren</div>
+    <button class="btn btn-download" onclick="exportToOBJ()">💾 3D-Modell (.obj) exportieren</button>
+
     <div class="github-panel">
-        <p style="margin-bottom:8px; font-size:12px;">Echte Baupläne & Codes findest du hier:</p>
-        <!-- Link direkt zu Open-Source-Projekten auf GitHub -->
+        <p style="margin: 0 0 8px 0; font-size:11px; color:#555;">Echte 3D-Druck-Vorlagen auf GitHub:</p>
         <a href="https://github.com" target="_blank" class="github-link">
-            🔍 Auf GitHub ansehen
+            🔍 GitHub Open-Source Baupläne
         </a>
     </div>
 </div>
-
 <script>
-/* DEINE INITIALISIERUNG */
+/* ================= DEINE SCENE ================= */
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87cfff);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-// Kamera etwas zurücksetzen und anwinkeln für besseren 3D-Blick
-camera.position.set(0, 3, 10); 
-camera.lookAt(0, 0, 0);
-
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -104,92 +116,285 @@ const sun = new THREE.DirectionalLight(0xffffff, 1.5);
 sun.position.set(10, 20, 10);
 scene.add(sun);
 
+/* ================= DEIN GROUND ================= */
 
-/* 3D-MODELL-ERSTELLUNG (Federdruck-Blaster) */
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(5000, 5000),
+    new THREE.MeshStandardMaterial({color: 0x228822})
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
 
-// 1. Das Gehäuse (Halbtransparent, um das Innere zu sehen)
-const bodyGeo = new THREE.BoxGeometry(4, 1.5, 1.2);
-const bodyMat = new THREE.MeshStandardMaterial({ 
-    color: 0xf39c12, 
-    transparent: true, 
-    opacity: 0.7,
-    roughness: 0.3
-});
-const blasterBody = new THREE.Mesh(bodyGeo, bodyMat);
-scene.add(blasterBody);
+/* ================= DEIN PLAYER ================= */
 
-// 2. Der Griff
-const gripGeo = new THREE.BoxGeometry(0.8, 2, 0.8);
-const gripMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
-const grip = new THREE.Mesh(gripGeo, gripMat);
-grip.position.set(-1.2, -1.5, 0);
-grip.rotation.z = -0.2; // Leicht schräg
-scene.add(grip);
+const player = new THREE.Object3D();
+scene.add(player);
+player.add(camera);
+camera.position.set(0, 2, 0);
 
-// 3. Der Lauf (Vorne angebracht)
-const barrelGeo = new THREE.CylinderGeometry(0.4, 0.4, 3, 32);
-const barrelMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7 });
-const barrel = new THREE.Mesh(barrelGeo, barrelMat);
-barrel.rotation.z = Math.PI / 2; // Horizontal drehen
-barrel.position.set(3.5, 0, 0);
-scene.add(barrel);
+let yaw = 0, pitch = 0;
+let velY = 0;
+let onGround = true;
 
-// 4. Die Feder (Im Inneren des Gehäuses)
-const springGroup = new THREE.Group();
-const numCoils = 10;
-const springRadius = 0.3;
-for(let i = 0; i < numCoils; i++) {
-    const coilGeo = new THREE.TorusGeometry(springRadius, 0.05, 8, 24);
-    const coilMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, metalness: 0.8 });
-    const coil = new THREE.Mesh(coilGeo, coilMat);
-    coil.rotation.y = Math.PI / 2;
-    coil.position.x = (i * 0.2) - 1.5;
-    springGroup.add(coil);
-}
-scene.add(springGroup);
+/* GLOBALE VARIABLEN FÜR DIE WAFFE (MAKERLAB) */
+let blasterGroup = new THREE.Group();
+// Die Waffe wird an die Kamera angehängt, damit sie sich im FPS-Blick mitbewegt!
+camera.add(blasterGroup); 
+// Leicht nach rechts unten vor die Kamera positionieren (wie in Shootern)
+blasterGroup.position.set(0.5, -0.4, -1.5); 
+blasterGroup.rotation.y = -Math.PI / 2; // Ausrichtung nach vorne
 
-// 5. Der Kolben / Plunger (Sitzt vor der Feder)
-const plungerGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 32);
-const plungerMat = new THREE.MeshStandardMaterial({ color: 0xc0392b });
-const plunger = new THREE.Mesh(plungerGeo, plungerMat);
-plunger.rotation.z = Math.PI / 2;
-plunger.position.set(0.6, 0, 0);
-scene.add(plunger);
+let bodyMesh, gripMesh, barrelMesh, stockMesh;
+let springGroup, plungerMesh, dartGroup;
 
-// 6. Die stumpfe Plastikpatrone (Dart mit dicker Kappe)
-const dartGroup = new THREE.Group();
-const dartBodyGeo = new THREE.CylinderGeometry(0.25, 0.25, 1.5, 24);
-const dartBodyMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
-const dartBody = new THREE.Mesh(dartBodyGeo, dartBodyMat);
-dartBody.rotation.z = Math.PI / 2;
-dartGroup.add(dartBody);
-
-const dartCapGeo = new THREE.SphereGeometry(0.25, 24, 24);
-const dartCapMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
-const dartCap = new THREE.Mesh(dartCapGeo, dartCapMat);
-dartCap.position.x = 0.75; // Vorne auf den Dart-Körper setzen
-dartGroup.add(dartCap);
-
-// Dart in den Lauf laden
-dartGroup.position.set(3, 0, 0);
-scene.add(dartGroup);
-
-
-/* MECHANIK-LOGIK (ANIMATIONEN) */
 let isLoaded = false;
 let isFlying = false;
 let dartVelocity = 0;
+let defaultDartX = 0;
 
+// Materialien für das 3D-Modell
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf39c12, transparent: true, opacity: 0.75, roughness: 0.3 });
+const gripMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.5 });
+const barrelMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.2 });
+const stockMat = new THREE.MeshStandardMaterial({ color: 0x34495e });
+const springMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, metalness: 0.8 });
+const plungerMat = new THREE.MeshStandardMaterial({ color: 0xc0392b });
+const dartBodyMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
+const dartCapMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
+
+/* ================= DEIN INPUT ================= */
+
+const keys = {};
+
+window.addEventListener("keydown", (e) => {
+    keys[e.key.toLowerCase()] = true;
+
+    if (e.key === "t") openChat();
+    if (e.code === "Space") jump();
+});
+
+window.addEventListener("keyup", (e) => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+// Klick sperrt die Maus für FPS-Steuerung (NUR wenn Chat zu ist)
+document.body.addEventListener("click", (e) => {
+    if(e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
+        if(!chatOpen) document.body.requestPointerLock();
+    }
+});
+
+/* ================= DEIN CHAT ================= */
+
+let chatOpen = false;
+
+// Falls du die Elemente im HTML noch nicht hast, fängt dieser Code Fehler ab
+const chatBox = document.getElementById("chatBox") || { style: {} };
+const chatInput = document.getElementById("chatInput") || { focus: function(){} };
+const chatLog = document.getElementById("chatLog") || { innerHTML: "" };
+
+function openChat() {
+    chatOpen = !chatOpen;
+    chatBox.style.display = chatOpen ? "flex" : "none";
+
+    if (chatOpen) {
+        chatInput.focus();
+        document.exitPointerLock();
+    }
+}
+
+if(chatInput.addEventListener) {
+    chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            handleCommand(chatInput.value);
+            chatInput.value = "";
+        }
+    });
+}
+
+function log(msg) {
+    chatLog.innerHTML += msg + "<br>";
+}
+
+/* ================= DEINE COMMANDS ================= */
+
+function handleCommand(cmd) {
+    cmd = cmd.trim();
+
+    if (cmd === "/save") {
+        saveGame();
+        log("Saved ✔");
+        return;
+    }
+
+    if (cmd === "/place barrier") {
+        placeBarrier();
+        log("Barrier placed ✔");
+        return;
+    }
+
+    log("Unknown: " + cmd);
+}
+
+function saveGame() {
+    const blob = new Blob([document.documentElement.outerHTML], {type: "text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "fps_game.html";
+    a.click();
+}
+
+function placeBarrier() {
+    // Beispiel-Funktion für deine Barriere
+    const barrierGeo = new THREE.BoxGeometry(2, 2, 2);
+    const barrierMat = new THREE.MeshStandardMaterial({color: 0xff0000});
+    const barrier = new THREE.Mesh(barrierGeo, barrierMat);
+    // Platziert die Barriere ein Stück vor dem Spieler in der Welt
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    barrier.position.copy(player.position).add(dir.multiplyScalar(5));
+    barrier.position.y = 1; // Auf den Boden setzen
+    scene.add(barrier);
+}
+
+/* ================= DEIN MOVEMENT (MOUSE) ================= */
+
+document.addEventListener("mousemove", (e) => {
+    if (document.pointerLockElement !== document.body || chatOpen) return;
+
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+
+    pitch = Math.max(-1.2, Math.min(1.2, pitch));
+
+    player.rotation.y = yaw;
+    camera.rotation.x = pitch;
+});
+
+function jump() {
+    if (onGround) {
+        velY = 0.25;
+        onGround = false;
+    }
+}
+/* ================= MAKERLAB WAFFENGENERIERUNG ================= */
+
+function rebuildModel() {
+    // Werte aus deinem UI-Menü auslesen
+    const type = document.getElementById('blaster-type').value;
+    const gripLen = parseFloat(document.getElementById('grip-length').value);
+    const gripThick = parseFloat(document.getElementById('grip-thickness').value);
+    const bLen = parseFloat(document.getElementById('barrel-length').value);
+
+    // Textwerte im UI aktualisieren (falls vorhanden)
+    if(document.getElementById('val-grip-length')) document.getElementById('val-grip-length').innerText = gripLen.toFixed(1);
+    if(document.getElementById('val-grip-thickness')) document.getElementById('val-grip-thickness').innerText = gripThick.toFixed(1);
+    if(document.getElementById('val-barrel-length')) document.getElementById('val-barrel-length').innerText = bLen.toFixed(1);
+
+    // Alte Waffenteile aus der Hand löschen
+    while(blasterGroup.children.length > 0){ 
+        blasterGroup.remove(blasterGroup.children[0]); 
+    }
+
+    // Skalierungsfaktor für die FPS-Hand-Ansicht (Modell etwas kleiner machen)
+    const scale = 0.15;
+
+    // 1. Hauptgehäuse
+    let bodyLength = type === 'rifle' ? 5.5 : 4.0;
+    const bodyGeo = new THREE.BoxGeometry(bodyLength * scale, 1.5 * scale, 1.2 * scale);
+    bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    bodyMesh.name = "Gehaeuse";
+    blasterGroup.add(bodyMesh);
+
+    // 2. Dynamischer Griff
+    const gripGeo = new THREE.BoxGeometry(gripThick * scale, gripLen * scale, gripThick * 0.9 * scale);
+    gripMesh = new THREE.Mesh(gripGeo, gripMat);
+    gripMesh.name = "Griff";
+    gripMesh.position.set((-bodyLength/4) * scale, (-0.75 - gripLen/2) * scale, 0);
+    gripMesh.rotation.z = -0.15;
+    blasterGroup.add(gripMesh);
+
+    // 3. Schulterstütze (nur bei Sturmgewehr)
+    if (type === 'rifle') {
+        const stockGeo = new THREE.BoxGeometry(2.5 * scale, 1.2 * scale, 0.8 * scale);
+        stockMesh = new THREE.Mesh(stockGeo, stockMat);
+        stockMesh.name = "Schulterstuetze";
+        stockMesh.position.set((-bodyLength/2 - 1.25) * scale, -0.2 * scale, 0);
+        blasterGroup.add(stockMesh);
+    }
+
+    // 4. Dynamischer Lauf
+    const barrelGeo = new THREE.CylinderGeometry(0.4 * scale, 0.4 * scale, bLen * scale, 32);
+    barrelMesh = new THREE.Mesh(barrelGeo, barrelMat);
+    barrelMesh.name = "Lauf";
+    barrelMesh.rotation.z = Math.PI / 2;
+    barrelMesh.position.set((bodyLength/2 + bLen/2) * scale, 0, 0);
+    blasterGroup.add(barrelMesh);
+
+    // 5. Interne Feder
+    springGroup = new THREE.Group();
+    springGroup.name = "Feder";
+    const numCoils = 10;
+    for(let i = 0; i < numCoils; i++) {
+        const coilGeo = new THREE.TorusGeometry(0.3 * scale, 0.04 * scale, 8, 24);
+        const coil = new THREE.Mesh(coilGeo, springMat);
+        coil.rotation.y = Math.PI / 2;
+        coil.position.x = ((i * (bodyLength * 0.05)) - (bodyLength/3)) * scale;
+        springGroup.add(coil);
+    }
+    blasterGroup.add(springGroup);
+
+    // 6. Kolben / Plunger
+    const plungerGeo = new THREE.CylinderGeometry(0.35 * scale, 0.35 * scale, 0.3 * scale, 32);
+    plungerMesh = new THREE.Mesh(plungerGeo, plungerMat);
+    plungerMesh.name = "Kolben";
+    plungerMesh.rotation.z = Math.PI / 2;
+    plungerMesh.position.set((bodyLength/6) * scale, 0, 0);
+    blasterGroup.add(plungerMesh);
+
+    // 7. Der stumpfe Sicherheits-Dart
+    dartGroup = new THREE.Group();
+    dartGroup.name = "Dart_Patrone";
+    
+    const dartBodyGeo = new THREE.CylinderGeometry(0.25 * scale, 0.25 * scale, 1.4 * scale, 24);
+    const dartBody = new THREE.Mesh(dartBodyGeo, dartBodyMat);
+    dartBody.rotation.z = Math.PI / 2;
+    dartGroup.add(dartBody);
+
+    const dartCapGeo = new THREE.SphereGeometry(0.25 * scale, 24, 24);
+    const dartCap = new THREE.Mesh(dartCapGeo, dartCapMat);
+    dartCap.position.x = 0.7 * scale;
+    dartGroup.add(dartCap);
+
+    defaultDartX = (bodyLength/2 + 0.8) * scale;
+    dartGroup.position.set(defaultDartX, 0, 0);
+    blasterGroup.add(dartGroup);
+
+    if(!isFlying) {
+        isLoaded = false;
+        if(document.getElementById('loadBtn')) document.getElementById('loadBtn').disabled = false;
+        if(document.getElementById('fireBtn')) document.getElementById('fireBtn').disabled = true;
+    }
+}
+
+function updateBlasterType() {
+    const type = document.getElementById('blaster-type').value;
+    if(type === 'rifle') {
+        document.getElementById('barrel-length').value = "4.5";
+        document.getElementById('grip-length').value = "2.2";
+    } else {
+        document.getElementById('barrel-length').value = "2.5";
+        document.getElementById('grip-length').value = "1.8";
+    }
+    rebuildModel();
+}
+
+/* MECHANIK STEUERUNG */
 function loadBlaster() {
     if (isLoaded) return;
-    
-    // Feder visuell zusammenstauchen (Skalierung auf X-Achse)
-    springGroup.scale.x = 0.5;
-    springGroup.position.x = -0.4;
-    
-    // Kolben fährt nach hinten
-    plunger.position.x = -0.3;
-    
+    springGroup.scale.x = 0.4;
+    springGroup.position.x = -0.07;
+    plungerMesh.position.x -= 0.09;
     document.getElementById('loadBtn').disabled = true;
     document.getElementById('fireBtn').disabled = false;
     isLoaded = true;
@@ -198,70 +403,136 @@ function loadBlaster() {
 function fireBlaster() {
     if (!isLoaded) return;
     
-    // Feder entspannt sich schlagartig
+    // Feder schnellt vor
     springGroup.scale.x = 1.0;
     springGroup.position.x = 0;
     
-    // Kolben schnellt nach vorne
-    plunger.position.x = 0.6;
+    const type = document.getElementById('blaster-type').value;
+    const scale = 0.15;
+    plungerMesh.position.set((type === 'rifle' ? 5.5/6 : 4.0/6) * scale, 0, 0);
     
-    // Dart bekommt Fluggeschwindigkeit
+    // Schuss-Animation startet
     isFlying = true;
-    dartVelocity = 0.8; 
-    
+    dartVelocity = 0.4; // Geschwindigkeit im FPS-Raum
     document.getElementById('fireBtn').disabled = true;
 }
 
+/* ================= TASTATUR-BEWEGUNG & GRAVITATION ================= */
 
-/* ANIMATIONS-LOOP & MAUS-INTERAKTION */
-let angle = 0;
-window.addEventListener('mousemove', (e) => {
-    // Wenn die Maus gedrückt gehalten wird, rotiert die Kamera um die Szene
-    if(e.buttons === 1) {
-        angle += e.movementX * 0.005;
-        camera.position.x = Math.sin(angle) * 10;
-        camera.position.z = Math.cos(angle) * 10;
-        camera.lookAt(0, 0, 0);
+function updateMovement() {
+    if (chatOpen) return;
+
+    const speed = 0.1;
+    const changeX = Math.sin(yaw) * speed;
+    const changeZ = Math.cos(yaw) * speed;
+
+    // Vorwärts / Rückwärts (W / S)
+    if (keys["w"]) {
+        player.position.x -= changeX;
+        player.position.z -= changeZ;
     }
-});
+    if (keys["s"]) {
+        player.position.x += changeX;
+        player.position.z += changeZ;
+    }
+    // Seitwärts (A / D)
+    if (keys["a"]) {
+        player.position.x -= changeZ;
+        player.position.z += changeX;
+    }
+    if (keys["d"]) {
+        player.position.x += changeZ;
+        player.position.z -= changeX;
+    }
+
+    // Gravitations-Logik aus deinem Code
+    velY -= 0.015;
+    player.position.y += velY;
+
+    // Kollision mit dem grünen Boden (y = 0)
+    if (player.position.y <= 0) {
+        player.position.y = 0;
+        velY = 0;
+        onGround = true;
+    }
+}
+
+/* ================= GAME LOOP ================= */
 
 function animate() {
     requestAnimationFrame(animate);
     
-    // Flugphysik für den Dart simulieren
+    // Spieler-Bewegung berechnen
+    updateMovement();
+    
+    // Ballistische Flugphysik für die Nerf-Patrone im 3D-Raum
     if (isFlying) {
         dartGroup.position.x += dartVelocity;
-        // Schwerkraft zieht den stumpfen Dart langsam nach unten
-        if(dartGroup.position.x > 5) {
-            dartVelocity -= 0.01;
-            dartGroup.position.y -= 0.05;
-            dartGroup.rotation.z -= 0.02; // Dreht sich im Flug leicht nach unten
+        
+        // Sobald er den Lauf verlässt, fällt er leicht ab
+        if(dartGroup.position.x > defaultDartX + 0.5) {
+            dartVelocity -= 0.005;
+            dartGroup.position.y -= 0.01;
+            dartGroup.rotation.z -= 0.01;
         }
         
-        // Reset nach dem Flug aus dem Sichtfeld
-        if (dartGroup.position.x > 25) {
+        // Reset nach Reichweiten-Limit
+        if (dartGroup.position.x > 5) {
             isFlying = false;
             isLoaded = false;
-            dartGroup.position.set(3, 0, 0);
-            dartGroup.rotation.z = 0;
-            dartGroup.position.y = 0;
-            document.getElementById('loadBtn').disabled = false;
+            rebuildModel(); // Setzt den Dart wieder in die Waffe zurück
         }
     }
     
     renderer.render(scene, camera);
 }
 
-// Fenstergröße automatisch anpassen
+/* ================= OBJ EXPORTIEREN (MAKERLAB) ================= */
+
+function exportToOBJ() {
+    let objOutput = "# MakerLab Spielzeugblaster Export (FPS Edition)\n";
+    let vertexCount = 1;
+
+    function appendMeshToOBJ(mesh) {
+        if (!mesh) return;
+        objOutput += `g ${mesh.name}\n`;
+        mesh.updateMatrixWorld();
+        const geometry = mesh.geometry.clone();
+        geometry.applyMatrix4(mesh.matrixWorld);
+        const positions = geometry.attributes.position.array;
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            objOutput += `v ${positions[i].toFixed(4)} ${positions[i+1].toFixed(4)} ${positions[i+2].toFixed(4)}\n`;
+        }
+        for (let i = 0; i < positions.length / 3; i += 3) {
+            objOutput += `f ${vertexCount} ${vertexCount+1} ${vertexCount+2}\n`;
+            vertexCount += 3;
+        }
+    }
+
+    // Exportiert die anpassbaren Gehäuseteile für deinen Slicer
+    appendMeshToOBJ(bodyMesh);
+    appendMeshToOBJ(gripMesh);
+    appendMeshToOBJ(barrelMesh);
+    if(stockMesh) appendMeshToOBJ(stockMesh);
+
+    const blob = new Blob([objOutput], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `makerlab_fps_blaster.obj`;
+    link.click();
+}
+
+// Fenstergröße anpassen
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Start des Loops
+// Start-Befehle beim Laden der Seite
+updateBlasterType();
 animate();
 </script>
-
 </body>
 </html>
