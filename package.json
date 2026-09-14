@@ -1,13 +1,15 @@
 {
-  "name": "ghost-3d-model-editor",
+  "name": "ghost-ai-training",
   "version": "1.0.0",
-  "description": "3D Model Editor",
+  "description": "Ghost AI with separate training interface",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
-    "express": "5.1.0",
-    "pg": "8.16.3"
+    "express": "5.1.0"
   }
 }
