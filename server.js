@@ -4,46 +4,17 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ======================================================
-// EINSTELLUNGEN
-// ======================================================
-
 const MAX_RESULTS_PER_WORD = 100;
-
-// Wenige Seiten statt sehr vieler Anfragen
-const MAX_PAGES_PER_WORD = 10;
-
-// Langsame Anfragen, damit DDG weniger wahrscheinlich blockiert
+const MAX_PAGES_PER_SEARCH = 10;
 const DELAY_BETWEEN_REQUESTS = 2500;
-
-// Wenn DDG blockiert, länger warten
 const BLOCK_WAIT = 15000;
 
-// ======================================================
-// MIDDLEWARE
-// ======================================================
-
 app.use(express.json({ limit: "2mb" }));
-
-app.use(
-    express.static(
-        path.join(__dirname, "public")
-    )
-);
-
-// ======================================================
-// WARTEN
-// ======================================================
+app.use(express.static(path.join(__dirname, "public")));
 
 function sleep(ms) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// ======================================================
-// HTML ENTITIES
-// ======================================================
 
 function decodeEntities(text) {
     return String(text)
@@ -54,77 +25,45 @@ function decodeEntities(text) {
         .replace(/&lt;/gi, "<")
         .replace(/&gt;/gi, ">")
         .replace(/&nbsp;/gi, " ")
-        .replace(
-            /&#(\d+);/g,
-            (_, n) =>
-                String.fromCharCode(
-                    Number(n)
-                )
+        .replace(/&#(\d+);/g, (_, n) =>
+            String.fromCharCode(Number(n))
         );
 }
-
-// ======================================================
-// TEXT BEREINIGEN
-// ======================================================
 
 function cleanText(text) {
     return decodeEntities(
         String(text)
-            .replace(
-                /<script[\s\S]*?<\/script>/gi,
-                ""
-            )
-            .replace(
-                /<style[\s\S]*?<\/style>/gi,
-                ""
-            )
-            .replace(
-                /<[^>]+>/g,
-                " "
-            )
-            .replace(
-                /\s+/g,
-                " "
-            )
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
             .trim()
     );
 }
 
-// ======================================================
-// URL BEREINIGEN
-// ======================================================
-
 function cleanURL(raw) {
-    if (!raw) {
-        return null;
-    }
+    if (!raw) return null;
 
-    let url =
-        decodeEntities(
-            String(raw).trim()
-        );
+    let url = decodeEntities(
+        String(raw).trim()
+    );
 
     try {
-        const parsed =
-            new URL(
-                url,
-                "https://duckduckgo.com"
-            );
+        const parsed = new URL(
+            url,
+            "https://duckduckgo.com"
+        );
 
         const uddg =
-            parsed.searchParams.get(
-                "uddg"
-            );
+            parsed.searchParams.get("uddg");
 
         if (uddg) {
             url = uddg;
         }
-
     } catch {}
 
     try {
-        url =
-            decodeURIComponent(url);
+        url = decodeURIComponent(url);
     } catch {}
 
     if (
@@ -137,14 +76,8 @@ function cleanURL(raw) {
     return url;
 }
 
-// ======================================================
-// BLOCK-/FEHLERSEITE ERKENNEN
-// ======================================================
-
 function isBlockedPage(html) {
-    const text =
-        String(html)
-            .toLowerCase();
+    const text = String(html).toLowerCase();
 
     const indicators = [
         "captcha",
@@ -159,78 +92,38 @@ function isBlockedPage(html) {
     ];
 
     return indicators.some(
-        word =>
-            text.includes(word)
+        indicator =>
+            text.includes(indicator)
     );
 }
-
-// ======================================================
-// SUCHERGEBNISSE PARSEN
-// ======================================================
 
 function parseResults(html) {
     const results = [];
     const seen = new Set();
 
-    // ----------------------------------------------
-    // Normales DuckDuckGo HTML
-    // ----------------------------------------------
-
     const patterns = [
-
         /<a[^>]*class=["'][^"']*result__a[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
 
-        /<a[^>]*href=["']([^"']+)["'][^>]*class=["'][^"']*result__a[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi,
-
-        /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
+        /<a[^>]*href=["']([^"']+)["'][^>]*class=["'][^"']*result__a[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
     ];
 
     for (const regex of patterns) {
-
         let match;
 
-        while (
-            (match =
-                regex.exec(html))
-        ) {
+        while ((match = regex.exec(html))) {
+            const url = cleanURL(match[1]);
+            const title = cleanText(match[2]);
 
-            const url =
-                cleanURL(
-                    match[1]
-                );
+            if (!url || !title) continue;
 
-            const title =
-                cleanText(
-                    match[2]
-                );
-
-            if (!url || !title) {
-                continue;
-            }
-
-            // DuckDuckGo interne Links ignorieren
             if (
-                url.includes(
-                    "duckduckgo.com"
-                ) &&
+                url.includes("duckduckgo.com") &&
                 !url.includes("uddg=")
             ) {
                 continue;
             }
 
-            // Sehr kurze / offensichtlich irrelevante Links
-            if (
-                title.length < 2 ||
-                title.length > 500
-            ) {
-                continue;
-            }
-
-            if (
-                seen.has(url)
-            ) {
-                continue;
-            }
+            if (seen.has(url)) continue;
 
             seen.add(url);
 
@@ -250,57 +143,40 @@ function parseResults(html) {
     return results;
 }
 
-// ======================================================
-// DUCKDUCKGO ABFRAGEN
-// ======================================================
-
 async function requestDuckDuckGo(
-    word,
+    query,
     page
 ) {
-
-    const offset =
-        page * 30;
+    const offset = page * 30;
 
     const url =
         "https://html.duckduckgo.com/html/?" +
         "q=" +
-        encodeURIComponent(word) +
+        encodeURIComponent(query) +
         "&s=" +
         offset;
 
-    console.log(
-        "DuckDuckGo:",
-        url
+    const response = await fetch(
+        url,
+        {
+            redirect: "follow",
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
+
+                "Accept":
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+
+                "Accept-Language":
+                    "de-DE,de;q=0.9,en;q=0.8"
+            }
+        }
     );
 
-    const response =
-        await fetch(
-            url,
-            {
-                method: "GET",
-                redirect: "follow",
-                headers: {
-                    "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-
-                    "Accept":
-                        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-
-                    "Accept-Language":
-                        "de-DE,de;q=0.9,en;q=0.8",
-
-                    "Cache-Control":
-                        "no-cache"
-                }
-            }
-        );
-
     if (
-        response.status === 429 ||
-        response.status === 403
+        response.status === 403 ||
+        response.status === 429
     ) {
-
         return {
             blocked: true,
             results: []
@@ -308,80 +184,60 @@ async function requestDuckDuckGo(
     }
 
     if (!response.ok) {
-
         throw new Error(
-            `DuckDuckGo HTTP ${response.status}`
+            `HTTP ${response.status}`
         );
     }
 
     const html =
         await response.text();
 
-    // Blockseite?
-    if (
-        isBlockedPage(html)
-    ) {
-
+    if (isBlockedPage(html)) {
         return {
             blocked: true,
             results: []
         };
     }
 
-    const results =
-        parseResults(html);
-
     return {
         blocked: false,
-        results
+        results: parseResults(html)
     };
 }
 
-// ======================================================
-// EIN WORT SUCHEN
-// ======================================================
-
-async function searchWord(word) {
-
-    const allResults = [];
+async function searchQuery(
+    query,
+    maxResults
+) {
+    const results = [];
     const seen = new Set();
 
     for (
         let page = 0;
-        page < MAX_PAGES_PER_WORD;
+        page < MAX_PAGES_PER_SEARCH;
         page++
     ) {
-
         if (
-            allResults.length >=
-            MAX_RESULTS_PER_WORD
+            results.length >=
+            maxResults
         ) {
             break;
         }
 
-        console.log(
-            `Suche "${word}" – Seite ${page + 1}/${MAX_PAGES_PER_WORD}`
-        );
-
         let response;
 
         try {
-
             response =
                 await requestDuckDuckGo(
-                    word,
+                    query,
                     page
                 );
-
         } catch (error) {
-
             console.error(
-                "DuckDuckGo-Fehler:",
+                "Suchfehler:",
                 error.message
             );
 
-            // Bei einem Fehler nicht als 0 Ergebnisse
-            // behandeln.
             await sleep(
                 BLOCK_WAIT
             );
@@ -389,66 +245,85 @@ async function searchWord(word) {
             continue;
         }
 
-        // ==================================================
-        // BLOCKIERUNG
-        // ==================================================
-
-        if (
-            response.blocked
-        ) {
-
+        if (response.blocked) {
             console.log(
-                "DuckDuckGo hat die Anfrage momentan blockiert."
-            );
-
-            console.log(
-                `Warte ${BLOCK_WAIT / 1000} Sekunden...`
+                "DuckDuckGo blockiert momentan. Warte..."
             );
 
             await sleep(
                 BLOCK_WAIT
             );
 
-            // Danach dieselbe Seite nochmals versuchen
             page--;
-
             continue;
         }
 
-        // ==================================================
-        // ERGEBNISSE
-        // ==================================================
+        for (
+            const result of response.results
+        ) {
+            if (
+                seen.has(result.url)
+            ) {
+                continue;
+            }
 
-        const results =
-            response.results;
+            seen.add(result.url);
+            results.push(result);
 
-        console.log(
-            `Seite liefert ${results.length} Ergebnisse`
-        );
+            if (
+                results.length >=
+                maxResults
+            ) {
+                break;
+            }
+        }
 
         if (
-            results.length === 0
+            response.results.length === 0
         ) {
-
-            console.log(
-                "Keine erkennbaren Ergebnisse auf dieser Seite."
-            );
-
-            // Nicht sofort mehrere Anfragen
-            // hintereinander schicken.
             await sleep(
                 DELAY_BETWEEN_REQUESTS
             );
-
             continue;
         }
 
-        let added = 0;
+        await sleep(
+            DELAY_BETWEEN_REQUESTS
+        );
+    }
 
-        for (
-            const result of results
-        ) {
+    return results.slice(
+        0,
+        maxResults
+    );
+}
 
+// ======================================================
+// BEDEUTUNG SUCHEN
+// ======================================================
+
+async function searchMeaning(word) {
+    const queries = [
+        `"${word}" Bedeutung`,
+        `"${word}" Definition`,
+        `"${word}" Erklärung`
+    ];
+
+    const meaningResults = [];
+    const seen = new Set();
+
+    for (const query of queries) {
+        console.log(
+            `Bedeutungssuche: ${query}`
+        );
+
+        const results =
+            await searchQuery(
+                query,
+                10
+            );
+
+        for (const result of results) {
             if (
                 seen.has(result.url)
             ) {
@@ -457,129 +332,136 @@ async function searchWord(word) {
 
             seen.add(result.url);
 
-            allResults.push(
+            meaningResults.push(
                 result
             );
 
-            added++;
-
             if (
-                allResults.length >=
-                MAX_RESULTS_PER_WORD
+                meaningResults.length >= 10
             ) {
                 break;
             }
         }
 
-        console.log(
-            `Gesamt für "${word}": ${allResults.length}/${MAX_RESULTS_PER_WORD}`
-        );
-
         if (
-            added === 0
+            meaningResults.length >= 10
         ) {
-
-            console.log(
-                "Keine neuen URLs."
-            );
-
             break;
         }
-
-        // Langsame Abfrage
-        await sleep(
-            DELAY_BETWEEN_REQUESTS
-        );
     }
 
-    return allResults.slice(
-        0,
-        MAX_RESULTS_PER_WORD
-    );
+    return meaningResults;
 }
 
 // ======================================================
-// TRAINING API
+// KOMPLETTE SUCHE
+// ======================================================
+
+async function searchWord(word) {
+    console.log(
+        `Normale Suche: ${word}`
+    );
+
+    const results =
+        await searchQuery(
+            word,
+            MAX_RESULTS_PER_WORD
+        );
+
+    console.log(
+        `${results.length} normale Ergebnisse`
+    );
+
+    await sleep(
+        DELAY_BETWEEN_REQUESTS
+    );
+
+    console.log(
+        `Bedeutung: ${word}`
+    );
+
+    const meaning =
+        await searchMeaning(
+            word
+        );
+
+    console.log(
+        `${meaning.length} Bedeutungs-Ergebnisse`
+    );
+
+    return {
+        word,
+        results,
+        meaning
+    };
+}
+
+// ======================================================
+// API
 // ======================================================
 
 app.post(
     "/api/training/search",
     async (req, res) => {
-
         const word =
             String(
                 req.body?.word || ""
             ).trim();
 
         if (!word) {
-
-            return res
-                .status(400)
-                .json({
-                    error:
-                        "Kein Wort angegeben."
-                });
+            return res.status(400).json({
+                error:
+                    "Kein Begriff angegeben."
+            });
         }
 
-        console.log("");
-        console.log(
-            "======================================"
-        );
-        console.log(
-            `TRAINING: ${word}`
-        );
-        console.log(
-            "======================================"
-        );
-
         try {
-
-            const results =
+            const data =
                 await searchWord(
                     word
                 );
 
-            console.log(
-                `FERTIG: ${results.length} Ergebnisse`
-            );
+            res.json({
+                word: data.word,
 
-            // Immer echtes JSON
-            return res.json({
-                word,
-                results,
+                results:
+                    data.results,
+
+                meaning:
+                    data.meaning,
+
                 count:
-                    results.length,
+                    data.results.length,
+
+                meaningCount:
+                    data.meaning.length,
+
                 maxResults:
                     MAX_RESULTS_PER_WORD
             });
 
         } catch (error) {
-
             console.error(
-                "Training-Fehler:",
                 error
             );
 
-            return res
-                .status(500)
-                .json({
-                    error:
-                        "Suche fehlgeschlagen.",
-                    details:
-                        error.message
-                });
+            res.status(500).json({
+                error:
+                    "Suche fehlgeschlagen.",
+                details:
+                    error.message
+            });
         }
     }
 );
 
 // ======================================================
-// TRAINING HTML
+// SEITEN
 // ======================================================
 
 app.get(
     "/training",
     (req, res) => {
-
         res.sendFile(
             path.join(
                 __dirname,
@@ -590,14 +472,9 @@ app.get(
     }
 );
 
-// ======================================================
-// INDEX
-// ======================================================
-
 app.get(
     "/",
     (req, res) => {
-
         res.sendFile(
             path.join(
                 __dirname,
@@ -614,13 +491,11 @@ app.get(
 app.get(
     "/health",
     (req, res) => {
-
         res.json({
             status: "ok",
-            service:
-                "Ghost AI Training Server",
-            maxResultsPerWord:
-                MAX_RESULTS_PER_WORD
+            maxResults:
+                MAX_RESULTS_PER_WORD,
+            meaningSearch: true
         });
     }
 );
@@ -631,7 +506,6 @@ app.get(
 
 app.use(
     (req, res, next) => {
-
         if (
             req.path.startsWith(
                 "/api/"
@@ -650,20 +524,19 @@ app.use(
 );
 
 // ======================================================
-// SERVER START
+// START
 // ======================================================
 
 app.listen(
     PORT,
     "0.0.0.0",
     () => {
-
         console.log(
             "======================================"
         );
 
         console.log(
-            "Ghost AI Training Server gestartet"
+            "Ghost AI Training Server"
         );
 
         console.log(
@@ -671,7 +544,11 @@ app.listen(
         );
 
         console.log(
-            `Maximal ${MAX_RESULTS_PER_WORD} Ergebnisse pro Wort`
+            "100 Ergebnisse pro Begriff"
+        );
+
+        console.log(
+            "Bedeutungssuche aktiviert"
         );
 
         console.log(
