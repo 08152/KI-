@@ -2,1539 +2,549 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Ghost Model Editor 3D</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ghost AI Training</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
-html,body{
+body{
     margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:Arial,sans-serif;
-    background:#10131a;
-    color:white;
+    background:#09090e;
+    color:#f5f5f7;
+    font-family:Arial,Helvetica,sans-serif;
+    min-height:100vh;
 }
 
-canvas{
-    display:block;
-}
-
-#ui{
+body:before{
+    content:"";
     position:fixed;
-    inset:0;
+    width:700px;
+    height:700px;
+    left:-250px;
+    top:-300px;
+    background:radial-gradient(circle,rgba(111,70,255,.24),transparent 65%);
     pointer-events:none;
 }
 
-.panel{
-    pointer-events:auto;
-    position:absolute;
-    background:rgba(15,18,25,.94);
-    border:1px solid rgba(255,255,255,.12);
-    box-shadow:0 10px 40px rgba(0,0,0,.35);
-    border-radius:14px;
+body:after{
+    content:"";
+    position:fixed;
+    width:600px;
+    height:600px;
+    right:-250px;
+    bottom:-300px;
+    background:radial-gradient(circle,rgba(0,180,255,.18),transparent 65%);
+    pointer-events:none;
 }
 
-#left{
-    left:12px;
-    top:12px;
-    width:220px;
-    max-height:calc(100vh - 24px);
-    overflow:auto;
-    padding:14px;
-}
-
-#right{
-    right:12px;
-    top:12px;
-    width:270px;
-    max-height:calc(100vh - 24px);
-    overflow:auto;
-    padding:14px;
-}
-
-#top{
-    left:50%;
-    top:12px;
-    transform:translateX(-50%);
-    padding:9px 12px;
+header{
+    height:72px;
+    border-bottom:1px solid #24242d;
     display:flex;
-    gap:7px;
     align-items:center;
+    padding:0 25px;
+    background:rgba(12,12,17,.8);
 }
 
-h2{
-    margin:0 0 12px;
-    font-size:18px;
-}
-
-h3{
-    margin:18px 0 8px;
-    font-size:14px;
-}
-
-button{
-    border:0;
-    border-radius:9px;
-    padding:9px 11px;
-    background:#303744;
-    color:white;
-    cursor:pointer;
+.logo{
+    font-size:23px;
     font-weight:bold;
+    background:linear-gradient(90deg,#a17cff,#48c7ff);
+    -webkit-background-clip:text;
+    color:transparent;
 }
 
-button:hover{
-    background:#46505f;
-}
-
-.shapeButton{
-    width:100%;
-    margin-bottom:7px;
-    text-align:left;
-}
-
-.positive{
-    border-left:4px solid #56d364;
-}
-
-.negative{
-    border-left:4px solid #ff5c5c;
-}
-
-input,select{
-    width:100%;
-    margin:4px 0 8px;
-    padding:8px;
-    border-radius:8px;
-    border:1px solid #3b4350;
-    background:#191e27;
-    color:white;
-}
-
-label{
-    display:block;
-    font-size:12px;
-    color:#b9c0ca;
-    margin-top:5px;
-}
-
-.row{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:5px;
-}
-
-.row2{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:6px;
-}
-
-.object{
-    padding:9px;
-    margin-bottom:6px;
-    border-radius:9px;
-    background:#202630;
-    cursor:pointer;
+.badge{
+    margin-left:auto;
+    color:#8c8c99;
     font-size:13px;
 }
 
-.object.selected{
-    background:#455166;
-    outline:1px solid #8db6ff;
+.container{
+    width:min(1100px,calc(100% - 30px));
+    margin:30px auto;
 }
 
-.object small{
-    display:block;
-    opacity:.6;
-    margin-top:3px;
+h1{
+    font-size:35px;
+    margin-bottom:8px;
 }
 
-#status{
+.subtitle{
+    color:#858591;
+    margin-bottom:28px;
+}
+
+.panel{
+    background:rgba(20,20,28,.88);
+    border:1px solid #30303b;
+    border-radius:22px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 10px 50px rgba(0,0,0,.2);
+}
+
+textarea{
+    width:100%;
+    min-height:150px;
+    resize:vertical;
+    background:#101017;
+    color:white;
+    border:1px solid #363642;
+    border-radius:15px;
+    outline:none;
+    padding:15px;
+    font-size:16px;
+}
+
+textarea:focus{
+    border-color:#7660ff;
+    box-shadow:0 0 0 3px rgba(118,96,255,.1);
+}
+
+.controls{
+    display:flex;
+    gap:12px;
+    margin-top:15px;
+    flex-wrap:wrap;
+}
+
+button{
+    border:1px solid #3a3947;
+    border-radius:13px;
+    background:#191922;
+    color:white;
+    padding:12px 18px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+button:hover{
+    background:#252532;
+}
+
+.start{
+    border:0;
+    background:linear-gradient(135deg,#805cff,#16bfff);
+}
+
+.stop{
+    background:#24181e;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.stat{
+    background:#111118;
+    border:1px solid #292933;
+    border-radius:16px;
+    padding:18px;
+}
+
+.label{
+    color:#777783;
     font-size:12px;
-    color:#8fd3ff;
-    margin-top:10px;
+    margin-bottom:8px;
 }
 
-#projectId{
-    font-size:10px;
-    opacity:.55;
-    word-break:break-all;
-    margin-top:7px;
+.value{
+    font-size:25px;
+    font-weight:bold;
 }
 
-#centerInfo{
-    position:absolute;
-    left:50%;
-    bottom:15px;
-    transform:translateX(-50%);
-    background:rgba(0,0,0,.55);
-    border-radius:12px;
-    padding:9px 15px;
-    font-size:12px;
-    pointer-events:none;
+.progress{
+    height:12px;
+    background:#111118;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:18px;
 }
 
-.danger{
-    background:#7b3030;
+.bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#805cff,#19c4ff);
+    transition:.2s;
 }
 
-.danger:hover{
-    background:#a83c3c;
+.log{
+    max-height:350px;
+    overflow:auto;
+    font-family:monospace;
+    font-size:13px;
 }
 
-.green{
-    background:#28733e;
+.line{
+    padding:9px 0;
+    border-bottom:1px solid #22222b;
+    color:#a7a7b3;
 }
 
-.blue{
-    background:#285c91;
+.line b{
+    color:#fff;
+}
+
+.download{
+    display:none;
+    margin-top:15px;
+    background:linear-gradient(135deg,#5d5cff,#00baff);
+    border:0;
+}
+
+@media(max-width:700px){
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui">
+<header>
+    <div class="logo">✦ Ghost AI Training</div>
+    <div class="badge">DATA COLLECTION</div>
+</header>
 
-    <div id="top" class="panel">
-        <button id="newProject" class="blue">＋ Neu</button>
-        <button id="saveProject" class="green">💾 Speichern</button>
-        <button id="loadProject">↻ Laden</button>
-        <button id="exportProject">⬇ JSON</button>
+<div class="container">
+
+    <h1>Training Data</h1>
+
+    <div class="subtitle">
+        Wörter eingeben → DuckDuckGo durchsuchen → Daten als JSON sammeln
     </div>
 
-    <div id="left" class="panel">
+    <div class="panel">
 
-        <h2>🧊 Formen</h2>
+        <textarea
+            id="words"
+            placeholder="Bis zu 100 Wörter eingeben...
 
-        <button class="shapeButton positive" onclick="addShape('box',false)">
-            🟩 Würfel
-        </button>
+Beispiel:
+Katze
+Computer
+Weltraum
+Physik
+Geschichte"
+        ></textarea>
 
-        <button class="shapeButton positive" onclick="addShape('sphere',false)">
-            ⚪ Kugel
-        </button>
-
-        <button class="shapeButton positive" onclick="addShape('cylinder',false)">
-            🟠 Zylinder
-        </button>
-
-        <h3>Negative Parts</h3>
-
-        <button class="shapeButton negative" onclick="addShape('box',true)">
-            ➖ Negativer Würfel
-        </button>
-
-        <button class="shapeButton negative" onclick="addShape('sphere',true)">
-            ➖ Negative Kugel
-        </button>
-
-        <button class="shapeButton negative" onclick="addShape('cylinder',true)">
-            ➖ Negativer Zylinder
-        </button>
-
-        <h3>Objekte</h3>
-
-        <div id="objects"></div>
-
-        <button id="deleteObject" class="danger" style="width:100%;margin-top:5px">
-            🗑 Löschen
-        </button>
-
-    </div>
-
-
-    <div id="right" class="panel">
-
-        <h2>⚙ Eigenschaften</h2>
-
-        <div id="noSelection">
-            Keine Form ausgewählt.
-        </div>
-
-        <div id="properties" style="display:none">
-
-            <label>Name</label>
-            <input id="name">
-
-            <label>Typ</label>
-            <input id="type" disabled>
-
-            <label>Operation</label>
-            <select id="operation">
-                <option value="add">Positiv</option>
-                <option value="subtract">Negativ</option>
-            </select>
-
-            <h3>Position</h3>
-
-            <div class="row">
-                <div>
-                    <label>X</label>
-                    <input id="px" type="number" step=".1">
-                </div>
-
-                <div>
-                    <label>Y</label>
-                    <input id="py" type="number" step=".1">
-                </div>
-
-                <div>
-                    <label>Z</label>
-                    <input id="pz" type="number" step=".1">
-                </div>
-            </div>
-
-            <h3>Rotation</h3>
-
-            <div class="row">
-                <div>
-                    <label>X</label>
-                    <input id="rx" type="number" step="1">
-                </div>
-
-                <div>
-                    <label>Y</label>
-                    <input id="ry" type="number" step="1">
-                </div>
-
-                <div>
-                    <label>Z</label>
-                    <input id="rz" type="number" step="1">
-                </div>
-            </div>
-
-            <h3>Größe</h3>
-
-            <div class="row">
-                <div>
-                    <label>X</label>
-                    <input id="sx" type="number" step=".1" min=".05">
-                </div>
-
-                <div>
-                    <label>Y</label>
-                    <input id="sy" type="number" step=".1" min=".05">
-                </div>
-
-                <div>
-                    <label>Z</label>
-                    <input id="sz" type="number" step=".1" min=".05">
-                </div>
-            </div>
-
-            <button id="duplicate" style="width:100%;margin-top:7px">
-                📋 Duplizieren
+        <div class="controls">
+            <button class="start" onclick="startTraining()">
+                ▶ Training starten
             </button>
 
-        </div>
+            <button class="stop" onclick="stopTraining()">
+                ■ Stoppen
+            </button>
 
-        <div id="status">
-            Verbindung wird hergestellt...
+            <button onclick="clearAll()">
+                Alles löschen
+            </button>
         </div>
-
-        <div id="projectId"></div>
 
     </div>
 
+    <div class="panel">
 
-    <div id="centerInfo">
-        🖱 Ziehen = Kamera · Mausrad = Zoom · Formen werden live berechnet
+        <div class="stats">
+
+            <div class="stat">
+                <div class="label">Wörter</div>
+                <div class="value" id="wordCount">0 / 100</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">Verarbeitet</div>
+                <div class="value" id="processed">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">JSON</div>
+                <div class="value" id="size">0 MB</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">Status</div>
+                <div class="value" id="status">Bereit</div>
+            </div>
+
+        </div>
+
+        <div class="progress">
+            <div class="bar" id="bar"></div>
+        </div>
+
+        <button
+            class="download"
+            id="download"
+            onclick="downloadJSON()">
+            JSON herunterladen
+        </button>
+
+    </div>
+
+    <div class="panel">
+
+        <h3>Verarbeitung</h3>
+
+        <div class="log" id="log"></div>
+
     </div>
 
 </div>
 
+<script>
 
-<script type="module">
+const MAX_BYTES = 25 * 1024 * 1024;
+const MAX_WORDS = 100;
 
-import * as THREE from
-"https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js";
+let running = false;
+let dataset = [];
 
-import {OrbitControls} from
-"https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/controls/OrbitControls.js";
-
-import {CSG} from
-"https://cdn.jsdelivr.net/npm/three-csg-ts@3.2.0/+esm";
-
-
-/* =========================================================
-   SERVER
-========================================================= */
-
-const API="/api/project";
-
-
-/* =========================================================
-   PROJEKT-ID
-========================================================= */
-
-let projectId=
-    localStorage.getItem("ghost_model_project");
-
-if(!projectId){
-
-    projectId=
-        crypto.randomUUID();
-
-    localStorage.setItem(
-        "ghost_model_project",
-        projectId
-    );
+function byteSize(data){
+    return new TextEncoder().encode(
+        JSON.stringify(data)
+    ).length;
 }
 
-document.getElementById(
-    "projectId"
-).textContent=
-    "Projekt-ID: "+projectId;
-
-
-/* =========================================================
-   SZENE
-========================================================= */
-
-const scene=
-    new THREE.Scene();
-
-scene.background=
-    new THREE.Color(0x101722);
-
-scene.fog=
-    new THREE.Fog(
-        0x101722,
-        30,
-        100
-    );
-
-
-/* =========================================================
-   KAMERA
-========================================================= */
-
-const camera=
-    new THREE.PerspectiveCamera(
-        55,
-        innerWidth/innerHeight,
-        .01,
-        500
-    );
-
-camera.position.set(
-    8,
-    6,
-    9
-);
-
-
-/* =========================================================
-   RENDERER
-========================================================= */
-
-const renderer=
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
-
-renderer.setSize(
-    innerWidth,
-    innerHeight
-);
-
-renderer.setPixelRatio(
-    Math.min(
-        devicePixelRatio,
-        2
-    )
-);
-
-renderer.outputColorSpace=
-    THREE.SRGBColorSpace;
-
-document.body.appendChild(
-    renderer.domElement
-);
-
-
-/* =========================================================
-   CONTROLS
-========================================================= */
-
-const controls=
-    new OrbitControls(
-        camera,
-        renderer.domElement
-    );
-
-controls.enableDamping=true;
-
-controls.target.set(
-    0,
-    1,
-    0
-);
-
-
-/* =========================================================
-   LICHT
-========================================================= */
-
-scene.add(
-    new THREE.HemisphereLight(
-        0xbfdcff,
-        0x26351e,
-        1.8
-    )
-);
-
-const light=
-    new THREE.DirectionalLight(
-        0xffffff,
-        2
-    );
-
-light.position.set(
-    8,
-    14,
-    10
-);
-
-scene.add(light);
-
-
-/* =========================================================
-   BODEN
-========================================================= */
-
-const grid=
-    new THREE.GridHelper(
-        30,
-        30,
-        0x4b596a,
-        0x29313c
-    );
-
-scene.add(grid);
-
-
-/* =========================================================
-   EDITOR DATEN
-========================================================= */
-
-let objects=[];
-
-let selectedId=null;
-
-let modelGroup=
-    new THREE.Group();
-
-scene.add(modelGroup);
-
-let previewGroup=
-    new THREE.Group();
-
-scene.add(previewGroup);
-
-
-/* =========================================================
-   ID
-========================================================= */
-
-function id(){
-
-    return crypto.randomUUID();
+function mb(bytes){
+    return (bytes / 1024 / 1024).toFixed(3);
 }
 
+function log(text){
+    const box=document.getElementById("log");
 
-/* =========================================================
-   FORMEN
-========================================================= */
+    const div=document.createElement("div");
+    div.className="line";
+    div.innerHTML=text;
 
-function addShape(
-    type,
-    negative=false
-){
-
-    const shape={
-        id:id(),
-
-        name:
-            type+
-            (negative ? " Loch" : ""),
-
-        type:type,
-
-        operation:
-            negative
-            ? "subtract"
-            : "add",
-
-        position:{
-            x:0,
-            y:1,
-            z:0
-        },
-
-        rotation:{
-            x:0,
-            y:0,
-            z:0
-        },
-
-        scale:{
-            x:2,
-            y:2,
-            z:2
-        }
-    };
-
-
-    if(type==="sphere"){
-
-        shape.scale={
-            x:2,
-            y:2,
-            z:2
-        };
-    }
-
-
-    if(type==="cylinder"){
-
-        shape.scale={
-            x:1.5,
-            y:2,
-            z:1.5
-        };
-    }
-
-
-    objects.push(shape);
-
-    selectedId=
-        shape.id;
-
-    renderObjects();
-
-    updateProperties();
-
-    rebuild();
-
-    saveSoon();
+    box.appendChild(div);
+    box.scrollTop=box.scrollHeight;
 }
 
+function update(){
 
-/* =========================================================
-   GEOMETRIE
-========================================================= */
+    const bytes=byteSize(dataset);
 
-function geometryFor(obj){
+    document.getElementById("size").textContent =
+        mb(bytes)+" MB";
 
-    if(obj.type==="box"){
+    document.getElementById("processed").textContent =
+        dataset.length;
 
-        return new THREE.BoxGeometry(
-            1,
-            1,
-            1
-        );
-    }
+    const words=
+        document.getElementById("words")
+        .value
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0,MAX_WORDS);
 
+    document.getElementById("wordCount").textContent =
+        words.length+" / "+MAX_WORDS;
 
-    if(obj.type==="sphere"){
-
-        return new THREE.SphereGeometry(
-            .5,
-            32,
-            20
-        );
-    }
-
-
-    if(obj.type==="cylinder"){
-
-        return new THREE.CylinderGeometry(
-            .5,
-            .5,
-            1,
-            32
-        );
-    }
+    document.getElementById("bar").style.width =
+        Math.min(100,(bytes/MAX_BYTES)*100)+"%";
 }
 
+async function startTraining(){
 
-/* =========================================================
-   MESH FÜR OBJEKT
-========================================================= */
+    if(running) return;
 
-function meshFor(obj){
+    const words=document.getElementById("words")
+        .value
+        .split(/\s+/)
+        .map(x=>x.trim())
+        .filter(Boolean)
+        .slice(0,MAX_WORDS);
 
-    const geometry=
-        geometryFor(obj);
-
-    const material=
-        new THREE.MeshStandardMaterial({
-            color:
-                obj.operation==="subtract"
-                ? 0xff4c4c
-                : 0x59b8ff,
-
-            roughness:.38,
-            metalness:.12
-        });
-
-    const mesh=
-        new THREE.Mesh(
-            geometry,
-            material
-        );
-
-
-    mesh.position.set(
-        obj.position.x,
-        obj.position.y,
-        obj.position.z
-    );
-
-
-    mesh.rotation.set(
-        THREE.MathUtils.degToRad(
-            obj.rotation.x
-        ),
-        THREE.MathUtils.degToRad(
-            obj.rotation.y
-        ),
-        THREE.MathUtils.degToRad(
-            obj.rotation.z
-        )
-    );
-
-
-    mesh.scale.set(
-        obj.scale.x,
-        obj.scale.y,
-        obj.scale.z
-    );
-
-
-    mesh.updateMatrix();
-
-    mesh.updateMatrixWorld(true);
-
-    return mesh;
-}
-
-
-/* =========================================================
-   CSG MODELL
-========================================================= */
-
-function rebuild(){
-
-    while(modelGroup.children.length){
-
-        const child=
-            modelGroup.children.pop();
-
-        child.geometry?.dispose();
-        child.material?.dispose();
-    }
-
-
-    while(previewGroup.children.length){
-
-        const child=
-            previewGroup.children.pop();
-
-        child.geometry?.dispose();
-        child.material?.dispose();
-    }
-
-
-    const positive=
-        objects.filter(
-            o=>o.operation==="add"
-        );
-
-    const negative=
-        objects.filter(
-            o=>o.operation==="subtract"
-        );
-
-
-    if(positive.length===0){
-
-        rebuildPreviewOnly();
-
+    if(!words.length){
+        alert("Bitte Wörter eingeben.");
         return;
     }
 
+    running=true;
 
-    try{
+    document.getElementById("status").textContent="Läuft";
+    document.getElementById("download").style.display="none";
 
-        let result=
-            CSG.fromMesh(
-                meshFor(
-                    positive[0]
-                )
-            );
+    log("<b>Training gestartet</b>");
 
+    for(let i=0;i<words.length;i++){
 
-        for(
-            let i=1;
-            i<positive.length;
-            i++
-        ){
+        if(!running) break;
 
-            result=
-                result.union(
-                    CSG.fromMesh(
-                        meshFor(
-                            positive[i]
-                        )
-                    )
-                );
-        }
+        const word=words[i];
 
+        log("Suche: <b>"+escapeHTML(word)+"</b>");
 
-        for(
-            const obj of negative
-        ){
+        try{
 
-            result=
-                result.subtract(
-                    CSG.fromMesh(
-                        meshFor(obj)
-                    )
-                );
-        }
-
-
-        const material=
-            new THREE.MeshStandardMaterial({
-                color:0x63b8ff,
-                roughness:.3,
-                metalness:.15
-            });
-
-
-        const finalMesh=
-            CSG.toMesh(
-                result,
-                new THREE.Matrix4(),
-                material
-            );
-
-
-        finalMesh.geometry.computeVertexNormals();
-
-        modelGroup.add(
-            finalMesh
-        );
-
-
-    }catch(error){
-
-        console.error(
-            "CSG Fehler:",
-            error
-        );
-
-        rebuildPreviewOnly();
-    }
-
-
-    rebuildPreviewOnly();
-}
-
-
-/* =========================================================
-   EDITOR-VORSCHAU
-========================================================= */
-
-function rebuildPreviewOnly(){
-
-    for(
-        const obj of objects
-    ){
-
-        const mesh=
-            meshFor(obj);
-
-        mesh.material.transparent=true;
-
-        mesh.material.opacity=
-            obj.id===selectedId
-            ? .30
-            : .08;
-
-        mesh.material.depthWrite=false;
-
-        previewGroup.add(mesh);
-    }
-}
-
-
-/* =========================================================
-   OBJEKTLISTE
-========================================================= */
-
-function renderObjects(){
-
-    const container=
-        document.getElementById(
-            "objects"
-        );
-
-    container.innerHTML="";
-
-
-    objects.forEach(
-        obj=>{
-
-            const div=
-                document.createElement(
-                    "div"
-                );
-
-            div.className=
-                "object"+
-                (
-                    obj.id===selectedId
-                    ? " selected"
-                    : ""
-                );
-
-
-            const symbol=
-                obj.operation==="subtract"
-                ? "➖"
-                : "➕";
-
-
-            div.innerHTML=
-                `${symbol} ${obj.name}
-                 <small>${obj.type}</small>`;
-
-
-            div.onclick=()=>{
-
-                selectedId=
-                    obj.id;
-
-                renderObjects();
-
-                updateProperties();
-
-                rebuild();
-            };
-
-
-            container.appendChild(div);
-        }
-    );
-}
-
-
-/* =========================================================
-   AUSGEWÄHLTES OBJEKT
-========================================================= */
-
-function selected(){
-
-    return objects.find(
-        o=>o.id===selectedId
-    );
-}
-
-
-/* =========================================================
-   PROPERTIES
-========================================================= */
-
-const fields={
-
-    name:
-        document.getElementById("name"),
-
-    type:
-        document.getElementById("type"),
-
-    operation:
-        document.getElementById("operation"),
-
-    px:
-        document.getElementById("px"),
-
-    py:
-        document.getElementById("py"),
-
-    pz:
-        document.getElementById("pz"),
-
-    rx:
-        document.getElementById("rx"),
-
-    ry:
-        document.getElementById("ry"),
-
-    rz:
-        document.getElementById("rz"),
-
-    sx:
-        document.getElementById("sx"),
-
-    sy:
-        document.getElementById("sy"),
-
-    sz:
-        document.getElementById("sz")
-};
-
-
-function updateProperties(){
-
-    const obj=
-        selected();
-
-
-    if(!obj){
-
-        document.getElementById(
-            "noSelection"
-        ).style.display=
-            "block";
-
-        document.getElementById(
-            "properties"
-        ).style.display=
-            "none";
-
-        return;
-    }
-
-
-    document.getElementById(
-        "noSelection"
-    ).style.display=
-        "none";
-
-    document.getElementById(
-        "properties"
-    ).style.display=
-        "block";
-
-
-    fields.name.value=
-        obj.name;
-
-    fields.type.value=
-        obj.type;
-
-    fields.operation.value=
-        obj.operation;
-
-
-    fields.px.value=
-        obj.position.x;
-
-    fields.py.value=
-        obj.position.y;
-
-    fields.pz.value=
-        obj.position.z;
-
-
-    fields.rx.value=
-        obj.rotation.x;
-
-    fields.ry.value=
-        obj.rotation.y;
-
-    fields.rz.value=
-        obj.rotation.z;
-
-
-    fields.sx.value=
-        obj.scale.x;
-
-    fields.sy.value=
-        obj.scale.y;
-
-    fields.sz.value=
-        obj.scale.z;
-}
-
-
-/* =========================================================
-   PROPERTY ÄNDERUNGEN
-========================================================= */
-
-function updateSelected(){
-
-    const obj=
-        selected();
-
-    if(!obj)
-        return;
-
-
-    obj.name=
-        fields.name.value;
-
-
-    obj.operation=
-        fields.operation.value;
-
-
-    obj.position.x=
-        Number(fields.px.value)||0;
-
-    obj.position.y=
-        Number(fields.py.value)||0;
-
-    obj.position.z=
-        Number(fields.pz.value)||0;
-
-
-    obj.rotation.x=
-        Number(fields.rx.value)||0;
-
-    obj.rotation.y=
-        Number(fields.ry.value)||0;
-
-    obj.rotation.z=
-        Number(fields.rz.value)||0;
-
-
-    obj.scale.x=
-        Math.max(
-            .05,
-            Number(fields.sx.value)||.05
-        );
-
-    obj.scale.y=
-        Math.max(
-            .05,
-            Number(fields.sy.value)||.05
-        );
-
-    obj.scale.z=
-        Math.max(
-            .05,
-            Number(fields.sz.value)||.05
-        );
-
-
-    renderObjects();
-
-    rebuild();
-
-    saveSoon();
-}
-
-
-Object.values(fields)
-.forEach(
-    field=>{
-
-        if(field.id==="type")
-            return;
-
-        field.addEventListener(
-            "input",
-            updateSelected
-        );
-
-        field.addEventListener(
-            "change",
-            updateSelected
-        );
-    }
-);
-
-
-/* =========================================================
-   LÖSCHEN
-========================================================= */
-
-document.getElementById(
-    "deleteObject"
-).onclick=()=>{
-
-    if(!selectedId)
-        return;
-
-    objects=
-        objects.filter(
-            o=>o.id!==selectedId
-        );
-
-    selectedId=
-        objects.length
-        ? objects[objects.length-1].id
-        : null;
-
-    renderObjects();
-
-    updateProperties();
-
-    rebuild();
-
-    saveSoon();
-};
-
-
-/* =========================================================
-   DUPLIZIEREN
-========================================================= */
-
-document.getElementById(
-    "duplicate"
-).onclick=()=>{
-
-    const obj=
-        selected();
-
-    if(!obj)
-        return;
-
-
-    const copy=
-        JSON.parse(
-            JSON.stringify(obj)
-        );
-
-    copy.id=id();
-
-    copy.name=
-        obj.name+" Kopie";
-
-    copy.position.x+=1;
-
-
-    objects.push(copy);
-
-    selectedId=
-        copy.id;
-
-    renderObjects();
-
-    updateProperties();
-
-    rebuild();
-
-    saveSoon();
-};
-
-
-/* =========================================================
-   SPEICHERN
-========================================================= */
-
-let saveTimer=null;
-
-function saveSoon(){
-
-    clearTimeout(
-        saveTimer
-    );
-
-    saveTimer=
-        setTimeout(
-            saveProject,
-            500
-        );
-
-    document.getElementById(
-        "status"
-    ).textContent=
-        "● Änderungen werden gespeichert...";
-}
-
-
-async function saveProject(){
-
-    try{
-
-        const response=
-            await fetch(
-                API+"/"+projectId,
+            const response=await fetch(
+                "/api/training/search",
                 {
-                    method:"PUT",
-
+                    method:"POST",
                     headers:{
-                        "Content-Type":
-                            "application/json"
+                        "Content-Type":"application/json"
                     },
-
-                    body:
-                        JSON.stringify({
-                            objects
-                        })
+                    body:JSON.stringify({
+                        word:word
+                    })
                 }
             );
 
+            const result=await response.json();
 
-        if(!response.ok)
-            throw new Error(
-                "Speichern fehlgeschlagen"
+            if(!response.ok){
+                throw new Error(result.error || "Fehler");
+            }
+
+            const candidate={
+                word:word,
+                results:result.results
+            };
+
+            /*
+             * WICHTIG:
+             * Erst komplett testen.
+             * Wenn das neue JSON >25 MiB wäre,
+             * wird der Datensatz NICHT hinzugefügt.
+             */
+            const test=[...dataset,candidate];
+
+            const testBytes=byteSize(test);
+
+            if(testBytes>MAX_BYTES){
+
+                log(
+                    "<b>25-MB-Grenze erreicht.</b> " +
+                    "Das Wort wurde nicht mehr hinzugefügt."
+                );
+
+                break;
+            }
+
+            dataset.push(candidate);
+
+            update();
+
+            log(
+                "✓ "+escapeHTML(word)+
+                " verarbeitet — "+
+                result.results.length+
+                " Ergebnisse"
             );
 
+        }catch(error){
 
-        document.getElementById(
-            "status"
-        ).textContent=
-            "● Gespeichert – live auf dem Server";
-
-    }catch(error){
-
-        console.error(error);
-
-        document.getElementById(
-            "status"
-        ).textContent=
-            "● Offline – lokale Version aktiv";
-    }
-}
-
-
-/* =========================================================
-   LADEN
-========================================================= */
-
-async function loadProject(){
-
-    try{
-
-        const response=
-            await fetch(
-                API+"/"+projectId
+            log(
+                "⚠ Fehler bei "+
+                escapeHTML(word)+
+                ": "+
+                escapeHTML(error.message)
             );
-
-
-        if(!response.ok)
-            throw new Error(
-                "Projekt nicht gefunden"
-            );
-
-
-        const data=
-            await response.json();
-
-
-        if(
-            data &&
-            Array.isArray(data.objects)
-        ){
-
-            objects=
-                data.objects;
-
-            selectedId=
-                objects.length
-                ? objects[0].id
-                : null;
         }
 
-
-        renderObjects();
-
-        updateProperties();
-
-        rebuild();
-
-
-        document.getElementById(
-            "status"
-        ).textContent=
-            "● Projekt geladen";
-
-    }catch(error){
-
-        console.log(
-            "Neues Projekt"
+        await new Promise(
+            resolve=>setTimeout(resolve,500)
         );
-
-        objects=[];
-
-        renderObjects();
-
-        updateProperties();
-
-        rebuild();
-
-        document.getElementById(
-            "status"
-        ).textContent=
-            "● Neues Projekt";
     }
+
+    running=false;
+
+    document.getElementById("status").textContent=
+        "Fertig";
+
+    document.getElementById("download").style.display=
+        dataset.length ? "inline-block" : "none";
+
+    update();
+
+    log(
+        "<b>Fertig.</b> JSON-Größe: "+
+        mb(byteSize(dataset))+
+        " MB"
+    );
 }
 
+function stopTraining(){
 
-/* =========================================================
-   BUTTONS
-========================================================= */
+    running=false;
 
-document.getElementById(
-    "saveProject"
-).onclick=
-    saveProject;
+    document.getElementById("status").textContent=
+        "Gestoppt";
 
+    log("<b>Training gestoppt.</b>");
+}
 
-document.getElementById(
-    "loadProject"
-).onclick=
-    loadProject;
+function clearAll(){
 
+    running=false;
+    dataset=[];
 
-document.getElementById(
-    "newProject"
-).onclick=()=>{
+    document.getElementById("log").innerHTML="";
+    document.getElementById("download").style.display="none";
+    document.getElementById("status").textContent="Bereit";
 
-    if(
-        !confirm(
-            "Neues Projekt erstellen?"
-        )
-    )
-        return;
+    update();
+}
 
+function downloadJSON(){
 
-    projectId=
-        crypto.randomUUID();
-
-    localStorage.setItem(
-        "ghost_model_project",
-        projectId
+    /*
+     * Sicherheitsprüfung:
+     * Es wird nur heruntergeladen, wenn das
+     * tatsächliche UTF-8-JSON maximal 25 MiB ist.
+     */
+    const text=JSON.stringify(
+        dataset,
+        null,
+        2
     );
 
+    const bytes=new TextEncoder().encode(text).length;
 
-    document.getElementById(
-        "projectId"
-    ).textContent=
-        "Projekt-ID: "+projectId;
+    if(bytes>MAX_BYTES){
 
-
-    objects=[];
-
-    selectedId=null;
-
-    renderObjects();
-
-    updateProperties();
-
-    rebuild();
-
-    saveProject();
-};
-
-
-/* =========================================================
-   JSON EXPORT
-========================================================= */
-
-document.getElementById(
-    "exportProject"
-).onclick=()=>{
-
-    const data=
-        JSON.stringify(
-            {
-                version:1,
-                projectId,
-                objects
-            },
-            null,
-            2
+        alert(
+            "Abbruch: Das JSON wäre größer als 25 MB."
         );
 
+        return;
+    }
 
-    const blob=
-        new Blob(
-            [data],
-            {
-                type:
-                    "application/json"
-            }
-        );
+    const blob=new Blob(
+        [text],
+        {type:"application/json"}
+    );
 
+    const url=URL.createObjectURL(blob);
 
-    const url=
-        URL.createObjectURL(
-            blob
-        );
-
-
-    const a=
-        document.createElement(
-            "a"
-        );
+    const a=document.createElement("a");
 
     a.href=url;
-
-    a.download=
-        "ghost-model-"+projectId+".json";
+    a.download="training-data.json";
 
     a.click();
 
     URL.revokeObjectURL(url);
-};
-
-
-/* =========================================================
-   START
-========================================================= */
-
-addShape(
-    "box",
-    false
-);
-
-loadProject();
-
-
-/* =========================================================
-   RESIZE
-========================================================= */
-
-window.addEventListener(
-    "resize",
-    ()=>{
-
-        camera.aspect=
-            innerWidth/innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            innerWidth,
-            innerHeight
-        );
-    }
-);
-
-
-/* =========================================================
-   ANIMATION
-========================================================= */
-
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    controls.update();
-
-    renderer.render(
-        scene,
-        camera
-    );
 }
 
-animate();
+function escapeHTML(text){
+
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+update();
 
 </script>
 
