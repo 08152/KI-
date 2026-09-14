@@ -1,13 +1,13 @@
 {
-  "name": "bild-video-direktlink",
+  "name": "ghost-3d-model-editor",
   "version": "1.0.0",
-  "description": "Bild und Video Upload mit Direktlinks",
+  "description": "3D Model Editor mit positiven und negativen Formen und serverseitiger Speicherung",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1"
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   }
 }
