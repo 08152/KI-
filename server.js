@@ -1,145 +1,387 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
+const { Pool } = require("pg");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 
-const uploadFolder = path.join(__dirname, "uploads");
+/* =========================================================
+   EXPRESS
+========================================================= */
+
+app.use(
+    express.json({
+        limit: "5mb"
+    })
+);
+
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
+);
 
 
-if (!fs.existsSync(uploadFolder)) {
+/* =========================================================
+   POSTGRES
+========================================================= */
 
-    fs.mkdirSync(uploadFolder);
+let pool = null;
 
+if(process.env.DATABASE_URL){
+
+    pool = new Pool({
+        connectionString:
+            process.env.DATABASE_URL,
+
+        ssl:
+            process.env.DATABASE_URL.includes(
+                "localhost"
+            )
+            ? false
+            : {
+                rejectUnauthorized:false
+            }
+    });
 }
 
 
-const storage = multer.diskStorage({
+/* =========================================================
+   DATENBANK INITIALISIEREN
+========================================================= */
 
-    destination: (req, file, cb) => {
+async function initDatabase(){
 
-        cb(null, uploadFolder);
+    if(!pool){
 
-    },
+        console.log(
+            "DATABASE_URL nicht gesetzt."
+        );
 
-    filename: (req, file, cb) => {
+        console.log(
+            "Lokaler Fallback wird verwendet."
+        );
 
-        const randomName = crypto.randomBytes(16).toString("hex");
-
-        const extension = path.extname(file.originalname);
-
-        cb(null, randomName + extension.toLowerCase());
-
+        return;
     }
 
-});
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS projects (
+            id TEXT PRIMARY KEY,
+            data JSONB NOT NULL,
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+    `);
 
 
-const upload = multer({
+    console.log(
+        "PostgreSQL bereit."
+    );
+}
 
-    storage: storage,
 
-    limits: {
+/* =========================================================
+   LOKALER FALLBACK
+========================================================= */
 
-        fileSize: 100 * 1024 * 1024
+const memoryProjects =
+    new Map();
 
-    },
 
-    fileFilter: (req, file, cb) => {
+/* =========================================================
+   PROJEKT LADEN
+========================================================= */
 
-        if (
-            file.mimetype.startsWith("image/") ||
-            file.mimetype.startsWith("video/")
-        ) {
+app.get(
+    "/api/project/:id",
+    async(req,res)=>{
 
-            cb(null, true);
+        const id=
+            req.params.id;
 
+
+        try{
+
+            if(pool){
+
+                const result=
+                    await pool.query(
+                        `
+                        SELECT data
+                        FROM projects
+                        WHERE id=$1
+                        `,
+                        [id]
+                    );
+
+
+                if(
+                    result.rows.length===0
+                ){
+
+                    return res.status(
+                        404
+                    ).json({
+                        error:
+                            "Projekt nicht gefunden"
+                    });
+                }
+
+
+                return res.json(
+                    result.rows[0].data
+                );
+            }
+
+
+            const data=
+                memoryProjects.get(id);
+
+
+            if(!data){
+
+                return res.status(
+                    404
+                ).json({
+                    error:
+                        "Projekt nicht gefunden"
+                });
+            }
+
+
+            res.json(data);
+
+        }catch(error){
+
+            console.error(error);
+
+            res.status(
+                500
+            ).json({
+                error:
+                    "Serverfehler"
+            });
+        }
+    }
+);
+
+
+/* =========================================================
+   PROJEKT SPEICHERN
+========================================================= */
+
+app.put(
+    "/api/project/:id",
+    async(req,res)=>{
+
+        const id=
+            req.params.id;
+
+        const data=
+            req.body;
+
+
+        if(
+            !data ||
+            !Array.isArray(data.objects)
+        ){
+
+            return res.status(
+                400
+            ).json({
+                error:
+                    "Ungültige Projektdaten"
+            });
         }
 
-        else {
 
-            cb(new Error("Nur Bilder und Videos sind erlaubt."));
+        try{
 
+            if(pool){
+
+                await pool.query(
+                    `
+                    INSERT INTO projects
+                    (
+                        id,
+                        data,
+                        updated_at
+                    )
+                    VALUES
+                    (
+                        $1,
+                        $2::jsonb,
+                        NOW()
+                    )
+                    ON CONFLICT(id)
+                    DO UPDATE SET
+                        data=$2::jsonb,
+                        updated_at=NOW()
+                    `,
+                    [
+                        id,
+                        JSON.stringify(data)
+                    ]
+                );
+
+            }else{
+
+                memoryProjects.set(
+                    id,
+                    data
+                );
+            }
+
+
+            res.json({
+                success:true,
+                id:id
+            });
+
+        }catch(error){
+
+            console.error(error);
+
+            res.status(
+                500
+            ).json({
+                error:
+                    "Speichern fehlgeschlagen"
+            });
+        }
+    }
+);
+
+
+/* =========================================================
+   PROJEKT LÖSCHEN
+========================================================= */
+
+app.delete(
+    "/api/project/:id",
+    async(req,res)=>{
+
+        const id=
+            req.params.id;
+
+
+        try{
+
+            if(pool){
+
+                await pool.query(
+                    `
+                    DELETE FROM projects
+                    WHERE id=$1
+                    `,
+                    [id]
+                );
+
+            }else{
+
+                memoryProjects.delete(id);
+            }
+
+
+            res.json({
+                success:true
+            });
+
+        }catch(error){
+
+            console.error(error);
+
+            res.status(
+                500
+            ).json({
+                error:
+                    "Löschen fehlgeschlagen"
+            });
+        }
+    }
+);
+
+
+/* =========================================================
+   HEALTH CHECK
+========================================================= */
+
+app.get(
+    "/health",
+    async(req,res)=>{
+
+        if(!pool){
+
+            return res.json({
+                status:"ok",
+                database:"memory"
+            });
         }
 
+
+        try{
+
+            await pool.query(
+                "SELECT 1"
+            );
+
+            res.json({
+                status:"ok",
+                database:"postgres"
+            });
+
+        }catch(error){
+
+            res.status(
+                500
+            ).json({
+                status:"error"
+            });
+        }
     }
-
-});
-
-
-app.use(express.static(__dirname));
+);
 
 
-app.use("/files", express.static(uploadFolder, {
+/* =========================================================
+   FRONTEND
+========================================================= */
 
-    setHeaders: (res, filePath) => {
+app.get(
+    "*",
+    (req,res)=>{
 
-        res.setHeader("Content-Disposition", "inline");
-
+        res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "index.html"
+            )
+        );
     }
-
-}));
-
-
-app.post("/upload", upload.single("file"), (req, res) => {
-
-    if (!req.file) {
-
-        return res.status(400).json({
-
-            error: "Keine Datei erhalten."
-
-        });
-
-    }
+);
 
 
-    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+/* =========================================================
+   START
+========================================================= */
 
-    const host = req.get("host");
+async function start(){
 
-
-    const directLink =
-        protocol +
-        "://" +
-        host +
-        "/files/" +
-        req.file.filename;
+    await initDatabase();
 
 
-    res.json({
+    app.listen(
+        PORT,
+        "0.0.0.0",
+        ()=>{
+            console.log(
+                `Server läuft auf Port ${PORT}`
+            );
+        }
+    );
+}
 
-        success: true,
-
-        filename: req.file.filename,
-
-        directLink: directLink
-
-    });
-
-});
-
-
-app.use((error, req, res, next) => {
-
-    console.error(error);
-
-    res.status(400).json({
-
-        error: error.message || "Ein Fehler ist aufgetreten."
-
-    });
-
-});
-
-
-app.listen(PORT, () => {
-
-    console.log("Server läuft auf Port " + PORT);
-
-});
+start();
