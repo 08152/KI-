@@ -4,171 +4,260 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ==========================================
-// EINSTELLUNGEN
-// ==========================================
-
 const MAX_RESULTS_PER_WORD = 100;
-const RESULTS_PER_PAGE = 20;
-const MAX_PAGES_PER_WORD = 10;
-const DELAY_BETWEEN_PAGES = 700;
-
-// ==========================================
-// MIDDLEWARE
-// ==========================================
+const RESULTS_PER_PAGE = 10;
+const MAX_PAGES_PER_WORD = 12;
+const DELAY_MS = 800;
 
 app.use(express.json({ limit: "2mb" }));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(
-    express.static(
-        path.join(__dirname, "public")
-    )
-);
+// =====================================================
+// DuckDuckGo – mehrere Endpunkte ausprobieren
+// =====================================================
 
-// ==========================================
-// DUCKDUCKGO
-// ==========================================
-
-async function duckDuckGoSearch(word, page) {
-    const offset = page * 30;
-
-    const url =
-        "https://html.duckduckgo.com/html/?" +
-        "q=" +
-        encodeURIComponent(word) +
-        "&s=" +
-        offset;
-
+async function fetchHTML(url) {
     const response = await fetch(url, {
+        redirect: "follow",
         headers: {
             "User-Agent":
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
             "Accept":
-                "text/html,application/xhtml+xml"
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"
         }
     });
 
     if (!response.ok) {
-        throw new Error(
-            "DuckDuckGo HTTP " +
-            response.status
-        );
+        throw new Error(`HTTP ${response.status}`);
     }
 
-    const html = await response.text();
-
-    return parseDuckDuckGo(html);
+    return await response.text();
 }
 
-// ==========================================
-// HTML PARSER
-// ==========================================
+// =====================================================
+// DuckDuckGo HTML parsen
+// =====================================================
 
 function parseDuckDuckGo(html) {
     const results = [];
+    const seen = new Set();
 
-    const regex =
-        /<a[^>]*class=["'][^"']*result__a[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    // Methode 1: result__a
+    const regex1 =
+        /<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
 
     let match;
 
-    while (
-        (match = regex.exec(html)) &&
-        results.length < RESULTS_PER_PAGE
-    ) {
-        let url = match[1];
-
-        let title = stripHTML(
+    while ((match = regex1.exec(html))) {
+        const result = makeResult(
+            match[1],
             match[2]
         );
 
-        // URL dekodieren
-        try {
-            url = decodeURIComponent(url);
-        } catch {}
-
-        // DuckDuckGo Redirect URL auflösen
-        if (url.includes("uddg=")) {
-            const found =
-                url.match(
-                    /[?&]uddg=([^&]+)/
-                );
-
-            if (found) {
-                try {
-                    url =
-                        decodeURIComponent(
-                            found[1]
-                        );
-                } catch {}
-            }
-        }
-
-        // Nur echte HTTP-URLs
         if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
+            result &&
+            !seen.has(result.url)
         ) {
-            continue;
+            seen.add(result.url);
+            results.push(result);
         }
-
-        results.push({
-            title,
-            url
-        });
     }
 
-    return results;
+    // Methode 2: href zuerst, class danach
+    const regex2 =
+        /<a[^>]+href=["']([^"']+)["'][^>]+class=["'][^"']*result__a[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+
+    while ((match = regex2.exec(html))) {
+        const result = makeResult(
+            match[1],
+            match[2]
+        );
+
+        if (
+            result &&
+            !seen.has(result.url)
+        ) {
+            seen.add(result.url);
+            results.push(result);
+        }
+    }
+
+    return results.slice(
+        0,
+        RESULTS_PER_PAGE
+    );
 }
 
-// ==========================================
-// HTML BEREINIGEN
-// ==========================================
+// =====================================================
+// Ergebnis erstellen
+// =====================================================
+
+function makeResult(rawUrl, rawTitle) {
+    let url = decodeHTML(rawUrl);
+    let title = stripHTML(rawTitle);
+
+    // DuckDuckGo Redirect URL
+    try {
+        const parsed = new URL(
+            url,
+            "https://duckduckgo.com"
+        );
+
+        const uddg =
+            parsed.searchParams.get(
+                "uddg"
+            );
+
+        if (uddg) {
+            url = uddg;
+        }
+    } catch {}
+
+    // Manche DDG URLs enthalten uddg direkt
+    if (url.includes("uddg=")) {
+        const match =
+            url.match(
+                /[?&]uddg=([^&]+)/i
+            );
+
+        if (match) {
+            try {
+                url =
+                    decodeURIComponent(
+                        match[1]
+                    );
+            } catch {}
+        }
+    }
+
+    if (
+        !url.startsWith("http://") &&
+        !url.startsWith("https://")
+    ) {
+        return null;
+    }
+
+    if (!title) {
+        return null;
+    }
+
+    return {
+        title,
+        url
+    };
+}
+
+// =====================================================
+// HTML bereinigen
+// =====================================================
 
 function stripHTML(text) {
+    return decodeHTML(
+        String(text)
+            .replace(
+                /<script[\s\S]*?<\/script>/gi,
+                ""
+            )
+            .replace(
+                /<style[\s\S]*?<\/style>/gi,
+                ""
+            )
+            .replace(
+                /<[^>]+>/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim()
+    );
+}
+
+function decodeHTML(text) {
     return String(text)
         .replace(
-            /<[^>]*>/g,
-            " "
-        )
-        .replace(
-            /&amp;/g,
+            /&amp;/gi,
             "&"
         )
         .replace(
-            /&quot;/g,
+            /&quot;/gi,
             '"'
         )
         .replace(
-            /&#x27;/g,
+            /&#39;/gi,
             "'"
         )
         .replace(
-            /&lt;/g,
+            /&#x27;/gi,
+            "'"
+        )
+        .replace(
+            /&lt;/gi,
             "<"
         )
         .replace(
-            /&gt;/g,
+            /&gt;/gi,
             ">"
-        )
-        .replace(
-            /&#39;/g,
-            "'"
-        )
-        .replace(
-            /\s+/g,
-            " "
-        )
-        .trim();
+        );
 }
 
-// ==========================================
-// BIS ZU 100 ERGEBNISSE PRO WORT
-// ==========================================
+// =====================================================
+// Eine DuckDuckGo-Seite
+// =====================================================
 
-async function searchManyPages(word) {
-    const allResults = [];
+async function searchPage(word, page) {
+    const offset =
+        page * 30;
+
+    const urls = [
+        "https://html.duckduckgo.com/html/?" +
+            "q=" +
+            encodeURIComponent(word) +
+            "&s=" +
+            offset,
+
+        "https://html.duckduckgo.com/html/?" +
+            "q=" +
+            encodeURIComponent(word) +
+            "&s=" +
+            offset +
+            "&dc=" +
+            (offset + 1)
+    ];
+
+    let lastError = null;
+
+    for (const url of urls) {
+        try {
+            const html =
+                await fetchHTML(url);
+
+            const results =
+                parseDuckDuckGo(html);
+
+            if (results.length > 0) {
+                return results;
+            }
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    if (lastError) {
+        throw lastError;
+    }
+
+    return [];
+}
+
+// =====================================================
+// Bis zu 100 eindeutige Ergebnisse
+// =====================================================
+
+async function searchWord(word) {
+    const results = [];
     const seen = new Set();
 
     for (
@@ -176,55 +265,69 @@ async function searchManyPages(word) {
         page < MAX_PAGES_PER_WORD;
         page++
     ) {
-        // Stop sobald 100 erreicht wurden
         if (
-            allResults.length >=
+            results.length >=
             MAX_RESULTS_PER_WORD
         ) {
             break;
         }
 
         console.log(
-            `DuckDuckGo: "${word}" – Seite ${page + 1}/${MAX_PAGES_PER_WORD}`
+            `Suche "${word}" – Seite ${page + 1}/${MAX_PAGES_PER_WORD}`
         );
 
         try {
-            const results =
-                await duckDuckGoSearch(
+            const pageResults =
+                await searchPage(
                     word,
                     page
                 );
 
-            // Keine weiteren Ergebnisse
-            if (!results.length) {
-                console.log(
-                    `Keine weiteren Ergebnisse für "${word}".`
-                );
+            console.log(
+                `  Gefunden: ${pageResults.length}`
+            );
 
-                break;
+            if (
+                pageResults.length === 0
+            ) {
+                // Eine kurze Wiederholung
+                await sleep(1200);
+
+                const retry =
+                    await searchPage(
+                        word,
+                        page
+                    );
+
+                if (
+                    retry.length === 0
+                ) {
+                    console.log(
+                        "  Keine weiteren Ergebnisse."
+                    );
+                    break;
+                }
+
+                pageResults.push(
+                    ...retry
+                );
             }
 
             let added = 0;
 
-            for (const result of results) {
-                // Schon vorhandene URL überspringen
+            for (const item of pageResults) {
                 if (
-                    seen.has(result.url)
+                    seen.has(item.url)
                 ) {
                     continue;
                 }
 
-                seen.add(result.url);
-
-                allResults.push(
-                    result
-                );
-
+                seen.add(item.url);
+                results.push(item);
                 added++;
 
-                // HARTE Grenze: maximal 100
                 if (
-                    allResults.length >=
+                    results.length >=
                     MAX_RESULTS_PER_WORD
                 ) {
                     break;
@@ -232,107 +335,83 @@ async function searchManyPages(word) {
             }
 
             console.log(
-                `"${word}": ${allResults.length}/${MAX_RESULTS_PER_WORD} Ergebnisse`
+                `  Gesamt: ${results.length}/${MAX_RESULTS_PER_WORD}`
             );
 
-            // Wenn diese Seite keine neuen URLs
-            // gebracht hat, nicht endlos weitersuchen
             if (added === 0) {
                 console.log(
-                    `Keine neuen Ergebnisse mehr für "${word}".`
+                    "  Keine neuen URLs."
                 );
-
                 break;
             }
 
-            // Pause zwischen den Seiten
             if (
                 page <
-                    MAX_PAGES_PER_WORD - 1 &&
-                allResults.length <
-                    MAX_RESULTS_PER_WORD
+                MAX_PAGES_PER_WORD - 1
             ) {
                 await sleep(
-                    DELAY_BETWEEN_PAGES
+                    DELAY_MS
                 );
             }
 
         } catch (error) {
             console.error(
-                `Fehler bei "${word}", Seite ${page + 1}:`,
+                `  Fehler Seite ${page + 1}:`,
                 error.message
             );
 
-            break;
+            // Nicht sofort abbrechen:
+            // nächste Seite versuchen.
+            await sleep(1500);
         }
     }
 
-    // Sicherheitshalber nochmals auf exakt 100 begrenzen
-    return allResults.slice(
+    return results.slice(
         0,
         MAX_RESULTS_PER_WORD
     );
 }
 
-// ==========================================
-// SLEEP
-// ==========================================
-
-function sleep(ms) {
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                ms
-            )
-    );
-}
-
-// ==========================================
-// TRAINING API
-// ==========================================
+// =====================================================
+// API
+// =====================================================
 
 app.post(
     "/api/training/search",
     async (req, res) => {
+        const word =
+            String(
+                req.body?.word || ""
+            ).trim();
+
+        if (!word) {
+            return res
+                .status(400)
+                .json({
+                    error:
+                        "Kein Suchwort angegeben."
+                });
+        }
+
         try {
-            const word =
-                String(
-                    req.body?.word || ""
-                ).trim();
-
-            if (!word) {
-                return res
-                    .status(400)
-                    .json({
-                        error:
-                            "Kein Wort angegeben."
-                    });
-            }
-
+            console.log("");
+            console.log(
+                "======================================"
+            );
+            console.log(
+                `TRAINING: ${word}`
+            );
             console.log(
                 "======================================"
             );
 
-            console.log(
-                `TRAINING: ${word}`
-            );
-
-            console.log(
-                `Ziel: ${MAX_RESULTS_PER_WORD} Ergebnisse`
-            );
-
             const results =
-                await searchManyPages(
+                await searchWord(
                     word
                 );
 
             console.log(
-                `FERTIG: ${word} → ${results.length} Ergebnisse`
-            );
-
-            console.log(
-                "======================================"
+                `FERTIG: ${results.length} Ergebnisse`
             );
 
             res.json({
@@ -345,7 +424,7 @@ app.post(
 
         } catch (error) {
             console.error(
-                "Training-Fehler:",
+                "Suchfehler:",
                 error
             );
 
@@ -353,15 +432,17 @@ app.post(
                 .status(500)
                 .json({
                     error:
-                        "Die DuckDuckGo-Suche ist fehlgeschlagen."
+                        "DuckDuckGo konnte nicht abgefragt werden.",
+                    details:
+                        error.message
                 });
         }
     }
 );
 
-// ==========================================
-// TRAINING HTML
-// ==========================================
+// =====================================================
+// Seiten
+// =====================================================
 
 app.get(
     "/training",
@@ -376,10 +457,6 @@ app.get(
     }
 );
 
-// ==========================================
-// HAUPTSEITE
-// ==========================================
-
 app.get(
     "/",
     (req, res) => {
@@ -392,9 +469,9 @@ app.get(
     }
 );
 
-// ==========================================
-// HEALTH CHECK
-// ==========================================
+// =====================================================
+// Health
+// =====================================================
 
 app.get(
     "/health",
@@ -404,18 +481,14 @@ app.get(
             service:
                 "Ghost AI Training Server",
             maxResultsPerWord:
-                MAX_RESULTS_PER_WORD,
-            resultsPerPage:
-                RESULTS_PER_PAGE,
-            maxPagesPerWord:
-                MAX_PAGES_PER_WORD
+                MAX_RESULTS_PER_WORD
         });
     }
 );
 
-// ==========================================
-// FALLBACK
-// ==========================================
+// =====================================================
+// Fallback
+// =====================================================
 
 app.use(
     (req, res, next) => {
@@ -436,9 +509,9 @@ app.use(
     }
 );
 
-// ==========================================
-// SERVER START
-// ==========================================
+// =====================================================
+// Start
+// =====================================================
 
 app.listen(
     PORT,
@@ -447,25 +520,31 @@ app.listen(
         console.log(
             "======================================"
         );
-
         console.log(
-            "Ghost AI Server gestartet"
+            "Ghost AI Training Server"
         );
-
         console.log(
             `Port: ${PORT}`
         );
-
         console.log(
-            `Max. Ergebnisse pro Wort: ${MAX_RESULTS_PER_WORD}`
+            "Bis zu 100 Ergebnisse pro Wort"
         );
-
-        console.log(
-            `Max. Seiten pro Wort: ${MAX_PAGES_PER_WORD}`
-        );
-
         console.log(
             "======================================"
         );
     }
 );
+
+// =====================================================
+// Hilfsfunktion
+// =====================================================
+
+function sleep(ms) {
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+}
