@@ -2,112 +2,90 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Ghost AI – Training</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ghost AI Training</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
-
-html,body{
-    margin:0;
-    min-height:100%;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#07080d;
-    color:#fff;
-}
+*{box-sizing:border-box}
 
 body{
+    margin:0;
+    min-height:100vh;
+    background:#07080d;
+    color:white;
+    font-family:Arial,sans-serif;
     padding:20px;
 }
 
 .container{
-    width:min(1100px,100%);
+    max-width:1100px;
     margin:auto;
 }
 
-.header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:15px;
+h1{
+    margin:0 0 5px;
+}
+
+.sub{
+    color:#8d91a3;
     margin-bottom:20px;
 }
 
-.title{
-    font-size:28px;
-    font-weight:700;
-}
-
-.subtitle{
-    color:#9296a8;
-    margin-top:5px;
-}
-
 .card{
-    background:rgba(18,20,29,.88);
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:20px;
+    background:#11131c;
+    border:1px solid #252938;
+    border-radius:18px;
     padding:20px;
     margin-bottom:18px;
-    box-shadow:0 15px 50px rgba(0,0,0,.25);
 }
 
 textarea{
     width:100%;
-    min-height:150px;
+    min-height:160px;
     resize:vertical;
-    border:1px solid #292d3d;
-    border-radius:15px;
-    background:#0c0e15;
-    color:#fff;
-    padding:16px;
+    background:#090b11;
+    color:white;
+    border:1px solid #303447;
+    border-radius:14px;
+    padding:15px;
     font-size:16px;
     outline:none;
 }
 
 textarea:focus{
-    border-color:#6875ff;
-    box-shadow:0 0 25px rgba(104,117,255,.18);
+    border-color:#7180ff;
 }
 
 .buttons{
     display:flex;
     flex-wrap:wrap;
     gap:10px;
-    margin-top:15px;
+    margin-top:14px;
 }
 
 button{
     border:0;
-    border-radius:13px;
+    border-radius:12px;
     padding:13px 18px;
-    font-size:15px;
-    font-weight:700;
-    cursor:pointer;
     color:white;
-    background:#252a3b;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-button:hover{
-    filter:brightness(1.18);
+#start{
+    background:linear-gradient(135deg,#7757ff,#328cff);
 }
 
-.start{
-    background:linear-gradient(135deg,#7657ff,#398cff);
+#download{
+    background:linear-gradient(135deg,#0ca978,#178cff);
 }
 
-.download{
-    background:linear-gradient(135deg,#10b981,#1687ff);
-}
-
-.reset{
+#reset{
     background:#292d3b;
 }
 
 button:disabled{
-    opacity:.45;
+    opacity:.5;
     cursor:not-allowed;
 }
 
@@ -118,85 +96,64 @@ button:disabled{
 }
 
 .stat{
-    background:#0c0e15;
-    border:1px solid rgba(255,255,255,.06);
-    border-radius:15px;
-    padding:15px;
+    background:#090b11;
+    border-radius:13px;
+    padding:14px;
 }
 
-.statName{
+.label{
     color:#85899b;
     font-size:13px;
 }
 
-.statValue{
-    margin-top:7px;
-    font-size:23px;
-    font-weight:700;
+.value{
+    font-size:22px;
+    font-weight:bold;
+    margin-top:6px;
 }
 
-.progressOuter{
-    width:100%;
+.progressBox{
     height:12px;
-    background:#10121a;
-    border-radius:99px;
+    margin-top:18px;
+    background:#090b11;
+    border-radius:20px;
     overflow:hidden;
-    margin-top:15px;
 }
 
-.progress{
+#progress{
     width:0%;
     height:100%;
-    background:linear-gradient(90deg,#805cff,#39a5ff);
-    transition:width .25s;
+    background:linear-gradient(90deg,#7657ff,#32a7ff);
+    transition:.2s;
 }
 
-.status{
+#status{
     margin-top:12px;
-    color:#9ba0b3;
+    color:#a8acbb;
 }
 
-.log{
-    height:260px;
+#log{
+    height:280px;
     overflow:auto;
-    background:#080a10;
-    border:1px solid rgba(255,255,255,.06);
-    border-radius:15px;
-    padding:13px;
+    background:#080a0f;
+    border-radius:13px;
+    padding:12px;
     font-family:monospace;
     font-size:13px;
-    line-height:1.6;
 }
 
-.logLine{
-    border-bottom:1px solid rgba(255,255,255,.035);
-    padding:3px 0;
+.line{
+    padding:4px 0;
+    border-bottom:1px solid #151823;
 }
 
-.good{
-    color:#55e6a5;
-}
-
-.warn{
-    color:#ffd166;
-}
-
-.bad{
-    color:#ff7777;
-}
+.ok{color:#52e6a2}
+.warn{color:#ffd166}
+.err{color:#ff7070}
 
 @media(max-width:700px){
     .stats{
         grid-template-columns:repeat(2,1fr);
-    }
-
-    .header{
-        align-items:flex-start;
-        flex-direction:column;
-    }
-
-    .title{
-        font-size:24px;
     }
 }
 </style>
@@ -206,34 +163,25 @@ button:disabled{
 
 <div class="container">
 
-    <div class="header">
-        <div>
-            <div class="title">Ghost AI Training</div>
-            <div class="subtitle">
-                Begriffe suchen, Bedeutungen sammeln und Trainingsdaten erstellen
-            </div>
-        </div>
+    <h1>Ghost AI Training</h1>
+    <div class="sub">
+        Suchdaten und Bedeutungen sammeln
     </div>
 
     <div class="card">
 
-        <textarea
-            id="words"
-            placeholder="Bis zu 100 Begriffe eingeben&#10;&#10;Beispiel:&#10;Computer&#10;Internet&#10;Künstliche Intelligenz&#10;Roboter"
-        ></textarea>
+        <textarea id="words"
+            placeholder="Bis zu 100 Begriffe eingeben, jeweils eine Zeile:
+
+Computer
+Internet
+Roboter
+Künstliche Intelligenz"></textarea>
 
         <div class="buttons">
-            <button class="start" id="startBtn">
-                Training starten
-            </button>
-
-            <button class="download" id="downloadBtn">
-                JSON herunterladen
-            </button>
-
-            <button class="reset" id="resetBtn">
-                Daten zurücksetzen
-            </button>
+            <button id="start">Training starten</button>
+            <button id="download">JSON herunterladen</button>
+            <button id="reset">Zurücksetzen</button>
         </div>
 
     </div>
@@ -243,449 +191,469 @@ button:disabled{
         <div class="stats">
 
             <div class="stat">
-                <div class="statName">JSON-Größe</div>
-                <div class="statValue" id="size">0 MB</div>
+                <div class="label">JSON-Größe</div>
+                <div class="value" id="size">0 MB</div>
             </div>
 
             <div class="stat">
-                <div class="statName">Begriffe</div>
-                <div class="statValue" id="wordCount">0</div>
+                <div class="label">Begriffe</div>
+                <div class="value" id="count">0</div>
             </div>
 
             <div class="stat">
-                <div class="statName">Suchergebnisse</div>
-                <div class="statValue" id="resultCount">0</div>
+                <div class="label">Ergebnisse</div>
+                <div class="value" id="results">0</div>
             </div>
 
             <div class="stat">
-                <div class="statName">Maximum</div>
-                <div class="statValue">25 MiB</div>
+                <div class="label">Limit</div>
+                <div class="value">25 MiB</div>
             </div>
 
         </div>
 
-        <div class="progressOuter">
-            <div class="progress" id="progress"></div>
+        <div class="progressBox">
+            <div id="progress"></div>
         </div>
 
-        <div class="status" id="status">
-            Bereit.
-        </div>
+        <div id="status">Bereit.</div>
 
     </div>
 
     <div class="card">
-
-        <div class="log" id="log"></div>
-
+        <div id="log"></div>
     </div>
 
 </div>
 
 <script>
-const MAX_WORDS = 100;
-const MAX_RESULTS_PER_WORD = 100;
+
 const MAX_BYTES = 25 * 1024 * 1024;
+const MAX_WORDS = 100;
+const REQUEST_TIMEOUT = 45000;
 
 let dataset = [];
-let training = false;
+let running = false;
 
-const wordsInput = document.getElementById("words");
-const startBtn = document.getElementById("startBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const resetBtn = document.getElementById("resetBtn");
+const words = document.getElementById("words");
+const start = document.getElementById("start");
+const download = document.getElementById("download");
+const reset = document.getElementById("reset");
 
-const sizeEl = document.getElementById("size");
-const wordCountEl = document.getElementById("wordCount");
-const resultCountEl = document.getElementById("resultCount");
-const progressEl = document.getElementById("progress");
-const statusEl = document.getElementById("status");
-const logEl = document.getElementById("log");
+const size = document.getElementById("size");
+const count = document.getElementById("count");
+const results = document.getElementById("results");
+const progress = document.getElementById("progress");
+const status = document.getElementById("status");
+const logBox = document.getElementById("log");
 
-function jsonBytes(data){
-    return new TextEncoder().encode(
-        JSON.stringify(data)
-    ).length;
+function bytes(){
+    return new TextEncoder()
+        .encode(JSON.stringify(dataset))
+        .length;
 }
 
-function formatMB(bytes){
-    return (bytes / 1024 / 1024).toFixed(3) + " MB";
+function mb(n){
+    return (n / 1024 / 1024).toFixed(3) + " MB";
 }
 
-function updateStats(){
-    const bytes = jsonBytes(dataset);
+function log(text,type=""){
+    const div = document.createElement("div");
+    div.className = "line " + type;
+    div.textContent =
+        "[" +
+        new Date().toLocaleTimeString() +
+        "] " +
+        text;
 
-    sizeEl.textContent = formatMB(bytes);
+    logBox.appendChild(div);
+    logBox.scrollTop = logBox.scrollHeight;
+}
 
-    wordCountEl.textContent = dataset.length;
+function update(){
 
-    let count = 0;
+    const b = bytes();
+
+    size.textContent = mb(b);
+    count.textContent = dataset.length;
+
+    let total = 0;
 
     for(const item of dataset){
-        count += Array.isArray(item.results)
-            ? item.results.length
-            : 0;
 
-        count += Array.isArray(item.meaning)
-            ? item.meaning.length
-            : 0;
+        if(Array.isArray(item.results))
+            total += item.results.length;
+
+        if(Array.isArray(item.meaning))
+            total += item.meaning.length;
     }
 
-    resultCountEl.textContent = count;
+    results.textContent = total;
 
-    const percent =
+    progress.style.width =
         Math.min(
             100,
-            (bytes / MAX_BYTES) * 100
-        );
-
-    progressEl.style.width =
-        percent + "%";
-}
-
-function log(text, type=""){
-    const line = document.createElement("div");
-
-    line.className =
-        "logLine " + type;
-
-    line.textContent =
-        "[" + new Date().toLocaleTimeString() + "] " + text;
-
-    logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
-}
-
-function setStatus(text){
-    statusEl.textContent = text;
+            b / MAX_BYTES * 100
+        ) + "%";
 }
 
 function getWords(){
-    return wordsInput.value
+
+    return words.value
         .split(/\r?\n|,/)
         .map(x => x.trim())
         .filter(Boolean)
-        .slice(0, MAX_WORDS);
+        .slice(0,MAX_WORDS);
 }
 
-async function trainWord(word){
+function timeoutFetch(url,options={}){
 
-    log("Suche: " + word);
+    const controller =
+        new AbortController();
 
-    const response = await fetch(
-        "/api/training/search",
+    const timer =
+        setTimeout(
+            () => controller.abort(),
+            REQUEST_TIMEOUT
+        );
+
+    return fetch(
+        url,
         {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                word
-            })
+            ...options,
+            signal:controller.signal
         }
+    )
+    .finally(
+        () => clearTimeout(timer)
+    );
+}
+
+async function search(word){
+
+    log(
+        "Suche nach: " + word
     );
 
-    if(!response.ok){
+    status.textContent =
+        "Suche nach: " + word;
+
+    let response;
+
+    try{
+
+        response =
+            await timeoutFetch(
+                "/api/training/search",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:JSON.stringify({
+                        word:word
+                    })
+                }
+            );
+
+    }catch(error){
+
+        if(error.name === "AbortError"){
+            throw new Error(
+                "Zeitüberschreitung nach 45 Sekunden"
+            );
+        }
+
         throw new Error(
-            "Serverfehler HTTP " +
-            response.status
+            "Server nicht erreichbar"
         );
     }
 
-    const data =
-        await response.json();
+    if(!response.ok){
 
-    const results =
-        Array.isArray(data.results)
-            ? data.results
-            : [];
+        let message =
+            "HTTP " + response.status;
 
-    const meaning =
-        Array.isArray(data.meaning)
-            ? data.meaning
-            : [];
+        try{
+            const error =
+                await response.json();
 
-    log(
-        word +
-        ": " +
-        results.length +
-        " Ergebnisse, " +
-        meaning.length +
-        " Bedeutungs-Ergebnisse",
-        "good"
-    );
+            if(error.error)
+                message = error.error;
+        }catch{}
+
+        throw new Error(message);
+    }
+
+    let data;
+
+    try{
+        data = await response.json();
+    }catch{
+        throw new Error(
+            "Server hat kein gültiges JSON geliefert"
+        );
+    }
 
     return {
         word:word,
-        results:results,
-        meaning:meaning
+
+        results:
+            Array.isArray(data.results)
+                ? data.results
+                : [],
+
+        meaning:
+            Array.isArray(data.meaning)
+                ? data.meaning
+                : []
     };
 }
 
-startBtn.addEventListener(
-    "click",
-    async () => {
+start.onclick = async () => {
 
-        if(training){
-            return;
-        }
+    if(running)
+        return;
 
-        const words =
-            getWords();
+    const list = getWords();
 
-        if(words.length === 0){
-            setStatus(
-                "Bitte mindestens einen Begriff eingeben."
-            );
+    if(!list.length){
 
-            log(
-                "Keine Begriffe eingegeben.",
-                "warn"
-            );
-
-            return;
-        }
-
-        training = true;
-        startBtn.disabled = true;
-
-        setStatus(
-            "Training läuft..."
-        );
+        status.textContent =
+            "Keine Begriffe eingegeben.";
 
         log(
-            "Training gestartet.",
-            "good"
+            "Bitte Begriffe eingeben.",
+            "warn"
         );
 
-        log(
-            words.length +
-            " Begriffe werden verarbeitet."
-        );
+        return;
+    }
 
-        for(let i = 0; i < words.length; i++){
+    running = true;
+    start.disabled = true;
 
-            if(!training){
+    log(
+        "Training gestartet: " +
+        list.length +
+        " Begriffe",
+        "ok"
+    );
+
+    for(let i=0;i<list.length;i++){
+
+        const word = list[i];
+
+        status.textContent =
+            "Begriff " +
+            (i+1) +
+            " / " +
+            list.length +
+            ": " +
+            word;
+
+        try{
+
+            const item =
+                await search(word);
+
+            const test =
+                [
+                    ...dataset,
+                    item
+                ];
+
+            const testBytes =
+                new TextEncoder()
+                    .encode(
+                        JSON.stringify(test)
+                    )
+                    .length;
+
+            if(testBytes > MAX_BYTES){
+
+                log(
+                    "25-MiB-Limit erreicht. " +
+                    word +
+                    " wurde NICHT gespeichert.",
+                    "warn"
+                );
+
+                status.textContent =
+                    "25-MiB-Limit erreicht.";
+
                 break;
             }
 
-            const word = words[i];
+            dataset.push(item);
 
-            setStatus(
-                "Verarbeite " +
-                (i + 1) +
-                " / " +
-                words.length +
-                ": " +
-                word
-            );
-
-            try{
-
-                const candidate =
-                    await trainWord(word);
-
-                const testDataset =
-                    [
-                        ...dataset,
-                        candidate
-                    ];
-
-                const testBytes =
-                    jsonBytes(
-                        testDataset
-                    );
-
-                /*
-                 * Wichtig:
-                 * Es wird VOR dem Hinzufügen geprüft.
-                 * Dadurch kann dataset niemals
-                 * größer als 25 MiB werden.
-                 */
-                if(testBytes > MAX_BYTES){
-
-                    log(
-                        "25-MiB-Grenze erreicht. " +
-                        word +
-                        " wird nicht hinzugefügt.",
-                        "warn"
-                    );
-
-                    setStatus(
-                        "Training gestoppt: " +
-                        "25-MiB-Grenze erreicht."
-                    );
-
-                    break;
-                }
-
-                dataset.push(candidate);
-
-                updateStats();
-
-                log(
-                    word +
-                    " gespeichert. " +
-                    formatMB(testBytes),
-                    "good"
-                );
-
-            }catch(error){
-
-                log(
-                    word +
-                    ": " +
-                    error.message,
-                    "bad"
-                );
-
-            }
-
-        }
-
-        training = false;
-        startBtn.disabled = false;
-
-        updateStats();
-
-        setStatus(
-            "Training beendet."
-        );
-
-        log(
-            "Training beendet.",
-            "good"
-        );
-    }
-);
-
-downloadBtn.addEventListener(
-    "click",
-    () => {
-
-        if(dataset.length === 0){
-
-            setStatus(
-                "Keine Trainingsdaten vorhanden."
-            );
+            update();
 
             log(
-                "Download nicht möglich: Datensatz ist leer.",
-                "warn"
+                word +
+                " → " +
+                item.results.length +
+                " Suchergebnisse + " +
+                item.meaning.length +
+                " Bedeutungs-Ergebnisse",
+                "ok"
             );
 
-            return;
-        }
-
-        const json =
-            JSON.stringify(
-                dataset,
-                null,
-                2
-            );
-
-        const bytes =
-            new TextEncoder().encode(
-                json
-            ).length;
-
-        /*
-         * Sicherheitsprüfung:
-         * Niemals eine Datei über 25 MiB herunterladen.
-         */
-        if(bytes > MAX_BYTES){
-
-            setStatus(
-                "Download abgebrochen: JSON wäre größer als 25 MiB."
-            );
+        }catch(error){
 
             log(
-                "Sicherheitsprüfung verhindert Download.",
-                "bad"
+                word +
+                " → FEHLER: " +
+                error.message,
+                "err"
             );
 
-            return;
+            status.textContent =
+                "Fehler bei " + word;
+
+            /*
+             * Wichtig:
+             * Ein Fehler beendet nicht das
+             * gesamte Training.
+             */
         }
-
-        const blob =
-            new Blob(
-                [json],
-                {
-                    type:"application/json"
-                }
-            );
-
-        const url =
-            URL.createObjectURL(blob);
-
-        const a =
-            document.createElement("a");
-
-        a.href = url;
-
-        a.download =
-            "ghost-ai-training.json";
-
-        document.body.appendChild(a);
-
-        a.click();
-
-        a.remove();
-
-        URL.revokeObjectURL(url);
-
-        log(
-            "JSON heruntergeladen: " +
-            formatMB(bytes),
-            "good"
-        );
 
         /*
-         * Nach erfolgreichem Download
-         * wird der Datensatz automatisch geleert.
+         * Kleine Pause zwischen Begriffen.
          */
-        dataset = [];
+        if(i < list.length - 1){
 
-        updateStats();
-
-        setStatus(
-            "Download erfolgreich. Trainingsdaten wurden zurückgesetzt."
-        );
-
-        log(
-            "Trainingsdaten automatisch zurückgesetzt.",
-            "good"
-        );
-    }
-);
-
-resetBtn.addEventListener(
-    "click",
-    () => {
-
-        if(training){
-            setStatus(
-                "Während des Trainings kann nicht zurückgesetzt werden."
+            await new Promise(
+                resolve =>
+                    setTimeout(resolve,1500)
             );
-            return;
         }
+    }
 
-        dataset = [];
+    running = false;
+    start.disabled = false;
 
-        updateStats();
+    update();
 
-        setStatus(
-            "Trainingsdaten zurückgesetzt."
-        );
+    status.textContent =
+        "Training beendet.";
+
+    log(
+        "Training beendet.",
+        "ok"
+    );
+};
+
+download.onclick = () => {
+
+    if(dataset.length === 0){
+
+        status.textContent =
+            "Keine Trainingsdaten vorhanden.";
 
         log(
-            "Datensatz geleert.",
+            "Download nicht möglich: Datensatz leer.",
             "warn"
         );
-    }
-);
 
-updateStats();
+        return;
+    }
+
+    const json =
+        JSON.stringify(
+            dataset,
+            null,
+            2
+        );
+
+    const sizeBytes =
+        new TextEncoder()
+            .encode(json)
+            .length;
+
+    if(sizeBytes > MAX_BYTES){
+
+        log(
+            "Download verhindert: JSON über 25 MiB.",
+            "err"
+        );
+
+        return;
+    }
+
+    const blob =
+        new Blob(
+            [json],
+            {
+                type:"application/json"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+    a.download =
+        "ghost-ai-training.json";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+    log(
+        "JSON heruntergeladen: " +
+        mb(sizeBytes),
+        "ok"
+    );
+
+    /*
+     * Nach erfolgreichem Download
+     * automatisch leeren.
+     */
+    dataset = [];
+
+    update();
+
+    status.textContent =
+        "Download erfolgreich – Daten zurückgesetzt.";
+
+    log(
+        "Trainingsdaten automatisch zurückgesetzt.",
+        "ok"
+    );
+};
+
+reset.onclick = () => {
+
+    if(running){
+
+        status.textContent =
+            "Während des Trainings nicht möglich.";
+
+        return;
+    }
+
+    dataset = [];
+
+    update();
+
+    status.textContent =
+        "Daten zurückgesetzt.";
+
+    log(
+        "Datensatz geleert.",
+        "warn"
+    );
+};
+
+update();
+
 </script>
 
 </body>
