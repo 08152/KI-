@@ -4,30 +4,46 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const MAX_RESULTS_PER_QUERY = 20;
-const MAX_PAGES_PER_WORD = 5;
+// ==========================================
+// EINSTELLUNGEN
+// ==========================================
+
+const MAX_RESULTS_PER_WORD = 100;
+const RESULTS_PER_PAGE = 20;
+const MAX_PAGES_PER_WORD = 10;
+const DELAY_BETWEEN_PAGES = 700;
+
+// ==========================================
+// MIDDLEWARE
+// ==========================================
 
 app.use(express.json({ limit: "2mb" }));
 
-/* public/training.html */
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
+);
 
-/* --------------------------------------------------
-   DuckDuckGo
--------------------------------------------------- */
+// ==========================================
+// DUCKDUCKGO
+// ==========================================
 
 async function duckDuckGoSearch(word, page) {
     const offset = page * 30;
 
     const url =
         "https://html.duckduckgo.com/html/?" +
-        "q=" + encodeURIComponent(word) +
-        "&s=" + offset;
+        "q=" +
+        encodeURIComponent(word) +
+        "&s=" +
+        offset;
 
     const response = await fetch(url, {
         headers: {
             "User-Agent":
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
+
             "Accept":
                 "text/html,application/xhtml+xml"
         }
@@ -35,7 +51,8 @@ async function duckDuckGoSearch(word, page) {
 
     if (!response.ok) {
         throw new Error(
-            "DuckDuckGo HTTP " + response.status
+            "DuckDuckGo HTTP " +
+            response.status
         );
     }
 
@@ -44,9 +61,9 @@ async function duckDuckGoSearch(word, page) {
     return parseDuckDuckGo(html);
 }
 
-/* --------------------------------------------------
-   Ergebnisse auslesen
--------------------------------------------------- */
+// ==========================================
+// HTML PARSER
+// ==========================================
 
 function parseDuckDuckGo(html) {
     const results = [];
@@ -58,32 +75,41 @@ function parseDuckDuckGo(html) {
 
     while (
         (match = regex.exec(html)) &&
-        results.length < MAX_RESULTS_PER_QUERY
+        results.length < RESULTS_PER_PAGE
     ) {
         let url = match[1];
-        let title = stripHTML(match[2]);
 
+        let title = stripHTML(
+            match[2]
+        );
+
+        // URL dekodieren
         try {
             url = decodeURIComponent(url);
         } catch {}
 
-        /*
-         * DuckDuckGo verwendet teilweise:
-         * //duckduckgo.com/l/?uddg=...
-         */
-
+        // DuckDuckGo Redirect URL auflösen
         if (url.includes("uddg=")) {
             const found =
-                url.match(/[?&]uddg=([^&]+)/);
+                url.match(
+                    /[?&]uddg=([^&]+)/
+                );
 
             if (found) {
                 try {
-                    url = decodeURIComponent(found[1]);
+                    url =
+                        decodeURIComponent(
+                            found[1]
+                        );
                 } catch {}
             }
         }
 
-        if (!url.startsWith("http")) {
+        // Nur echte HTTP-URLs
+        if (
+            !url.startsWith("http://") &&
+            !url.startsWith("https://")
+        ) {
             continue;
         }
 
@@ -96,29 +122,53 @@ function parseDuckDuckGo(html) {
     return results;
 }
 
-/* --------------------------------------------------
-   HTML reinigen
--------------------------------------------------- */
+// ==========================================
+// HTML BEREINIGEN
+// ==========================================
 
 function stripHTML(text) {
     return String(text)
-        .replace(/<[^>]*>/g, " ")
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&#x27;/g, "'")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#39;/g, "'")
-        .replace(/\s+/g, " ")
+        .replace(
+            /<[^>]*>/g,
+            " "
+        )
+        .replace(
+            /&amp;/g,
+            "&"
+        )
+        .replace(
+            /&quot;/g,
+            '"'
+        )
+        .replace(
+            /&#x27;/g,
+            "'"
+        )
+        .replace(
+            /&lt;/g,
+            "<"
+        )
+        .replace(
+            /&gt;/g,
+            ">"
+        )
+        .replace(
+            /&#39;/g,
+            "'"
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
         .trim();
 }
 
-/* --------------------------------------------------
-   Mehrere Seiten durchsuchen
--------------------------------------------------- */
+// ==========================================
+// BIS ZU 100 ERGEBNISSE PRO WORT
+// ==========================================
 
 async function searchManyPages(word) {
-    const all = [];
+    const allResults = [];
     const seen = new Set();
 
     for (
@@ -126,47 +176,85 @@ async function searchManyPages(word) {
         page < MAX_PAGES_PER_WORD;
         page++
     ) {
+        // Stop sobald 100 erreicht wurden
+        if (
+            allResults.length >=
+            MAX_RESULTS_PER_WORD
+        ) {
+            break;
+        }
+
         console.log(
-            `DuckDuckGo: "${word}" – Seite ${page + 1}`
+            `DuckDuckGo: "${word}" – Seite ${page + 1}/${MAX_PAGES_PER_WORD}`
         );
 
         try {
             const results =
-                await duckDuckGoSearch(word, page);
+                await duckDuckGoSearch(
+                    word,
+                    page
+                );
 
+            // Keine weiteren Ergebnisse
             if (!results.length) {
+                console.log(
+                    `Keine weiteren Ergebnisse für "${word}".`
+                );
+
                 break;
             }
 
             let added = 0;
 
             for (const result of results) {
-                if (seen.has(result.url)) {
+                // Schon vorhandene URL überspringen
+                if (
+                    seen.has(result.url)
+                ) {
                     continue;
                 }
 
                 seen.add(result.url);
-                all.push(result);
+
+                allResults.push(
+                    result
+                );
+
                 added++;
+
+                // HARTE Grenze: maximal 100
+                if (
+                    allResults.length >=
+                    MAX_RESULTS_PER_WORD
+                ) {
+                    break;
+                }
             }
 
-            /*
-             * Wenn eine Seite keine neuen Treffer
-             * mehr bringt, abbrechen.
-             */
+            console.log(
+                `"${word}": ${allResults.length}/${MAX_RESULTS_PER_WORD} Ergebnisse`
+            );
 
+            // Wenn diese Seite keine neuen URLs
+            // gebracht hat, nicht endlos weitersuchen
             if (added === 0) {
+                console.log(
+                    `Keine neuen Ergebnisse mehr für "${word}".`
+                );
+
                 break;
             }
 
-            /*
-             * Kleine Pause zwischen den Anfragen,
-             * damit nicht sofort viele Anfragen
-             * hintereinander gesendet werden.
-             */
-
-            if (page < MAX_PAGES_PER_WORD - 1) {
-                await sleep(700);
+            // Pause zwischen den Seiten
+            if (
+                page <
+                    MAX_PAGES_PER_WORD - 1 &&
+                allResults.length <
+                    MAX_RESULTS_PER_WORD
+            ) {
+                await sleep(
+                    DELAY_BETWEEN_PAGES
+                );
             }
 
         } catch (error) {
@@ -175,129 +263,209 @@ async function searchManyPages(word) {
                 error.message
             );
 
-            /*
-             * Bei einem Fehler nicht alles verlieren.
-             * Bereits gefundene Ergebnisse werden
-             * zurückgegeben.
-             */
             break;
         }
     }
 
-    return all;
+    // Sicherheitshalber nochmals auf exakt 100 begrenzen
+    return allResults.slice(
+        0,
+        MAX_RESULTS_PER_WORD
+    );
 }
+
+// ==========================================
+// SLEEP
+// ==========================================
 
 function sleep(ms) {
-    return new Promise(resolve => {
-        setTimeout(resolve, ms);
-    });
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
 }
 
-/* --------------------------------------------------
-   Training API
--------------------------------------------------- */
+// ==========================================
+// TRAINING API
+// ==========================================
 
 app.post(
     "/api/training/search",
     async (req, res) => {
-
         try {
             const word =
-                String(req.body?.word || "").trim();
+                String(
+                    req.body?.word || ""
+                ).trim();
 
             if (!word) {
-                return res.status(400).json({
-                    error: "Kein Wort angegeben."
-                });
+                return res
+                    .status(400)
+                    .json({
+                        error:
+                            "Kein Wort angegeben."
+                    });
             }
 
+            console.log(
+                "======================================"
+            );
+
+            console.log(
+                `TRAINING: ${word}`
+            );
+
+            console.log(
+                `Ziel: ${MAX_RESULTS_PER_WORD} Ergebnisse`
+            );
+
             const results =
-                await searchManyPages(word);
+                await searchManyPages(
+                    word
+                );
+
+            console.log(
+                `FERTIG: ${word} → ${results.length} Ergebnisse`
+            );
+
+            console.log(
+                "======================================"
+            );
 
             res.json({
                 word,
-                pages: MAX_PAGES_PER_WORD,
-                results
+                results,
+                count: results.length,
+                maxResults:
+                    MAX_RESULTS_PER_WORD
             });
 
         } catch (error) {
+            console.error(
+                "Training-Fehler:",
+                error
+            );
 
-            console.error(error);
-
-            res.status(500).json({
-                error:
-                    "Die DuckDuckGo-Suche ist fehlgeschlagen."
-            });
+            res
+                .status(500)
+                .json({
+                    error:
+                        "Die DuckDuckGo-Suche ist fehlgeschlagen."
+                });
         }
     }
 );
 
-/* --------------------------------------------------
-   Training HTML
--------------------------------------------------- */
+// ==========================================
+// TRAINING HTML
+// ==========================================
 
-app.get("/training", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "public",
-            "training.html"
-        )
-    );
-});
-
-/* --------------------------------------------------
-   Hauptseite
--------------------------------------------------- */
-
-app.get("/", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "index.html"
-        )
-    );
-});
-
-/* --------------------------------------------------
-   Health Check
--------------------------------------------------- */
-
-app.get("/health", (req, res) => {
-    res.json({
-        status: "ok",
-        service: "Ghost AI Training Server"
-    });
-});
-
-/* --------------------------------------------------
-   Express 5 Fallback
--------------------------------------------------- */
-
-app.use((req, res, next) => {
-
-    if (req.path.startsWith("/api/")) {
-        return next();
+app.get(
+    "/training",
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "training.html"
+            )
+        );
     }
+);
 
-    res.sendFile(
-        path.join(
-            __dirname,
-            "index.html"
-        )
-    );
-});
+// ==========================================
+// HAUPTSEITE
+// ==========================================
 
-/* --------------------------------------------------
-   Server
--------------------------------------------------- */
+app.get(
+    "/",
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+    }
+);
+
+// ==========================================
+// HEALTH CHECK
+// ==========================================
+
+app.get(
+    "/health",
+    (req, res) => {
+        res.json({
+            status: "ok",
+            service:
+                "Ghost AI Training Server",
+            maxResultsPerWord:
+                MAX_RESULTS_PER_WORD,
+            resultsPerPage:
+                RESULTS_PER_PAGE,
+            maxPagesPerWord:
+                MAX_PAGES_PER_WORD
+        });
+    }
+);
+
+// ==========================================
+// FALLBACK
+// ==========================================
+
+app.use(
+    (req, res, next) => {
+        if (
+            req.path.startsWith(
+                "/api/"
+            )
+        ) {
+            return next();
+        }
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "index.html"
+            )
+        );
+    }
+);
+
+// ==========================================
+// SERVER START
+// ==========================================
 
 app.listen(
     PORT,
     "0.0.0.0",
     () => {
         console.log(
-            `Ghost AI Server läuft auf Port ${PORT}`
+            "======================================"
+        );
+
+        console.log(
+            "Ghost AI Server gestartet"
+        );
+
+        console.log(
+            `Port: ${PORT}`
+        );
+
+        console.log(
+            `Max. Ergebnisse pro Wort: ${MAX_RESULTS_PER_WORD}`
+        );
+
+        console.log(
+            `Max. Seiten pro Wort: ${MAX_PAGES_PER_WORD}`
+        );
+
+        console.log(
+            "======================================"
         );
     }
 );
