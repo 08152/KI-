@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Roter Würfel</title>
+<title>3D Spielzeugpistole - Interaktiv</title>
 
 <style>
     * {
@@ -15,93 +15,211 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #111;
+        background: #1a1a1a;
+        user-select: none; /* Verhindert Textmarkierung beim Ziehen */
     }
 
     body {
         display: flex;
         align-items: center;
         justify-content: center;
-        perspective: 900px;
+        perspective: 1200px;
+        cursor: grab;
     }
 
+    body:active {
+        cursor: grabbing;
+    }
+
+    /* Der interaktive Drehpunkt – wird per JS rotiert */
     .scene {
-        width: 220px;
-        height: 220px;
+        width: 500px;
+        height: 300px;
         position: relative;
         transform-style: preserve-3d;
+        transform: rotateX(-20deg) rotateY(30deg); /* Startwinkel */
     }
 
-    .cube {
-        width: 180px;
-        height: 180px;
+    /* Gemeinsame Basis für alle 3D-Blöcke */
+    .block {
         position: absolute;
-        left: 20px;
-        top: 20px;
         transform-style: preserve-3d;
-        animation: drehen 5s linear infinite;
     }
 
     .seite {
         position: absolute;
-        width: 180px;
-        height: 180px;
-        background: linear-gradient(145deg, #ff3b3b, #a80000);
-        border: 2px solid #700000;
-        box-shadow:
-            inset 0 0 25px rgba(255,255,255,0.12),
-            inset 0 0 15px rgba(0,0,0,0.3);
         backface-visibility: visible;
+        border: 1px solid rgba(0,0,0,0.4);
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
     }
 
-    .vorne {
-        transform: translateZ(90px);
-    }
+    /*--- FARBSCHEMATA ---*/
+    .gun .seite { background: linear-gradient(135deg, #555, #222); }
+    .grip .seite { background: linear-gradient(135deg, #8a4f2a, #4a2711); }
+    .ammo .seite { background: linear-gradient(135deg, #cc2424, #801010); }
+    .ammo .boden { background: linear-gradient(135deg, #d4af37, #aa860b); }
 
-    .hinten {
-        transform: rotateY(180deg) translateZ(90px);
-    }
+    /*--- GEOMETRIE DER BLÖCKE ---*/
+    
+    /* 1. Hauptlauf */
+    .barrel { width: 260px; height: 50px; left: 100px; top: 80px; }
+    .barrel .v { transform: translateZ(25px); width: 260px; height: 50px; }
+    .barrel .h { transform: rotateY(180deg) translateZ(25px); width: 260px; height: 50px; }
+    .barrel .r { transform: rotateY(90deg) translateZ(130px); width: 50px; height: 50px; }
+    .barrel .l { transform: rotateY(-90deg) translateZ(130px); width: 50px; height: 50px; }
+    .barrel .o { transform: rotateX(90deg) translateZ(25px); width: 260px; height: 50px; }
+    .barrel .u { transform: rotateX(-90deg) translateZ(25px); width: 260px; height: 50px; }
 
-    .rechts {
-        transform: rotateY(90deg) translateZ(90px);
-    }
+    /* 2. Griff (Schräg) */
+    .handle { width: 50px; height: 120px; left: 110px; top: 130px; transform: rotateZ(-15deg); }
+    .handle .v { transform: translateZ(20px); width: 50px; height: 120px; }
+    .handle .h { transform: rotateY(180deg) translateZ(20px); width: 50px; height: 120px; }
+    .handle .r { transform: rotateY(90deg) translateZ(25px); width: 40px; height: 120px; }
+    .handle .l { transform: rotateY(-90deg) translateZ(25px); width: 40px; height: 120px; }
+    .handle .o { transform: rotateX(90deg) translateZ(20px); width: 50px; height: 40px; }
+    .handle .u { transform: rotateX(-90deg) translateZ(100px); width: 50px; height: 40px; }
 
-    .links {
-        transform: rotateY(-90deg) translateZ(90px);
-    }
+    /* 3. Abzug */
+    .trigger { width: 15px; height: 30px; left: 180px; top: 140px; }
+    .trigger .v { transform: translateZ(10px); width: 15px; height: 30px; }
+    .trigger .h { transform: rotateY(180deg) translateZ(10px); width: 15px; height: 30px; }
+    .trigger .r { transform: rotateY(90deg) translateZ(7.5px); width: 20px; height: 30px; }
+    .trigger .l { transform: rotateY(-90deg) translateZ(7.5px); width: 20px; height: 30px; }
+    .trigger .o { transform: rotateX(90deg) translateZ(10px); width: 15px; height: 20px; }
+    .trigger .u { transform: rotateX(-90deg) translateZ(20px); width: 15px; height: 20px; }
 
-    .oben {
-        transform: rotateX(90deg) translateZ(90px);
+    /*--- FEDER-ANTRIEB (Im hinteren Lauf platziert) ---*/
+    .spring-container {
+        position: absolute;
+        left: 115px; top: 93px;
+        transform-style: preserve-3d;
     }
-
-    .unten {
-        transform: rotateX(-90deg) translateZ(90px);
+    .spring-ring {
+        position: absolute;
+        width: 24px; height: 24px;
+        border: 4px solid #bbb;
+        border-radius: 50%;
+        transform-style: preserve-3d;
+        background: rgba(255,255,255,0.1);
     }
+    /* Windungen hintereinander aufgereiht */
+    .ring1 { transform: rotateY(90deg) translateZ(0px); }
+    .ring2 { transform: rotateY(90deg) translateZ(15px); }
+    .ring3 { transform: rotateY(90deg) translateZ(30px); }
+    .ring4 { transform: rotateY(90deg) translateZ(45px); }
+    .ring5 { transform: rotateY(90deg) translateZ(60px); }
 
-    @keyframes drehen {
-        0% {
-            transform: rotateX(-20deg) rotateY(0deg);
-        }
-
-        100% {
-            transform: rotateX(-20deg) rotateY(360deg);
-        }
+    /*--- SCHROTMPATREONE (Im vorderen Lauf platziert) ---*/
+    .shotgun-shell {
+        width: 60px; height: 30px; left: 290px; top: 90px;
     }
+    .shotgun-shell .v { transform: translateZ(15px); width: 60px; height: 30px; }
+    .shotgun-shell .h { transform: rotateY(180deg) translateZ(15px); width: 60px; height: 30px; }
+    .shotgun-shell .r { transform: rotateY(90deg) translateZ(30px); width: 30px; height: 30px; } 
+    .shotgun-shell .l { transform: rotateY(-90deg) translateZ(30px); width: 30px; height: 30px; } 
+    .shotgun-shell .o { transform: rotateX(90deg) translateZ(15px); width: 60px; height: 30px; }
+    .shotgun-shell .u { transform: rotateX(-90deg) translateZ(15px); width: 60px; height: 30px; }
 </style>
 </head>
 
 <body>
 
-<div class="scene">
-    <div class="cube">
-        <div class="seite vorne"></div>
-        <div class="seite hinten"></div>
-        <div class="seite rechts"></div>
-        <div class="seite links"></div>
-        <div class="seite oben"></div>
-        <div class="seite unten"></div>
+<div class="scene" id="scene">
+    <!-- Waffenkörper -->
+    <div class="gun">
+        <div class="block barrel">
+            <div class="seite v"></div><div class="seite h"></div>
+            <div class="seite r"></div><div class="seite l"></div>
+            <div class="seite o"></div><div class="seite u"></div>
+        </div>
+        
+        <div class="block grip handle">
+            <div class="seite v"></div><div class="seite h"></div>
+            <div class="seite r"></div><div class="seite l"></div>
+            <div class="seite o"></div><div class="seite u"></div>
+        </div>
+
+        <div class="block trigger">
+            <div class="seite v"></div><div class="seite h"></div>
+            <div class="seite r"></div><div class="seite l"></div>
+            <div class="seite o"></div><div class="seite u"></div>
+        </div>
+    </div>
+
+    <!-- Federung -->
+    <div class="spring-container">
+        <div class="spring-ring ring1"></div>
+        <div class="spring-ring ring2"></div>
+        <div class="spring-ring ring3"></div>
+        <div class="spring-ring ring4"></div>
+        <div class="spring-ring ring5"></div>
+    </div>
+
+    <!-- Schrotpatrone (Steckt sichtbar vorne im Lauf) -->
+    <div class="block ammo shotgun-shell">
+        <div class="seite v"></div><div class="seite h"></div>
+        <div class="seite r"></div>
+        <div class="seite l boden"></div>
+        <div class="seite o"></div><div class="seite u"></div>
     </div>
 </div>
+
+<script>
+    const scene = document.getElementById('scene');
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    
+    // Aktuelle Rotationswerte (Startwerte)
+    let rotationX = -20;
+    let rotationY = 30;
+
+    // Event-Listener für PC (Maus) und Mobile (Touch)
+    window.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        // Delta-Bewegung berechnen
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        // Rotation anpassen (0.5 dient als Mausempfindlichkeit)
+        rotationY += deltaX * 0.5;
+        rotationX -= deltaY * 0.5;
+
+        // Grenzwerte für die X-Achse (damit das Modell nicht über Kopf flippt)
+        rotationX = Math.max(-85, Math.min(85, rotationX));
+
+        // Transformation auf die CSS-Szene anwenden
+        scene.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+    
+    // Touch-Support für Smartphones/Tablets
+    window.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.touches[0].clientX - previousMousePosition.x;
+        const deltaY = e.touches[0].clientY - previousMousePosition.y;
+        rotationY += deltaX * 0.5;
+        rotationX -= deltaY * 0.5;
+        rotationX = Math.max(-85, Math.min(85, rotationX));
+        scene.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+
+    window.addEventListener('touchend', () => isDragging = false);
+</script>
 
 </body>
 </html>
