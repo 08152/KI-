@@ -3,202 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Spielzeugpistole - Modularer Bausatz</title>
+<title>3D Kipplauf Schrotpistole - High Detail Modular</title>
 
 <style>
     * { box-sizing: border-box; }
     html, body {
         margin: 0; width: 100%; height: 100%;
-        overflow: hidden; background: #0f121a;
+        overflow: hidden; background: #0a0d14;
         user-select: none; font-family: system-ui, sans-serif;
     }
     body {
         display: flex; align-items: center; justify-content: center;
-        perspective: 1600px; cursor: grab;
+        perspective: 1800px; cursor: grab;
     }
     body:active { cursor: grabbing; }
 
-    .instructions {
-        position: absolute; top: 20px; left: 20px; color: #4af;
-        font-size: 13px; pointer-events: none; line-height: 1.6;
-        background: rgba(0, 0, 0, 0.7); padding: 15px; border-radius: 8px;
-        border: 1px solid #1a2333; z-index: 10;
+    /* Kontrollzentrum */
+    .ui-panel {
+        position: absolute; top: 20px; left: 20px;
+        background: rgba(8, 12, 21, 0.9); padding: 22px;
+        border-radius: 12px; border: 1px solid #1e293b; z-index: 100;
+        display: flex; flex-direction: column; gap: 8px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.6); width: 220px;
     }
+    .ui-panel h3 { color: #f1f5f9; margin: 0 0 5px 0; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; color: #38bdf8; }
+    .btn {
+        background: #1e293b; border: 1px solid #334155; color: #cbd5e1;
+        padding: 10px 12px; border-radius: 6px; cursor: pointer;
+        font-weight: 600; text-align: left; transition: all 0.15s ease; font-size: 12px;
+    }
+    .btn:hover:not(:disabled) { background: #334155; color: #f8fafc; border-color: #475569; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
 
-    /* Interaktiver 3D-Raum */
+    /* 3D-Bühne */
     .scene {
-        width: 600px; height: 400px; position: relative;
+        width: 700px; height: 500px; position: relative;
         transform-style: preserve-3d;
-        transform: rotateX(-20deg) rotateY(40deg) scale3d(1.1, 1.1, 1.1);
+        transform: rotateX(-18deg) rotateY(35deg) scale3d(1.1, 1.1, 1.1);
+        transition: transform 0.1s ease-out;
     }
 
-    /* Globale 3D-Klassen */
+    /* Alle Blöcke sind echte 6-seitige Würfel */
     .block { position: absolute; transform-style: preserve-3d; }
     .seite {
         position: absolute; backface-visibility: visible;
         border: 1px solid rgba(0, 0, 0, 0.5);
-        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
     }
 
-    /* --- MATERIALIEN (Farbthemen für Spielzeug-Look) --- */
-    .mat-frame .seite { background: linear-gradient(135deg, #ff5722, #e64a19); } /* Knalliges Orange */
-    .mat-slide .seite { background: linear-gradient(135deg, #37474f, #212121); } /* Dunkelgrauer Schlitten */
-    .mat-grip .seite { background: linear-gradient(135deg, #1e1e1e, #111111); }  /* Schwarze Griffschalen */
-    .mat-mech .seite { background: linear-gradient(135deg, #b0bec5, #78909c); }  /* Mechanikteile */
-    .mat-ammo .seite { background: linear-gradient(135deg, #e53935, #b71c1c); }  /* Schrotpatrone Rot */
-    .mat-brass .seite { background: linear-gradient(135deg, #ffb300, #ff8f00); } /* Patronenboden */
+    /* MAT-FARBEN (Strukturiert für 3D-Drucker-Optik) */
+    .mat-steel .seite { background: linear-gradient(135deg, #334155, #1e293b); }   /* Gehäusestahl */
+    .mat-darksteel .seite { background: linear-gradient(135deg, #1e293b, #0f172a); } /* Schlitten / Verschluss */
+    .mat-wood .seite { background: linear-gradient(135deg, #7c2d12, #451a03); }    /* Premium Nussbaumholz */
+    .mat-mech .seite { background: linear-gradient(135deg, #94a3b8, #64748b); }    /* Innere Mechanik */
+    .mat-plastic .seite { background: linear-gradient(135deg, #dc2626, #b91c1c); } /* Rote Schrotpatrone */
+    .mat-brass .seite { background: linear-gradient(135deg, #fbbf24, #d97706); }   /* Patronen-Messing */
+
+    /* WÜRFEL-SEITEN GENERIERUNG (Hilfsklassen für Tiefe) */
+    .w-cube .v { transform: translateZ(var(--z-half)); width: var(--w); height: var(--h); }
+    .w-cube .h { transform: rotateY(180deg) translateZ(var(--z-half)); width: var(--w); height: var(--h); }
+    .w-cube .r { transform: rotateY(90deg) translateZ(var(--x-half)); width: var(--d); height: var(--h); }
+    .w-cube .l { transform: rotateY(-90deg) translateZ(var(--x-half)); width: var(--d); height: var(--h); }
+    .w-cube .o { transform: rotateX(90deg) translateZ(var(--y-half)); width: var(--w); height: var(--d); }
+    .w-cube .u { transform: rotateX(-90deg) translateZ(var(--y-half2)); width: var(--w); height: var(--d); }
 
     /* ================================================================= */
-    /* 1. DER HAUPTLAUF & SCHLITTEN (Mit Patronenlager & Visierung) */
-    .barrel-main { width: 280px; height: 46px; left: 80px; top: 80px; transform: translateZ(0px); }
-    .barrel-main .v { transform: translateZ(20px); width: 280px; height: 46px; }
-    .barrel-main .h { transform: rotateY(180deg) translateZ(20px); width: 280px; height: 46px; }
-    .barrel-main .r { transform: rotateY(90deg) translateZ(140px); width: 40px; height: 46px; } 
-    .barrel-main .l { transform: rotateY(-90deg) translateZ(140px); width: 40px; height: 46px; } 
-    .barrel-main .o { transform: rotateX(90deg) translateZ(20px); width: 280px; height: 40px; }
-    .barrel-main .u { transform: rotateX(-90deg) translateZ(26px); width: 280px; height: 40px; }
+    /* GEHÄUSEBAUGRUPPE (Receiver) */
+    .rec-core { --w:120px; --h:60px; --d:40px; --z-half:20px; --x-half:100px; --y-half:20px; --y-half2:40px; left: 160px; top: 140px; }
+    .rec-top-cover { --w:100px; --h:15px; --d:36px; --z-half:18px; --x-half:82px; --y-half:18px; --y-half2:-3px; left: 160px; top: 125px; }
+    .rec-shield { --w:15px; --h:60px; --d:44px; --z-half:22px; --x-half:5px; --y-half:22px; --y-half2:38px; left: 280px; top: 140px; } /* Stoßboden */
+    .lock-lever { --w:35px; --h:10px; --d:12px; --z-half:6px; --x-half:11.5px; --y-half:6px; --y-half2:4px; left: 190px; top: 115px; transform-origin: left center; transition: transform 0.3s; }
+    .scene.status-open .lock-lever { transform: rotateZ(-25deg); }
 
-    /* Visierung: Korn (vorne) */
-    .sight-front { width: 15px; height: 10px; left: 335px; top: 70px; }
-    .sight-front .v { transform: translateZ(4px); width: 15px; height: 10px; }
-    .sight-front .h { transform: rotateY(180deg) translateZ(4px); width: 15px; height: 10px; }
-    .sight-front .r { transform: rotateY(90deg) translateZ(7.5px); width: 8px; height: 10px; }
-    .sight-front .l { transform: rotateY(-90deg) translateZ(7.5px); width: 8px; height: 10px; }
-    .sight-front .o { transform: rotateX(90deg) translateZ(4px); width: 15px; height: 8px; }
-
-    /* Visierung: Kimme (hinten) */
-    .sight-rear { width: 15px; height: 12px; left: 90px; top: 68px; }
-    .sight-rear .v { transform: translateZ(12px); width: 15px; height: 12px; }
-    .sight-rear .h { transform: rotateY(180deg) translateZ(12px); width: 15px; height: 12px; }
-    .sight-rear .r { transform: rotateY(90deg) translateZ(7.5px); width: 24px; height: 12px; }
-    .sight-rear .l { transform: rotateY(-90deg) translateZ(7.5px); width: 24px; height: 12px; }
-    .sight-rear .o { transform: rotateX(90deg) translateZ(6px); width: 15px; height: 24px; }
+    /* HAHN & ABZUG */
+    .hammer { --w:18px; --h:35px; --d:14px; --z-half:7px; --x-half:2px; --y-half:7px; --y-half2:28px; left: 150px; top: 105px; transform-origin: bottom center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .scene.status-cocked .hammer { transform: rotateZ(-40deg); }
+    .scene.status-fired .hammer { transform: rotateZ(-5deg); }
+    .trigger-guard { --w:65px; --h:40px; --d:8px; --z-half:4px; --x-half:28.5px; --y-half:4px; --y-half2:36px; left: 200px; top: 195px; }
+    .trigger-guard .seite { background: transparent !important; border: 5px solid #1e293b; border-left: none; box-shadow: none; }
+    .trigger { --w:14px; --h:28px; --d:10px; --z-half:5px; --x-half:2px; --y-half:5px; --y-half2:23px; left: 215px; top: 198px; transform-origin: top center; transition: transform 0.1s; }
+    .scene.status-fired .trigger { transform: rotateZ(18deg); }
+    /* ================================================================= */
+    /* MULTI-BLOCK ERGONOMISCHER HOLZGRIFF (Aus echten Würfeln gebaut) */
+    /* Griff-Adapter oben */
+    .g-top { --w:50px; --h:35px; --d:38px; --z-half:19px; --x-half:31px; --y-half:19px; --y-half2:16px; left: 120px; top: 180px; transform: rotateZ(-8deg); }
+    /* Griff-Zentrum mit Handrückenstütze */
+    .g-mid { --w:44px; --h:65px; --d:34px; --z-half:17px; --x-half:26px; --y-half:17px; --y-half2:48px; left: 104px; top: 212px; transform: rotateZ(-20deg); }
+    /* Fingermulde 1 */
+    .g-f1 { --w:12px; --h:20px; --d:34px; --z-half:17px; --x-half:-1px; --y-half:17px; --y-half2:3px; left: 142px; top: 220px; transform: rotateZ(-20deg); }
+    /* Fingermulde 2 */
+    .g-f2 { --w:12px; --h:20px; --d:34px; --z-half:17px; --x-half:-1px; --y-half:17px; --y-half2:3px; left: 135px; top: 242px; transform: rotateZ(-20deg); }
+    /* Massiver ausgestellter Griffboden (Magwell-Optik) */
+    .g-bot { --w:56px; --h:16px; --d:40px; --z-half:20px; --x-half:36px; --y-half:20px; --y-half2:-4px; left: 73px; top: 272px; transform: rotateZ(-20deg); }
 
     /* ================================================================= */
-    /* 2. ERGONOMISCH MODELLIERTER GRIFF (Mehrstufige Segmente) */
-    .grip-top { width: 55px; height: 40px; left: 95px; top: 126px; transform: rotateZ(-5deg); }
-    .grip-top .v { transform: translateZ(18px); width: 55px; height: 40px; }
-    .grip-top .h { transform: rotateY(180deg) translateZ(18px); width: 55px; height: 40px; }
-    .grip-top .r { transform: rotateY(90deg) translateZ(27.5px); width: 36px; height: 40px; }
-    .grip-top .l { transform: rotateY(-90deg) translateZ(27.5px); width: 36px; height: 40px; }
-    .grip-top .u { transform: rotateX(-90deg) translateZ(20px); width: 55px; height: 36px; }
+    /* BEWEGLICHE KIPPLAUF-EINHEIT (Drehpunkt exakt am Scharniergelenk) */
+    .barrel-assembly {
+        position: absolute; left: 290px; top: 140px; width: 260px; height: 60px;
+        transform-style: preserve-3d;
+        transform-origin: 5px 55px 0px; /* Präzises mechanisches Gelenk */
+        transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    /* Steuerung des Winkels bei geöffnetem Kipplauf */
+    .scene.status-open .barrel-assembly { transform: rotateZ(32deg); }
 
-    .grip-middle { width: 50px; height: 100px; left: 85px; top: 160px; transform: rotateZ(-18deg); }
-    .grip-middle .v { transform: translateZ(16px); width: 50px; height: 100px; }
-    .grip-middle .h { transform: rotateY(180deg) translateZ(16px); width: 50px; height: 100px; }
-    .grip-middle .r { transform: rotateY(90deg) translateZ(25px); width: 32px; height: 100px; } 
-    .grip-middle .l { transform: rotateY(-90deg) translateZ(25px); width: 32px; height: 100px; } 
-    .grip-middle .u { transform: rotateX(-90deg) translateZ(84px); width: 50px; height: 32px; }
-
-    .grip-bottom { width: 58px; height: 15px; left: 52px; top: 250px; transform: rotateZ(-18deg); }
-    .grip-bottom .v { transform: translateZ(18px); width: 58px; height: 15px; }
-    .grip-bottom .h { transform: rotateY(180deg) translateZ(18px); width: 58px; height: 15px; }
-    .grip-bottom .r { transform: rotateY(90deg) translateZ(29px); width: 36px; height: 15px; }
-    .grip-bottom .l { transform: rotateY(-90deg) translateZ(29px); width: 36px; height: 15px; }
-    .grip-bottom .o { transform: rotateX(90deg) translateZ(7.5px); width: 58px; height: 36px; }
-    .grip-bottom .u { transform: rotateX(-90deg) translateZ(7.5px); width: 58px; height: 36px; }
-
-    /* Abzugschutz (Trigger Guard) */
-    .trigger-guard { width: 50px; height: 35px; left: 145px; top: 126px; }
-    .trigger-guard .v { transform: translateZ(4px); width: 50px; height: 35px; border: 4px solid #ff5722; border-left: none; background: transparent; box-shadow: none; }
-    .trigger-guard .h { transform: rotateY(180deg) translateZ(4px); width: 50px; height: 35px; border: 4px solid #ff5722; border-left: none; background: transparent; box-shadow: none; }
+    /* Hauptlauf-Quader */
+    .b-main { --w:210px; --h:44px; --d:36px; --z-half:18px; --x-half:192px; --y-half:18px; --y-half2:26px; left: 10px; top: 0px; }
+    /* Obere massive Visierschiene */
+    .b-rib { --w:210px; --h:8px; --d:16px; --z-half:8px; --x-half:202px; --y-half:8px; --y-half2:0px; left: 10px; top: -8px; }
+    /* Korn-Visier (Messing-Pin) */
+    .b-bead { --w:8px; --h:8px; --d:8px; --z-half:4px; --x-half:4px; --y-half:4px; --y-half2:4px; left: 200px; top: -16px; }
+    
+    /* Unterer Verriegelungshaken (Greift ins Gehäuse) */
+    .b-lug { --w:35px; --h:16px; --d:14px; --z-half:7px; --x-half:10.5px; --y-half:7px; --y-half2:9px; left: 15px; top: 44px; }
+    /* Echte offene Laufmündung (Rahmen-Effekt durch geschickte Blöcke) */
+    .b-muzzle-top { --w:12px; --h:8px; --d:36px; --z-half:18px; --x-half:0px; --y-half:18px; --y-half2:0px; left: 220px; top: 0px; }
+    .b-muzzle-bot { --w:12px; --h:8px; --d:36px; --z-half:18px; --x-half:0px; --y-half:18px; --y-half2:0px; left: 220px; top: 36px; }
+    .b-muzzle-l { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(15px); }
+    .b-muzzle-r { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(-18px); }
 
     /* ================================================================= */
-    /* ERGÄNZENDE KLASSEN FÜR MECHANIK AUS TEIL 2 */
-    .trigger-lever { width: 14px; height: 26px; left: 160px; top: 130px; transform: rotateZ(-10deg); }
-    .trigger-lever .v { transform: translateZ(6px); width: 14px; height: 26px; }
-    .trigger-lever .h { transform: rotateY(180deg) translateZ(6px); width: 14px; height: 26px; }
-    .trigger-lever .r { transform: rotateY(90deg) translateZ(7px); width: 12px; height: 26px; }
-    .trigger-lever .l { transform: rotateY(-90deg) translateZ(7px); width: 12px; height: 26px; }
-    .piston { width: 70px; height: 20px; left: 90px; top: 93px; }
-    .piston .v { transform: translateZ(8px); width: 70px; height: 20px; }
-    .piston .h { transform: rotateY(180deg) translateZ(8px); width: 70px; height: 20px; }
-    .piston .r { transform: rotateY(90deg) translateZ(35px); width: 16px; height: 20px; }
-    .spring-block { position: absolute; left: 165px; top: 94px; transform-style: preserve-3d; }
-    .spring-coil { position: absolute; width: 16px; height: 16px; border: 2.5px solid #78909c; border-radius: 50%; transform-style: preserve-3d; }
-    .c1 { transform: rotateY(90deg) translateZ(0px); } .c2 { transform: rotateY(90deg) translateZ(8px); } .c3 { transform: rotateY(90deg) translateZ(16px); } .c4 { transform: rotateY(90deg) translateZ(24px); } .c5 { transform: rotateY(90deg) translateZ(32px); }
-    .shotgun-shell { width: 65px; height: 24px; left: 240px; top: 91px; }
-    .shotgun-shell .v { transform: translateZ(12px); width: 65px; height: 24px; } .shotgun-shell .h { transform: rotateY(180deg) translateZ(12px); width: 65px; height: 24px; }
-    .shotgun-shell .r { transform: rotateY(90deg) translateZ(32.5px); width: 24px; height: 24px; } .shotgun-shell .l { transform: rotateY(-90deg) translateZ(32.5px); width: 24px; height: 24px; }
-    .shotgun-shell .o { transform: rotateX(90deg) translateZ(12px); width: 65px; height: 24px; } .shotgun-shell .u { transform: rotateX(-90deg) translateZ(12px); width: 65px; height: 24px; }
+    /* MECHANISCHER AUSWERFER-STIFT (Ejector im Lauf) */
+    .ejector-rod {
+        --w:40px; --h:8px; --d:8px; --z-half:4px; --x-half:0px; --y-half:4px; --y-half2:4px; left: -30px; top: 46px;
+        transition: transform 0.4s ease;
+    }
+    .scene.status-open .ejector-rod { transform: translateX(0px); }
+    .scene.status-eject .ejector-rod { transform: translateX(-12px); }
+    /* ================================================================= */
+    /* REALISTISCHE SCHROTPATREONE (Aus echten Würfelkomponenten gebaut) */
+    .shell-group {
+        position: absolute; left: 10px; top: 11px; width: 65px; height: 22px;
+        transform-style: preserve-3d;
+        transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s;
+        opacity: 0; /* Standardmäßig entladen */
+    }
+
+    /* Rote Kunststoff-Hülse */
+    .sh-body { --w:48px; --h:22px; --d:24px; --z-half:12px; --x-half:12px; --y-half:12px; --y-half2:10px; left: 17px; top: 0; }
+    /* Goldener Messingboden */
+    .sh-base { --w:17px; --h:24px; --d:26px; --z-half:13px; --x-half:11.5px; --y-half:13px; --y-half2:11px; left: 0; top: -1px; }
+
+    /* ANSTEUERUNG DER PATRONEN-POSITION IM 3D-RAUM */
+    /* Geladen: Steckt im abgekippten Lauf */
+    .scene.status-loaded .shell-group { opacity: 1; transform: translateX(-12px); }
+    /* Geschlossen: Schiebt sich vollständig bündig in das Patronenlager */
+    .scene.status-closed .shell-group, .scene.status-cocked .shell-group, .scene.status-fired .shell-group { opacity: 1; transform: translateX(0px); }
+    /* Auswerfen: Hülse wird durch die Feder mechanisch nach hinten links herausgeschleudert */
+    .scene.status-eject .shell-group {
+        animation: shellEjectFly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes shellEjectFly {
+        0% { opacity: 1; transform: translateX(-12px) rotateZ(0deg); }
+        25% { opacity: 1; transform: translateX(-70px) translateY(-25px) rotateZ(-30deg) translateZ(15px); }
+        100% { opacity: 0; transform: translateX(-240px) translateY(150px) rotateZ(-150deg) translateZ(50px); }
+    }
 </style>
 </head>
 <body>
 
-<div class="instructions">
-    <strong>Mechanische Spielzeugpistole (3D-Model)</strong><br>
-    • Ziehen mit Maus: Modell rundherum betrachten<br>
-    • Mausrad: Stufenloser Zoom
+<!-- Interaktives Kontrollzentrum für den echten Ablauf -->
+<div class="ui-panel">
+    <h3>Bauanleitung & Funktion</h3>
+    <button class="btn" id="btn-open">1. Lauf runterklappen</button>
+    <button class="btn" id="btn-load" disabled>2. Patrone rein</button>
+    <button class="btn" id="btn-close" disabled>3. Lauf hochklappen</button>
+    <button class="btn" id="btn-cock" disabled>4. Hahn spannen</button>
+    <button class="btn" id="btn-fire" disabled>5. Abdrücken 💥</button>
+    <button class="btn" id="btn-eject" disabled>6. Auswerfen ↩</button>
 </div>
 
-<div class="scene" id="scene">
+<div class="scene status-open" id="scene">
     
-    <!-- Äußeres Gehäuse & Lauf -->
-    <div class="block mat-slide barrel-main">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div><div class="seite l"></div>
-        <div class="seite o"></div><div class="seite u"></div>
-    </div>
+    <!-- === GEHÄUSEBAUGRUPPE (Receiver) === -->
+    <div class="block mat-steel w-cube rec-core"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-darksteel w-cube rec-top-cover"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-steel w-cube rec-shield"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-mech w-cube lock-lever"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- Visierung -->
-    <div class="block mat-slide sight-front"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div></div>
-    <div class="block mat-slide sight-rear"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div></div>
+    <!-- === MECHANIK (Hahn, Abzug, Bügel) === -->
+    <div class="block mat-mech w-cube hammer"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block trigger-guard"><div class="seite v"></div><div class="seite h"></div></div>
+    <div class="block mat-mech w-cube trigger"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- Ergonomischer Griff (Komponenten) -->
-    <div class="block mat-frame grip-top">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div><div class="seite l"></div>
-        <div class="seite u"></div>
-    </div>
-    <div class="block mat-grip grip-middle">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div><div class="seite l"></div>
-        <div class="seite u"></div>
-    </div>
-    <div class="block mat-frame grip-bottom">
-        <div class="seite v"></div><div class="seite h"></div>
-    <!-- Innere Funktionsteile: Abzughebel -->
-    <div class="block mat-mech trigger-lever">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div><div class="seite l"></div>
-    </div>
+    <!-- === ERGONOMISCHER HOLZGRIFF === -->
+    <div class="block mat-wood w-cube g-top"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-wood w-cube g-mid"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-wood w-cube g-f1"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-wood w-cube g-f2"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-wood w-cube g-bot"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- Antriebskolben / Schlagbolzen -->
-    <div class="block mat-mech piston">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div>
-    </div>
+    <!-- === KIPPLAUF-EINHEIT === -->
+    <div class="barrel-assembly" id="barrel-assembly">
+        <div class="block mat-barrel w-cube b-main"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-darksteel w-cube b-rib"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-brass w-cube b-bead"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-steel w-cube b-lug"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        
+        <!-- Offene Mündungsausgänge -->
+        <div class="block mat-barrel w-cube b-muzzle-top"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-barrel w-cube b-muzzle-bot"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-barrel w-cube b-muzzle-l"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <div class="block mat-barrel w-cube b-muzzle-r"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- Druckfeder (Windungen) -->
-    <div class="spring-block">
-        <div class="spring-coil c1"></div>
-        <div class="spring-coil c2"></div>
-        <div class="spring-coil c3"></div>
-        <div class="spring-coil c4"></div>
-        <div class="spring-coil c5"></div>
-    </div>
-
-    <!-- Schrotflinten-Munition im Patronenlager -->
-    <div class="block mat-ammo shotgun-shell">
-        <div class="seite v"></div><div class="seite h"></div>
-        <div class="seite r"></div>                  <!-- Rote Hülse -->
-        <div class="seite l mat-brass"></div>        <!-- Messing-Kappe hinten -->
-        <div class="seite o"></div><div class="seite u"></div>
+        <!-- Auswerfer-Stift unten -->
+        <div class="block mat-mech w-cube ejector-rod"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        <!-- Echte Schrotpatrone im Lager -->
+        <div class="shell-group">
+            <div class="block mat-plastic w-cube sh-body"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+            <div class="block mat-brass w-cube sh-base"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+        </div>
     </div>
 
 </div>
 
 <script>
     const scene = document.getElementById('scene');
+    
+    const bOpen = document.getElementById('btn-open');
+    const bLoad = document.getElementById('btn-load');
+    const bClose = document.getElementById('btn-close');
+    const bCock = document.getElementById('btn-cock');
+    const bFire = document.getElementById('btn-fire');
+    const bEject = document.getElementById('btn-eject');
+
+    // Logische Abfolge der einzelnen Waffenschritte steuern
+    bOpen.addEventListener('click', () => {
+        scene.className = "scene status-open";
+        toggleButtons(false, true, false, false, false, false);
+    });
+
+    bLoad.addEventListener('click', () => {
+        scene.className = "scene status-loaded";
+        toggleButtons(false, false, true, false, false, false);
+    });
+
+    bClose.addEventListener('click', () => {
+        scene.className = "scene status-closed";
+        toggleButtons(true, false, false, true, false, false);
+    });
+
+    bCock.addEventListener('click', () => {
+        scene.className = "scene status-cocked";
+        toggleButtons(false, false, false, false, true, false);
+    });
+
+    bFire.addEventListener('click', () => {
+        scene.className = "scene status-fired";
+        toggleButtons(false, false, false, false, false, true);
+    });
+
+    bEject.addEventListener('click', () => {
+        scene.className = "scene status-open status-eject";
+        toggleButtons(true, false, false, false, false, false);
+    });
+
+    function toggleButtons(o, l, c, co, f, e) {
+        bOpen.disabled = !o; bLoad.disabled = !l; bClose.disabled = !c;
+        bCock.disabled = !co; bFire.disabled = !f; bEject.disabled = !e;
+    }
+
+    // 3D INTERAKTIVE MAUSSTEUERUNG (DREHEN & ZOOM)
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    
-    let rotationX = -20;
-    let rotationY = 40;
-    let currentScale = 1.1;
+    let rotationX = -18, rotationY = 35, currentScale = 1.1;
 
-    // 3D-Drehung per Mausbewegung (Klicken & Ziehen)
     window.addEventListener('mousedown', (e) => {
+        if(e.target.tagName === 'BUTTON') return;
         isDragging = true;
         previousMousePosition = { x: e.clientX, y: e.clientY };
     });
@@ -207,53 +280,21 @@
         if (!isDragging) return;
         const deltaX = e.clientX - previousMousePosition.x;
         const deltaY = e.clientY - previousMousePosition.y;
-
         rotationY += deltaX * 0.4;
         rotationX -= deltaY * 0.4;
-        rotationX = Math.max(-85, Math.min(85, rotationX)); // Begrenzung Kippwinkel
-
-        updateTransform();
+        rotationX = Math.max(-75, Math.min(75, rotationX)); // Kippbegrenzung
+        scene.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg) scale3d(${currentScale}, ${currentScale}, ${currentScale})`;
         previousMousePosition = { x: e.clientX, y: e.clientY };
     });
 
     window.addEventListener('mouseup', () => isDragging = false);
 
-    // Zoom per Mausrad
     window.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (e.deltaY < 0) {
-            currentScale += 0.05;
-        } else {
-            currentScale -= 0.05;
-        }
-        currentScale = Math.max(0.5, Math.min(2.5, currentScale));
-        updateTransform();
-    }, { passive: false });
-
-    // Touchsteuerung für Smartphones / Tablets
-    window.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        previousMousePosition = { x: e.touches.clientX, y: e.touches.clientY };
-    });
-
-    window.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const deltaX = e.touches.clientX - previousMousePosition.x;
-        const deltaY = e.touches.clientY - previousMousePosition.y;
-
-        rotationY += deltaX * 0.4;
-        rotationX -= deltaY * 0.4;
-        rotationX = Math.max(-85, Math.min(85, rotationX));
-
-        updateTransform();
-        previousMousePosition = { x: e.touches.clientX, y: e.touches.clientY };
-    });
-
-    window.addEventListener('touchend', () => isDragging = false);
-
-    function updateTransform() {
+        currentScale += e.deltaY < 0 ? 0.05 : -0.05;
+        currentScale = Math.max(0.5, Math.min(2.2, currentScale));
         scene.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg) scale3d(${currentScale}, ${currentScale}, ${currentScale})`;
-    }
+    }, { passive: false });
 </script>
 
 </body>
