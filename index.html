@@ -3,34 +3,33 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Block World</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Optimized Block World</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial}
-#ui{position:fixed;top:10px;left:10px;z-index:10;background:#000b;color:white;padding:10px}
-#cross{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:24px;pointer-events:none}
-#hotbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:#222b;padding:5px}
-.slot{width:50px;height:50px;border:2px solid #777;background:#333;color:white;text-align:center;padding:4px;font-size:11px}
-.selected{border:3px solid white}
-.slot img{width:28px;height:28px;image-rendering:pixelated}
+body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial}
+#ui{position:fixed;top:10px;left:10px;z-index:5;background:#000b;color:white;padding:12px;border:2px solid #555;border-radius:8px}
+button{padding:10px;margin-top:7px}
+#crosshair{position:fixed;top:50%;left:50%;color:white;font-size:24px;transform:translate(-50%,-50%);pointer-events:none}
+#hotbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:5px;background:#222b;padding:5px}
+.slot{width:52px;height:52px;background:#444;border:3px solid #777;color:white;text-align:center;font-size:10px;padding:3px}
+.slot.selected{border-color:white}
+.slot img{width:30px;height:30px;image-rendering:pixelated}
 #inventory{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#292929;border:4px solid #111;padding:15px;color:white;width:300px}
-#inventory h2{margin-top:0}
 #invslots{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .invslot{height:55px;background:#444;border:2px solid #777;text-align:center;padding:4px}
 .invslot img{width:30px;height:30px}
-button{padding:8px}
 </style>
 </head>
 <body>
 
 <div id="ui">
 <b>BLOCK WORLD</b><br>
-<span id="info">Laden...</span><br>
-<button id="new">Neue Welt</button>
+<span id="info">Lade Welt...</span><br>
+<button id="newWorld">Neue Welt</button>
 </div>
 
-<div id="cross">+</div>
+<div id="crosshair">+</div>
 <div id="hotbar"></div>
 
 <div id="inventory">
@@ -41,10 +40,12 @@ button{padding:8px}
 </div>
 
 <script type="importmap">
-{"imports":{
+{
+"imports":{
 "three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
 "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-}}
+}
+}
 </script>
 
 <script type="module">
@@ -59,7 +60,6 @@ scene.fog=new THREE.Fog(0x87ceeb,35,90);
 const camera=new THREE.PerspectiveCamera(
 75,innerWidth/innerHeight,.05,120
 );
-camera.position.set(0,12,8);
 
 const renderer=new THREE.WebGLRenderer({
 antialias:false,powerPreference:"high-performance"
@@ -69,14 +69,14 @@ renderer.setPixelRatio(1);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x666666,1.8));
-
 const controls=new PointerLockControls(camera,document.body);
-scene.add(controls.object);
+scene.add(controls.getObject());
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x667788,1.8));
 
 const loader=new THREE.TextureLoader();
 
-function tex(url){
+function loadTexture(url){
 const t=loader.load(url);
 t.magFilter=THREE.NearestFilter;
 t.minFilter=THREE.NearestFilter;
@@ -84,27 +84,26 @@ t.colorSpace=THREE.SRGBColorSpace;
 return t;
 }
 
-const textures={
-dirt:tex("https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png"),
-stone:tex("https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png")
-};
+const dirtTexture=loadTexture(
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png"
+);
+
+const stoneTexture=loadTexture(
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png"
+);
 
 const materials={
-dirt:new THREE.MeshLambertMaterial({map:textures.dirt}),
-stone:new THREE.MeshLambertMaterial({map:textures.stone})
+dirt:new THREE.MeshLambertMaterial({map:dirtTexture}),
+stone:new THREE.MeshLambertMaterial({map:stoneTexture})
 };
 
-const geo=new THREE.BoxGeometry(1,1,1);
-
-let dirtMesh,stoneMesh;
 const SIZE=32;
 const HEIGHT=16;
-const blocks=new Map();
-const heights=new Map();
 
-function key(x,y,z){
-return x+","+y+","+z;
-}
+let world=new Map();
+let worldMeshes=[];
+
+const key=(x,y,z)=>x+","+y+","+z;
 
 function terrainHeight(x,z){
 return Math.max(1,Math.min(
@@ -117,128 +116,186 @@ Math.sin((x+z)*.12)
 ));
 }
 
-function generate(){
+function solid(x,y,z){
+return world.has(key(x,y,z));
+}
 
-if(dirtMesh)scene.remove(dirtMesh);
-if(stoneMesh)scene.remove(stoneMesh);
+const faces=[
+{dir:[1,0,0],corners:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]]},
+{dir:[-1,0,0],corners:[[0,0,1],[0,1,1],[0,1,0],[0,0,0]]},
+{dir:[0,1,0],corners:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]},
+{dir:[0,-1,0],corners:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]},
+{dir:[0,0,1],corners:[[1,0,1],[1,1,1],[0,1,1],[0,0,1]]},
+{dir:[0,0,-1],corners:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]]}
+];
 
-blocks.clear();
-heights.clear();
+const uvs=[
+[0,0],[1,0],[1,1],[0,1]
+];
 
-let dc=0,sc=0;
+function buildWorldMesh(type){
+
+const positions=[];
+const normals=[];
+const uv=[];
+const indices=[];
+let vertex=0;
 
 for(let x=-SIZE/2;x<SIZE/2;x++){
 for(let z=-SIZE/2;z<SIZE/2;z++){
 
 const h=terrainHeight(x,z);
-heights.set(x+","+z,h);
 
 for(let y=0;y<h;y++){
-blocks.set(key(x,y,z),y<h-2?"stone":"dirt");
-if(y<h-2)sc++;
-else dc++;
+
+const block=world.get(key(x,y,z));
+if(block!==type)continue;
+
+for(const face of faces){
+
+const [dx,dy,dz]=face.dir;
+
+if(solid(x+dx,y+dy,z+dz))continue;
+
+for(let i=0;i<4;i++){
+
+const c=face.corners[i];
+positions.push(x+c[0],y+c[1],z+c[2]);
+normals.push(dx,dy,dz);
+uv.push(uvs[i][0],uvs[i][1]);
+
+}
+
+indices.push(
+vertex,vertex+1,vertex+2,
+vertex,vertex+2,vertex+3
+);
+
+vertex+=4;
+}
 }
 }
 }
 
-dirtMesh=new THREE.InstancedMesh(geo,materials.dirt,dc);
-stoneMesh=new THREE.InstancedMesh(geo,materials.stone,sc);
+const geometry=new THREE.BufferGeometry();
 
-const m=new THREE.Matrix4();
-let di=0,si=0;
+geometry.setAttribute(
+"position",new THREE.Float32BufferAttribute(positions,3)
+);
+
+geometry.setAttribute(
+"normal",new THREE.Float32BufferAttribute(normals,3)
+);
+
+geometry.setAttribute(
+"uv",new THREE.Float32BufferAttribute(uv,2)
+);
+
+geometry.setIndex(indices);
+geometry.computeBoundingSphere();
+
+return new THREE.Mesh(geometry,materials[type]);
+}
+
+function generateWorld(){
+
+for(const mesh of worldMeshes){
+scene.remove(mesh);
+mesh.geometry.dispose();
+}
+
+worldMeshes=[];
+world.clear();
 
 for(let x=-SIZE/2;x<SIZE/2;x++){
 for(let z=-SIZE/2;z<SIZE/2;z++){
 
-const h=heights.get(x+","+z);
+const h=terrainHeight(x,z);
 
 for(let y=0;y<h;y++){
 
-m.makeTranslation(x,y,z);
-
-if(y<h-2)stoneMesh.setMatrixAt(si++,m);
-else dirtMesh.setMatrixAt(di++,m);
+world.set(
+key(x,y,z),
+y<h-2?"stone":"dirt"
+);
 
 }
 }
 }
 
-dirtMesh.instanceMatrix.needsUpdate=true;
-stoneMesh.instanceMatrix.needsUpdate=true;
+const dirtMesh=buildWorldMesh("dirt");
+const stoneMesh=buildWorldMesh("stone");
 
+worldMeshes.push(dirtMesh,stoneMesh);
 scene.add(dirtMesh,stoneMesh);
 
-player.position.set(0,14,8);
-velocity.set(0,0,0);
-
 document.getElementById("info").textContent=
-"Blöcke: "+(dc+sc)+" | WASD | SPACE | E";
+"Optimierte Oberflächen-Meshes | Blöcke: "+world.size;
 }
 
-generate();
+generateWorld();
 
-document.getElementById("new").onclick=generate;
+document.getElementById("newWorld").onclick=generateWorld;
 
-// PLAYER PHYSICS
-const player={
-position:camera.position,
-width:.6,
-height:1.8,
-eye:1.62
-};
+// PLAYER
+const player=controls.getObject();
+player.position.set(0,14,8);
+
+const playerWidth=.6;
+const playerHeight=1.8;
 
 const velocity=new THREE.Vector3();
 let onGround=false;
 
 const keys={};
+
 addEventListener("keydown",e=>{
 keys[e.code]=true;
-
-if(e.code==="KeyE"){
-inventory.style.display=
-inventory.style.display==="block"?"none":"block";
-if(inventory.style.display==="block")controls.unlock();
-else controls.lock();
-}
 
 if(e.code==="Space"&&onGround){
 velocity.y=7.5;
 onGround=false;
 }
-});
-addEventListener("keyup",e=>keys[e.code]=false);
 
-function solid(x,y,z){
-return blocks.has(key(Math.floor(x),Math.floor(y),Math.floor(z)));
+if(e.code==="KeyE"){
+const inv=document.getElementById("inventory");
+
+if(inv.style.display==="block"){
+inv.style.display="none";
+controls.lock();
+}else{
+inv.style.display="block";
+controls.unlock();
 }
+}
+});
+
+addEventListener("keyup",e=>keys[e.code]=false);
 
 function collides(pos){
 
-const minX=Math.floor(pos.x-player.width/2);
-const maxX=Math.floor(pos.x+player.width/2);
+const minX=Math.floor(pos.x-playerWidth/2);
+const maxX=Math.floor(pos.x+playerWidth/2);
 const minY=Math.floor(pos.y);
-const maxY=Math.floor(pos.y+player.height);
-const minZ=Math.floor(pos.z-player.width/2);
-const maxZ=Math.floor(pos.z+player.width/2);
+const maxY=Math.floor(pos.y+playerHeight);
+const minZ=Math.floor(pos.z-playerWidth/2);
+const maxZ=Math.floor(pos.z+playerWidth/2);
 
 for(let x=minX;x<=maxX;x++){
 for(let y=minY;y<=maxY;y++){
 for(let z=minZ;z<=maxZ;z++){
 
-if(solid(x,y,z)){
-
-const bx=x,by=y,bz=z;
+if(!solid(x,y,z))continue;
 
 if(
-pos.x+player.width/2>bx&&
-pos.x-player.width/2<bx+1&&
-pos.y+player.height>by&&
-pos.y<by+1&&
-pos.z+player.width/2>bz&&
-pos.z-player.width/2<bz+1
+pos.x+playerWidth/2>x&&
+pos.x-playerWidth/2<x+1&&
+pos.y+playerHeight>y&&
+pos.y<y+1&&
+pos.z+playerWidth/2>z&&
+pos.z-playerWidth/2<z+1
 )return true;
 
-}
 }
 }
 }
@@ -266,14 +323,14 @@ const speed=5.5;
 let forward=0;
 let side=0;
 
-if(keys.KeyW)forward+=1;
-if(keys.KeyS)forward-=1;
-if(keys.KeyA)side-=1;
-if(keys.KeyD)side+=1;
+if(keys.KeyW)forward++;
+if(keys.KeyS)forward--;
+if(keys.KeyA)side--;
+if(keys.KeyD)side++;
 
 const len=Math.hypot(forward,side);
 
-if(len>0){
+if(len){
 forward/=len;
 side/=len;
 }
@@ -292,27 +349,24 @@ const oldY=player.position.y;
 player.position.y+=velocity.y*dt;
 
 if(collides(player.position)){
+
 player.position.y=oldY;
 
-if(velocity.y<0){
-onGround=true;
-}
+if(velocity.y<0)onGround=true;
+
 velocity.y=0;
+
 }else{
 onGround=false;
 }
 
-if(player.position.y< -20){
-player.position.set(0,15,8);
+if(player.position.y<-20){
+player.position.set(0,14,8);
 velocity.set(0,0,0);
 }
 }
 
 // INVENTORY
-const inventory=document.getElementById("inventory");
-const hotbar=document.getElementById("hotbar");
-const invslots=document.getElementById("invslots");
-
 const items=[
 {name:"dirt",count:64},
 {name:"stone",count:64},
@@ -329,18 +383,15 @@ invslots.innerHTML="";
 
 items.forEach((item,i)=>{
 
+const imgSrc=item.name==="dirt"?
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png":
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png";
+
 const slot=document.createElement("div");
 slot.className="slot"+(i===selected?" selected":"");
 
-const img=document.createElement("img");
-img.src=textures[item.name].image?.src||
-(item.name==="dirt"?
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png":
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png");
-
-slot.appendChild(img);
-slot.appendChild(document.createElement("br"));
-slot.append(item.name+" "+item.count);
+slot.innerHTML=
+`<img src="${imgSrc}"><br>${item.name} ${item.count}`;
 
 slot.onclick=()=>{
 selected=i;
@@ -360,11 +411,14 @@ renderInventory();
 
 addEventListener("keydown",e=>{
 if(e.code.startsWith("Digit")){
+
 const n=Number(e.code.slice(5))-1;
+
 if(n>=0&&n<items.length){
 selected=n;
 renderInventory();
 }
+
 }
 });
 
@@ -373,14 +427,7 @@ inventory.style.display="none";
 controls.lock();
 };
 
-// MOUSE LOCK
-document.body.addEventListener("click",()=>{
-if(inventory.style.display!=="block"&&!controls.isLocked){
-controls.lock();
-}
-});
-
-// LOOP
+// GAME LOOP
 const clock=new THREE.Clock();
 
 function animate(){
@@ -389,7 +436,8 @@ requestAnimationFrame(animate);
 
 const dt=Math.min(clock.getDelta(),.04);
 
-if(controls.isLocked&&inventory.style.display!=="block"){
+if(controls.isLocked&&
+inventory.style.display!=="block"){
 physics(dt);
 }
 
