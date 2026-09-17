@@ -4,29 +4,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fast Block World</title>
+<title>Block World</title>
 <style>
-html,body{margin:0;overflow:hidden;background:#87ceeb}
-#ui{position:fixed;z-index:5;top:10px;left:10px;background:#000b;color:white;padding:10px;font:14px Arial}
-button{padding:8px;margin-top:5px}
-#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);color:white;font:22px Arial}
+*{box-sizing:border-box}
+html,body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial}
+#ui{position:fixed;top:10px;left:10px;z-index:10;background:#000b;color:white;padding:10px}
+#cross{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:24px;pointer-events:none}
+#hotbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:#222b;padding:5px}
+.slot{width:50px;height:50px;border:2px solid #777;background:#333;color:white;text-align:center;padding:4px;font-size:11px}
+.selected{border:3px solid white}
+.slot img{width:28px;height:28px;image-rendering:pixelated}
+#inventory{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#292929;border:4px solid #111;padding:15px;color:white;width:300px}
+#inventory h2{margin-top:0}
+#invslots{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.invslot{height:55px;background:#444;border:2px solid #777;text-align:center;padding:4px}
+.invslot img{width:30px;height:30px}
+button{padding:8px}
 </style>
 </head>
 <body>
+
 <div id="ui">
-<b>FAST BLOCK WORLD</b><br>
+<b>BLOCK WORLD</b><br>
 <span id="info">Laden...</span><br>
 <button id="new">Neue Welt</button>
 </div>
+
 <div id="cross">+</div>
+<div id="hotbar"></div>
+
+<div id="inventory">
+<h2>Inventar</h2>
+<div id="invslots"></div>
+<br>
+<button id="closeInv">Schließen [E]</button>
+</div>
 
 <script type="importmap">
-{
-"imports":{
+{"imports":{
 "three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
 "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-}
-}
+}}
 </script>
 
 <script type="module">
@@ -36,11 +54,12 @@ import {PointerLockControls} from
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x87ceeb);
+scene.fog=new THREE.Fog(0x87ceeb,35,90);
 
 const camera=new THREE.PerspectiveCamera(
-75,innerWidth/innerHeight,.1,150
+75,innerWidth/innerHeight,.05,120
 );
-camera.position.set(0,10,10);
+camera.position.set(0,12,8);
 
 const renderer=new THREE.WebGLRenderer({
 antialias:false,powerPreference:"high-performance"
@@ -50,50 +69,52 @@ renderer.setPixelRatio(1);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x777777,1.5));
+scene.add(new THREE.HemisphereLight(0xffffff,0x666666,1.8));
 
 const controls=new PointerLockControls(camera,document.body);
 scene.add(controls.object);
 
-document.body.addEventListener("click",()=>{
-if(!controls.isLocked)controls.lock();
-});
-
-const textureLoader=new THREE.TextureLoader();
+const loader=new THREE.TextureLoader();
 
 function tex(url){
-const t=textureLoader.load(url);
+const t=loader.load(url);
 t.magFilter=THREE.NearestFilter;
 t.minFilter=THREE.NearestFilter;
 t.colorSpace=THREE.SRGBColorSpace;
 return t;
 }
 
-const dirt=tex(
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png"
-);
+const textures={
+dirt:tex("https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png"),
+stone:tex("https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png")
+};
 
-const stone=tex(
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png"
-);
-
-const dirtMat=new THREE.MeshBasicMaterial({map:dirt});
-const stoneMat=new THREE.MeshBasicMaterial({map:stone});
+const materials={
+dirt:new THREE.MeshLambertMaterial({map:textures.dirt}),
+stone:new THREE.MeshLambertMaterial({map:textures.stone})
+};
 
 const geo=new THREE.BoxGeometry(1,1,1);
 
 let dirtMesh,stoneMesh;
-
 const SIZE=32;
-const DEPTH=5;
+const HEIGHT=16;
+const blocks=new Map();
+const heights=new Map();
 
-function height(x,z){
-return Math.floor(
-7+
-Math.sin(x*.2)*1.5+
+function key(x,y,z){
+return x+","+y+","+z;
+}
+
+function terrainHeight(x,z){
+return Math.max(1,Math.min(
+HEIGHT-1,
+Math.floor(
+7+Math.sin(x*.2)*1.5+
 Math.cos(z*.2)*1.5+
 Math.sin((x+z)*.12)
-);
+)
+));
 }
 
 function generate(){
@@ -101,23 +122,27 @@ function generate(){
 if(dirtMesh)scene.remove(dirtMesh);
 if(stoneMesh)scene.remove(stoneMesh);
 
-let dirtCount=0;
-let stoneCount=0;
+blocks.clear();
+heights.clear();
+
+let dc=0,sc=0;
 
 for(let x=-SIZE/2;x<SIZE/2;x++){
 for(let z=-SIZE/2;z<SIZE/2;z++){
 
-const h=height(x,z);
+const h=terrainHeight(x,z);
+heights.set(x+","+z,h);
 
 for(let y=0;y<h;y++){
-if(y<h-2)stoneCount++;
-else dirtCount++;
+blocks.set(key(x,y,z),y<h-2?"stone":"dirt");
+if(y<h-2)sc++;
+else dc++;
 }
 }
 }
 
-dirtMesh=new THREE.InstancedMesh(geo,dirtMat,dirtCount);
-stoneMesh=new THREE.InstancedMesh(geo,stoneMat,stoneCount);
+dirtMesh=new THREE.InstancedMesh(geo,materials.dirt,dc);
+stoneMesh=new THREE.InstancedMesh(geo,materials.stone,sc);
 
 const m=new THREE.Matrix4();
 let di=0,si=0;
@@ -125,17 +150,14 @@ let di=0,si=0;
 for(let x=-SIZE/2;x<SIZE/2;x++){
 for(let z=-SIZE/2;z<SIZE/2;z++){
 
-const h=height(x,z);
+const h=heights.get(x+","+z);
 
 for(let y=0;y<h;y++){
 
 m.makeTranslation(x,y,z);
 
-if(y<h-2){
-stoneMesh.setMatrixAt(si++,m);
-}else{
-dirtMesh.setMatrixAt(di++,m);
-}
+if(y<h-2)stoneMesh.setMatrixAt(si++,m);
+else dirtMesh.setMatrixAt(di++,m);
 
 }
 }
@@ -146,37 +168,229 @@ stoneMesh.instanceMatrix.needsUpdate=true;
 
 scene.add(dirtMesh,stoneMesh);
 
+player.position.set(0,14,8);
+velocity.set(0,0,0);
+
 document.getElementById("info").textContent=
-"Blöcke: "+(dirtCount+stoneCount);
+"Blöcke: "+(dc+sc)+" | WASD | SPACE | E";
 }
 
 generate();
+
 document.getElementById("new").onclick=generate;
 
-// MOVEMENT
+// PLAYER PHYSICS
+const player={
+position:camera.position,
+width:.6,
+height:1.8,
+eye:1.62
+};
+
+const velocity=new THREE.Vector3();
+let onGround=false;
+
 const keys={};
-addEventListener("keydown",e=>keys[e.code]=true);
+addEventListener("keydown",e=>{
+keys[e.code]=true;
+
+if(e.code==="KeyE"){
+inventory.style.display=
+inventory.style.display==="block"?"none":"block";
+if(inventory.style.display==="block")controls.unlock();
+else controls.lock();
+}
+
+if(e.code==="Space"&&onGround){
+velocity.y=7.5;
+onGround=false;
+}
+});
 addEventListener("keyup",e=>keys[e.code]=false);
 
+function solid(x,y,z){
+return blocks.has(key(Math.floor(x),Math.floor(y),Math.floor(z)));
+}
+
+function collides(pos){
+
+const minX=Math.floor(pos.x-player.width/2);
+const maxX=Math.floor(pos.x+player.width/2);
+const minY=Math.floor(pos.y);
+const maxY=Math.floor(pos.y+player.height);
+const minZ=Math.floor(pos.z-player.width/2);
+const maxZ=Math.floor(pos.z+player.width/2);
+
+for(let x=minX;x<=maxX;x++){
+for(let y=minY;y<=maxY;y++){
+for(let z=minZ;z<=maxZ;z++){
+
+if(solid(x,y,z)){
+
+const bx=x,by=y,bz=z;
+
+if(
+pos.x+player.width/2>bx&&
+pos.x-player.width/2<bx+1&&
+pos.y+player.height>by&&
+pos.y<by+1&&
+pos.z+player.width/2>bz&&
+pos.z-player.width/2<bz+1
+)return true;
+
+}
+}
+}
+}
+
+return false;
+}
+
+function moveAxis(axis,amount){
+
+const old=player.position[axis];
+player.position[axis]+=amount;
+
+if(collides(player.position)){
+player.position[axis]=old;
+return false;
+}
+
+return true;
+}
+
+function physics(dt){
+
+const speed=5.5;
+
+let forward=0;
+let side=0;
+
+if(keys.KeyW)forward+=1;
+if(keys.KeyS)forward-=1;
+if(keys.KeyA)side-=1;
+if(keys.KeyD)side+=1;
+
+const len=Math.hypot(forward,side);
+
+if(len>0){
+forward/=len;
+side/=len;
+}
+
+const yaw=camera.rotation.y;
+
+const dx=(side*Math.cos(yaw)+forward*Math.sin(yaw))*speed*dt;
+const dz=(forward*Math.cos(yaw)-side*Math.sin(yaw))*speed*dt;
+
+moveAxis("x",dx);
+moveAxis("z",dz);
+
+velocity.y-=20*dt;
+
+const oldY=player.position.y;
+player.position.y+=velocity.y*dt;
+
+if(collides(player.position)){
+player.position.y=oldY;
+
+if(velocity.y<0){
+onGround=true;
+}
+velocity.y=0;
+}else{
+onGround=false;
+}
+
+if(player.position.y< -20){
+player.position.set(0,15,8);
+velocity.set(0,0,0);
+}
+}
+
+// INVENTORY
+const inventory=document.getElementById("inventory");
+const hotbar=document.getElementById("hotbar");
+const invslots=document.getElementById("invslots");
+
+const items=[
+{name:"dirt",count:64},
+{name:"stone",count:64},
+{name:"dirt",count:32},
+{name:"stone",count:32}
+];
+
+let selected=0;
+
+function renderInventory(){
+
+hotbar.innerHTML="";
+invslots.innerHTML="";
+
+items.forEach((item,i)=>{
+
+const slot=document.createElement("div");
+slot.className="slot"+(i===selected?" selected":"");
+
+const img=document.createElement("img");
+img.src=textures[item.name].image?.src||
+(item.name==="dirt"?
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png":
+"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png");
+
+slot.appendChild(img);
+slot.appendChild(document.createElement("br"));
+slot.append(item.name+" "+item.count);
+
+slot.onclick=()=>{
+selected=i;
+renderInventory();
+};
+
+hotbar.appendChild(slot);
+
+const inv=slot.cloneNode(true);
+inv.className="invslot";
+invslots.appendChild(inv);
+
+});
+}
+
+renderInventory();
+
+addEventListener("keydown",e=>{
+if(e.code.startsWith("Digit")){
+const n=Number(e.code.slice(5))-1;
+if(n>=0&&n<items.length){
+selected=n;
+renderInventory();
+}
+}
+});
+
+document.getElementById("closeInv").onclick=()=>{
+inventory.style.display="none";
+controls.lock();
+};
+
+// MOUSE LOCK
+document.body.addEventListener("click",()=>{
+if(inventory.style.display!=="block"&&!controls.isLocked){
+controls.lock();
+}
+});
+
+// LOOP
 const clock=new THREE.Clock();
 
 function animate(){
 
 requestAnimationFrame(animate);
 
-const dt=Math.min(clock.getDelta(),.05);
-const speed=7;
+const dt=Math.min(clock.getDelta(),.04);
 
-if(controls.isLocked){
-
-if(keys.KeyW)controls.moveForward(speed*dt);
-if(keys.KeyS)controls.moveForward(-speed*dt);
-if(keys.KeyA)controls.moveRight(-speed*dt);
-if(keys.KeyD)controls.moveRight(speed*dt);
-
-if(keys.Space)controls.object.position.y+=speed*dt;
-if(keys.ShiftLeft)controls.object.position.y-=speed*dt;
-
+if(controls.isLocked&&inventory.style.display!=="block"){
+physics(dt);
 }
 
 renderer.render(scene,camera);
