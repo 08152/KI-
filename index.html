@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Kipplauf Schrotpistole - High Detail Modular</title>
+<title>3D Kipplauf Schrotpistole - Massive Blöcke</title>
 
 <style>
     * { box-sizing: border-box; }
@@ -44,7 +44,7 @@
         transition: transform 0.1s ease-out;
     }
 
-    /* Alle Blöcke sind echte 6-seitige Würfel */
+    /* Alle Blöcke sind echte 6-seitige, massive Würfel */
     .block { position: absolute; transform-style: preserve-3d; }
     .seite {
         position: absolute; backface-visibility: visible;
@@ -52,15 +52,15 @@
         box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
     }
 
-    /* MAT-FARBEN (Strukturiert für 3D-Drucker-Optik) */
-    .mat-steel .seite { background: linear-gradient(135deg, #334155, #1e293b); }   /* Gehäusestahl */
-    .mat-darksteel .seite { background: linear-gradient(135deg, #1e293b, #0f172a); } /* Schlitten / Verschluss */
-    .mat-wood .seite { background: linear-gradient(135deg, #7c2d12, #451a03); }    /* Premium Nussbaumholz */
-    .mat-mech .seite { background: linear-gradient(135deg, #94a3b8, #64748b); }    /* Innere Mechanik */
-    .mat-plastic .seite { background: linear-gradient(135deg, #dc2626, #b91c1c); } /* Rote Schrotpatrone */
-    .mat-brass .seite { background: linear-gradient(135deg, #fbbf24, #d97706); }   /* Patronen-Messing */
+    /* MAT-FARBEN (Rauer 3D-Druck-Look) */
+    .mat-steel .seite { background: linear-gradient(135deg, #334155, #1e293b); }   
+    .mat-darksteel .seite { background: linear-gradient(135deg, #1e293b, #0f172a); } 
+    .mat-wood .seite { background: linear-gradient(135deg, #7c2d12, #451a03); }    
+    .mat-mech .seite { background: linear-gradient(135deg, #94a3b8, #64748b); }    
+    .mat-plastic .seite { background: linear-gradient(135deg, #dc2626, #b91c1c); } 
+    .mat-brass .seite { background: linear-gradient(135deg, #fbbf24, #d97706); }   
 
-    /* WÜRFEL-SEITEN GENERIERUNG (Hilfsklassen für Tiefe) */
+    /* MASSIVE WÜRFEL-GENERIERUNG (Präzise 3D-Volumen) */
     .w-cube .v { transform: translateZ(var(--z-half)); width: var(--w); height: var(--h); }
     .w-cube .h { transform: rotateY(180deg) translateZ(var(--z-half)); width: var(--w); height: var(--h); }
     .w-cube .r { transform: rotateY(90deg) translateZ(var(--x-half)); width: var(--d); height: var(--h); }
@@ -69,33 +69,39 @@
     .w-cube .u { transform: rotateX(-90deg) translateZ(var(--y-half2)); width: var(--w); height: var(--d); }
 
     /* ================================================================= */
-    /* GEHÄUSEBAUGRUPPE (Receiver) */
+    /* GEHÄUSEBAUGRUPPE (Aus dicken Blöcken) */
     .rec-core { --w:120px; --h:60px; --d:40px; --z-half:20px; --x-half:100px; --y-half:20px; --y-half2:40px; left: 160px; top: 140px; }
-    .rec-top-cover { --w:100px; --h:15px; --d:36px; --z-half:18px; --x-half:82px; --y-half:18px; --y-half2:-3px; left: 160px; top: 125px; }
-    .rec-shield { --w:15px; --h:60px; --d:44px; --z-half:22px; --x-half:5px; --y-half:22px; --y-half2:38px; left: 280px; top: 140px; } /* Stoßboden */
-    .lock-lever { --w:35px; --h:10px; --d:12px; --z-half:6px; --x-half:11.5px; --y-half:6px; --y-half2:4px; left: 190px; top: 115px; transform-origin: left center; transition: transform 0.3s; }
+    .rec-top-cover { --w:100px; --h:16px; --d:36px; --z-half:18px; --x-half:82px; --y-half:18px; --y-half2:-2px; left: 160px; top: 124px; }
+    .rec-shield { --w:20px; --h:60px; --d:44px; --z-half:22px; --x-half:10px; --y-half:22px; --y-half2:38px; left: 280px; top: 140px; } 
+    
+    /* Massiver mechanischer Verschlusshebel */
+    .lock-lever { --w:35px; --h:12px; --d:12px; --z-half:6px; --x-half:11.5px; --y-half:6px; --y-half2:6px; left: 190px; top: 112px; transform-origin: left center; transition: transform 0.3s; }
     .scene.status-open .lock-lever { transform: rotateZ(-25deg); }
 
-    /* HAHN & ABZUG */
-    .hammer { --w:18px; --h:35px; --d:14px; --z-half:7px; --x-half:2px; --y-half:7px; --y-half2:28px; left: 150px; top: 105px; transform-origin: bottom center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    /* MASSIVER HAHN & ABZUG */
+    .hammer { --w:20px; --h:35px; --d:16px; --z-half:8px; --x-half:2px; --y-half:8px; --y-half2:27px; left: 150px; top: 105px; transform-origin: bottom center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .scene.status-cocked .hammer { transform: rotateZ(-40deg); }
     .scene.status-fired .hammer { transform: rotateZ(-5deg); }
-    .trigger-guard { --w:65px; --h:40px; --d:8px; --z-half:4px; --x-half:28.5px; --y-half:4px; --y-half2:36px; left: 200px; top: 195px; }
-    .trigger-guard .seite { background: transparent !important; border: 5px solid #1e293b; border-left: none; box-shadow: none; }
-    .trigger { --w:14px; --h:28px; --d:10px; --z-half:5px; --x-half:2px; --y-half:5px; --y-half2:23px; left: 215px; top: 198px; transform-origin: top center; transition: transform 0.1s; }
+    
+    /* ECHTER ABZUGSSCHUTZ AUS DREI MASSIVEN BLÖCKEN GESTUFT */
+    .guard-back { --w:12px; --h:35px; --d:10px; --z-half:5px; --x-half:1px; --y-half:5px; --y-half2:30px; left: 195px; top: 195px; }
+    .guard-bottom { --w:60px; --h:12px; --d:10px; --z-half:5px; --x-half:55px; --y-half:5px; --y-half2:7px; left: 195px; top: 230px; }
+    .guard-front { --w:12px; --h:25px; --d:10px; --z-half:5px; --x-half:1px; --y-half:5px; --y-half2:20px; left: 255px; top: 205px; }
+
+    .trigger { --w:14px; --h:28px; --d:12px; --z-half:6px; --x-half:1px; --y-half:6px; --y-half2:22px; left: 220px; top: 198px; transform-origin: top center; transition: transform 0.1s; }
     .scene.status-fired .trigger { transform: rotateZ(18deg); }
     /* ================================================================= */
-    /* MULTI-BLOCK ERGONOMISCHER HOLZGRIFF (Aus echten Würfeln gebaut) */
+    /* MULTI-BLOCK ERGONOMISCHER HOLZGRIFF (Aus massiven Blöcken gebaut) */
     /* Griff-Adapter oben */
     .g-top { --w:50px; --h:35px; --d:38px; --z-half:19px; --x-half:31px; --y-half:19px; --y-half2:16px; left: 120px; top: 180px; transform: rotateZ(-8deg); }
     /* Griff-Zentrum mit Handrückenstütze */
     .g-mid { --w:44px; --h:65px; --d:34px; --z-half:17px; --x-half:26px; --y-half:17px; --y-half2:48px; left: 104px; top: 212px; transform: rotateZ(-20deg); }
-    /* Fingermulde 1 */
+    /* Fingermulde 1 (Massiver Quader) */
     .g-f1 { --w:12px; --h:20px; --d:34px; --z-half:17px; --x-half:-1px; --y-half:17px; --y-half2:3px; left: 142px; top: 220px; transform: rotateZ(-20deg); }
-    /* Fingermulde 2 */
+    /* Fingermulde 2 (Massiver Quader) */
     .g-f2 { --w:12px; --h:20px; --d:34px; --z-half:17px; --x-half:-1px; --y-half:17px; --y-half2:3px; left: 135px; top: 242px; transform: rotateZ(-20deg); }
-    /* Massiver ausgestellter Griffboden (Magwell-Optik) */
-    .g-bot { --w:56px; --h:16px; --d:40px; --z-half:20px; --x-half:36px; --y-half:20px; --y-half2:-4px; left: 73px; top: 272px; transform: rotateZ(-20deg); }
+    /* Massiver, dicker Griffboden */
+    .g-bot { --w:56px; --h:18px; --d:40px; --z-half:20px; --x-half:36px; --y-half:20px; --y-half2:-2px; left: 73px; top: 272px; transform: rotateZ(-20deg); }
 
     /* ================================================================= */
     /* BEWEGLICHE KIPPLAUF-EINHEIT (Drehpunkt exakt am Scharniergelenk) */
@@ -108,31 +114,32 @@
     /* Steuerung des Winkels bei geöffnetem Kipplauf */
     .scene.status-open .barrel-assembly { transform: rotateZ(32deg); }
 
-    /* Hauptlauf-Quader */
-    .b-main { --w:210px; --h:44px; --d:36px; --z-half:18px; --x-half:192px; --y-half:18px; --y-half2:26px; left: 10px; top: 0px; }
-    /* Obere massive Visierschiene */
+    /* Massiver Hauptlauf-Quader */
+    .b-main { --w:210px; --h:44px; --d:38px; --z-half:19px; --x-half:192px; --y-half:19px; --y-half2:25px; left: 10px; top: 0px; }
+    /* Obere massive Visierschiene (Echter dicker Block) */
     .b-rib { --w:210px; --h:8px; --d:16px; --z-half:8px; --x-half:202px; --y-half:8px; --y-half2:0px; left: 10px; top: -8px; }
-    /* Korn-Visier (Messing-Pin) */
+    /* Korn-Visier (Massiver kleiner Würfel) */
     .b-bead { --w:8px; --h:8px; --d:8px; --z-half:4px; --x-half:4px; --y-half:4px; --y-half2:4px; left: 200px; top: -16px; }
     
-    /* Unterer Verriegelungshaken (Greift ins Gehäuse) */
-    .b-lug { --w:35px; --h:16px; --d:14px; --z-half:7px; --x-half:10.5px; --y-half:7px; --y-half2:9px; left: 15px; top: 44px; }
-    /* Echte offene Laufmündung (Rahmen-Effekt durch geschickte Blöcke) */
-    .b-muzzle-top { --w:12px; --h:8px; --d:36px; --z-half:18px; --x-half:0px; --y-half:18px; --y-half2:0px; left: 220px; top: 0px; }
-    .b-muzzle-bot { --w:12px; --h:8px; --d:36px; --z-half:18px; --x-half:0px; --y-half:18px; --y-half2:0px; left: 220px; top: 36px; }
-    .b-muzzle-l { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(15px); }
-    .b-muzzle-r { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(-18px); }
+    /* Unterer Verriegelungshaken (Massiver Block unter dem Lauf) */
+    .b-lug { --w:35px; --h:16px; --d:16px; --z-half:8px; --x-half:10px; --y-half:8px; --y-half2:8px; left: 15px; top: 44px; }
+    
+    /* Echte offene Laufmündung (Rahmen-Effekt durch 4 massive Quader) */
+    .b-muzzle-top { --w:12px; --h:8px; --d:38px; --z-half:19px; --x-half:0px; --y-half:19px; --y-half2:0px; left: 220px; top: 0px; }
+    .b-muzzle-bot { --w:12px; --h:8px; --d:38px; --z-half:19px; --x-half:0px; --y-half:19px; --y-half2:0px; left: 220px; top: 36px; }
+    .b-muzzle-l { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(16px); }
+    .b-muzzle-r { --w:12px; --h:28px; --d:6px; --z-half:3px; --x-half:3px; --y-half:3px; --y-half2:25px; left: 220px; top: 8px; transform: translateZ(-19px); }
 
     /* ================================================================= */
-    /* MECHANISCHER AUSWERFER-STIFT (Ejector im Lauf) */
+    /* MECHANISCHER AUSWERFER-STIFT (Massiver Ejector-Block unter dem Lauf) */
     .ejector-rod {
-        --w:40px; --h:8px; --d:8px; --z-half:4px; --x-half:0px; --y-half:4px; --y-half2:4px; left: -30px; top: 46px;
+        --w:40px; --h:8px; --d:10px; --z-half:5px; --x-half:0px; --y-half:5px; --y-half2:3px; left: -30px; top: 46px;
         transition: transform 0.4s ease;
     }
     .scene.status-open .ejector-rod { transform: translateX(0px); }
     .scene.status-eject .ejector-rod { transform: translateX(-12px); }
     /* ================================================================= */
-    /* REALISTISCHE SCHROTPATREONE (Aus echten Würfelkomponenten gebaut) */
+    /* REALISTISCHE SCHROTPATREONE (Aus massiven Würfelkomponenten gebaut) */
     .shell-group {
         position: absolute; left: 10px; top: 11px; width: 65px; height: 22px;
         transform-style: preserve-3d;
@@ -140,9 +147,9 @@
         opacity: 0; /* Standardmäßig entladen */
     }
 
-    /* Rote Kunststoff-Hülse */
+    /* Rote Kunststoff-Hülse (Massiver Quader) */
     .sh-body { --w:48px; --h:22px; --d:24px; --z-half:12px; --x-half:12px; --y-half:12px; --y-half2:10px; left: 17px; top: 0; }
-    /* Goldener Messingboden */
+    /* Goldener Messingboden (Massiver Quader) */
     .sh-base { --w:17px; --h:24px; --d:26px; --z-half:13px; --x-half:11.5px; --y-half:13px; --y-half2:11px; left: 0; top: -1px; }
 
     /* ANSTEUERUNG DER PATRONEN-POSITION IM 3D-RAUM */
@@ -177,40 +184,42 @@
 
 <div class="scene status-open" id="scene">
     
-    <!-- === GEHÄUSEBAUGRUPPE (Receiver) === -->
+    <!-- === GEHÄUSEBAUGRUPPE (Receiver aus massiven Blöcken) === -->
     <div class="block mat-steel w-cube rec-core"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-darksteel w-cube rec-top-cover"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-steel w-cube rec-shield"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-mech w-cube lock-lever"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- === MECHANIK (Hahn, Abzug, Bügel) === -->
+    <!-- === MECHANIK (Hahn, Abzug, massiver Bügel-Verbund) === -->
     <div class="block mat-mech w-cube hammer"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
-    <div class="block trigger-guard"><div class="seite v"></div><div class="seite h"></div></div>
+    <div class="block mat-steel w-cube guard-back"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-steel w-cube guard-bottom"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
+    <div class="block mat-steel w-cube guard-front"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-mech w-cube trigger"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-    <!-- === ERGONOMISCHER HOLZGRIFF === -->
+    <!-- === MASSIVER ERGONOMISCHER HOLZGRIFF === -->
     <div class="block mat-wood w-cube g-top"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-wood w-cube g-mid"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-wood w-cube g-f1"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-wood w-cube g-f2"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
     <div class="block mat-wood w-cube g-bot"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
-
-    <!-- === KIPPLAUF-EINHEIT === -->
+    <!-- === KIPPLAUF-EINHEIT (Aus massiven Blöcken) === -->
     <div class="barrel-assembly" id="barrel-assembly">
         <div class="block mat-barrel w-cube b-main"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-darksteel w-cube b-rib"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-brass w-cube b-bead"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-steel w-cube b-lug"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         
-        <!-- Offene Mündungsausgänge -->
+        <!-- Massive Quader formen die offene Mündung -->
         <div class="block mat-barrel w-cube b-muzzle-top"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-barrel w-cube b-muzzle-bot"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-barrel w-cube b-muzzle-l"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
         <div class="block mat-barrel w-cube b-muzzle-r"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
 
-        <!-- Auswerfer-Stift unten -->
+        <!-- Auswerfer-Stift unten am Lauf -->
         <div class="block mat-mech w-cube ejector-rod"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
-        <!-- Echte Schrotpatrone im Lager -->
+
+        <!-- Massive 3D-Schrotpatrone im Lager -->
         <div class="shell-group">
             <div class="block mat-plastic w-cube sh-body"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
             <div class="block mat-brass w-cube sh-base"><div class="seite v"></div><div class="seite h"></div><div class="seite r"></div><div class="seite l"></div><div class="seite o"></div><div class="seite u"></div></div>
@@ -229,7 +238,7 @@
     const bFire = document.getElementById('btn-fire');
     const bEject = document.getElementById('btn-eject');
 
-    // Logische Abfolge der einzelnen Waffenschritte steuern
+    // Mechanische Schritt-Kette steuern
     bOpen.addEventListener('click', () => {
         scene.className = "scene status-open";
         toggleButtons(false, true, false, false, false, false);
@@ -265,7 +274,7 @@
         bCock.disabled = !co; bFire.disabled = !f; bEject.disabled = !e;
     }
 
-    // 3D INTERAKTIVE MAUSSTEUERUNG (DREHEN & ZOOM)
+    // INTERAKTIVE MAUSSTEUERUNG (DREHEN & ZOOM)
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     let rotationX = -18, rotationY = 35, currentScale = 1.1;
@@ -282,7 +291,7 @@
         const deltaY = e.clientY - previousMousePosition.y;
         rotationY += deltaX * 0.4;
         rotationX -= deltaY * 0.4;
-        rotationX = Math.max(-75, Math.min(75, rotationX)); // Kippbegrenzung
+        rotationX = Math.max(-75, Math.min(75, rotationX)); // Sicherheitsgurt fürs Kippen
         scene.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg) scale3d(${currentScale}, ${currentScale}, ${currentScale})`;
         previousMousePosition = { x: e.clientX, y: e.clientY };
     });
