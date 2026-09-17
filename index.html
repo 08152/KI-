@@ -1,508 +1,107 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>3D MakerLab Blaster Simulator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Roter Würfel</title>
 
 <style>
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#87cfff;
-    font-family:Arial,sans-serif;
-}
-canvas{display:block}
+    * {
+        box-sizing: border-box;
+    }
 
-#crosshair{
-    position:fixed;
-    left:50%;
-    top:50%;
-    width:10px;
-    height:10px;
-    transform:translate(-50%,-50%);
-    z-index:20;
-    pointer-events:none;
-}
-#crosshair:before,#crosshair:after{
-    content:"";
-    position:absolute;
-    background:#fff;
-    box-shadow:0 0 3px #000;
-}
-#crosshair:before{width:10px;height:2px;top:4px}
-#crosshair:after{width:2px;height:10px;left:4px}
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+    }
 
-#hud,#controls-menu{
-    position:fixed;
-    z-index:30;
-    color:white;
-    background:rgba(0,0,0,.75);
-    border-radius:13px;
-    padding:15px 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-#hud{left:15px;top:15px;line-height:1.6; min-width: 180px;}
-#controls-menu{
-    right:15px;
-    top:15px;
-    width:280px;
-    max-height:85vh;
-    overflow-y:auto;
-}
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 900px;
+    }
 
-.section-title { font-weight: bold; font-size: 14px; margin: 12px 0 6px 0; color: #ffd83d; border-bottom: 1px solid #555; padding-bottom: 3px; }
-.control-group { margin-bottom: 10px; }
-label { display: block; font-size: 12px; margin-bottom: 4px; }
-select, input[type="range"] { width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px; }
-.range-val { font-size: 11px; color: #ffd83d; float: right; }
+    .scene {
+        width: 220px;
+        height: 220px;
+        position: relative;
+        transform-style: preserve-3d;
+    }
 
-.btn {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 6px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.btn-load { background: #3498db; color: white; }
-.btn-load:hover { background: #2980b9; }
-.btn-fire { background: #e74c3c; color: white; }
-.btn-fire:hover { background: #c0392b; }
-.btn-fire:disabled { background: #555; color: #888; cursor: not-allowed; }
-.btn-download { background: #27ae60; color: white; margin-top: 10px; }
-.btn-download:hover { background: #219a52; }
+    .cube {
+        width: 180px;
+        height: 180px;
+        position: absolute;
+        left: 20px;
+        top: 20px;
+        transform-style: preserve-3d;
+        animation: drehen 5s linear infinite;
+    }
 
-#hint{
-    position:fixed;
-    bottom:18px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:30;
-    background:rgba(0,0,0,.75);
-    color:#fff;
-    padding:12px 20px;
-    border-radius:12px;
-    text-align:center;
-    font-size: 13px;
-}
-.github-panel { text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #444; }
-.github-link { display: inline-block; background: #24292e; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; }
+    .seite {
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        background: linear-gradient(145deg, #ff3b3b, #a80000);
+        border: 2px solid #700000;
+        box-shadow:
+            inset 0 0 25px rgba(255,255,255,0.12),
+            inset 0 0 15px rgba(0,0,0,0.3);
+        backface-visibility: visible;
+    }
+
+    .vorne {
+        transform: translateZ(90px);
+    }
+
+    .hinten {
+        transform: rotateY(180deg) translateZ(90px);
+    }
+
+    .rechts {
+        transform: rotateY(90deg) translateZ(90px);
+    }
+
+    .links {
+        transform: rotateY(-90deg) translateZ(90px);
+    }
+
+    .oben {
+        transform: rotateX(90deg) translateZ(90px);
+    }
+
+    .unten {
+        transform: rotateX(-90deg) translateZ(90px);
+    }
+
+    @keyframes drehen {
+        0% {
+            transform: rotateX(-20deg) rotateY(0deg);
+        }
+
+        100% {
+            transform: rotateX(-20deg) rotateY(360deg);
+        }
+    }
 </style>
 </head>
 
 <body>
 
-<div id="crosshair"></div>
-
-<div id="controls-menu">
-    <div style="text-align:center; font-weight:bold; font-size:16px; color:#ffd83d; margin-bottom:5px;">🛠️ MAKERLAB BUILDER</div>
-    
-    <div class="section-title">Modell-Typ</div>
-    <div class="control-group">
-        <label for="blaster-type">Typ:</label>
-        <select id="blaster-type" onchange="updateBlasterType()">
-            <option value="pistol">Kompakte Pistole</option>
-            <option value="rifle">Sturmgewehr (mit Schulterstütze)</option>
-        </select>
-    </div>
-
-    <div class="section-title">Details & Größe</div>
-    <div class="control-group">
-        <label for="grip-length">Grifflänge: <span id="val-grip-length" class="range-val">2.0</span></label>
-        <input type="range" id="grip-length" min="1.2" max="3.5" step="0.1" value="2.0" oninput="rebuildModel()">
-    </div>
-    <div class="control-group">
-        <label for="grip-thickness">Griffdicke: <span id="val-grip-thickness" class="range-val">0.8</span></label>
-        <input type="range" id="grip-thickness" min="0.5" max="1.5" step="0.1" value="0.8" oninput="rebuildModel()">
-    </div>
-    <div class="control-group">
-        <label for="barrel-length">Lauflänge: <span id="val-barrel-length" class="range-val">3.0</span></label>
-        <input type="range" id="barrel-length" min="1.5" max="6.0" step="0.1" value="3.0" oninput="rebuildModel()">
-    </div>
-
-    <div class="section-title">Mechanik-Test</div>
-    <button class="btn btn-load" id="loadBtn" onclick="loadBlaster()">1. Feder spannen</button>
-    <button class="btn btn-fire" id="fireBtn" onclick="fireBlaster()" disabled>2. Dart abfeuern!</button>
-    
-    <div class="section-title">Export</div>
-    <button class="btn btn-download" onclick="exportToOBJ()">💾 3D-Modell (.obj) exportieren</button>
-    
-    <div class="github-panel">
-        <a href="https://github.com" target="_blank" class="github-link">🔍 GitHub Pläne öffnen</a>
+<div class="scene">
+    <div class="cube">
+        <div class="seite vorne"></div>
+        <div class="seite hinten"></div>
+        <div class="seite rechts"></div>
+        <div class="seite links"></div>
+        <div class="seite oben"></div>
+        <div class="seite unten"></div>
     </div>
 </div>
 
-<div id="hud">
-    <b>📐 BLASTER DETAILS</b><br>
-    Status: <span id="status-text" style="color:#3498db;">Bereit</span><br>
-    Lauf-Typ: <span id="hud-barrel">Standard</span>
-</div>
-
-<div id="hint">
-    <b>Steuerung auf dem Chromebook:</b><br>
-    WASD = Am Ufer laufen · Maus = Umschauen · Klick auf die Natur = Maus sperren<br>
-    <i>Nutze den Mauszeiger direkt auf dem rechten Menü, um Regler einzustellen.</i>
-</div>
-
-<script src="https://jsdelivr.net"></script>
-<script>
-/* =========================================================
-   SZENE INITIALISIERUNG
-========================================================= */
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87cfff);
-scene.fog = new THREE.Fog(0x87cfff, 35, 140);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 500);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.outputEncoding = THREE.sRGBEncoding;
-document.body.appendChild(renderer.domElement);
-
-/* LICHTQUELLEN */
-scene.add(new THREE.HemisphereLight(0xbfeaff, 0x50703d, 1.2));
-const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-sun.position.set(30, 40, 15);
-scene.add(sun);
-
-/* SPIELERKONTEXT */
-const player = new THREE.Object3D();
-player.position.set(0, 1.7, 7);
-scene.add(player);
-player.add(camera);
-
-let yaw = 0, pitch = 0;
-let velY = 0;
-let onGround = true;
-
-/* WELTUMGEBUNG */
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
-    new THREE.MeshStandardMaterial({ color: 0x4f9846, roughness: 1 })
-);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
-
-const sand = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 5),
-    new THREE.MeshStandardMaterial({ color: 0xc8b27a, roughness: 1 })
-);
-sand.rotation.x = -Math.PI / 2;
-sand.position.set(0, 0.012, -1);
-scene.add(sand);
-
-const water = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 100),
-    new THREE.MeshStandardMaterial({ color: 0x087daf, roughness: 0.25, metalness: 0.05 })
-);
-water.rotation.x = -Math.PI / 2;
-water.position.set(0, 0.035, -52);
-scene.add(water);
-
-const waves = [];
-for (let i = 0; i < 60; i++) {
-    const geo = new THREE.PlaneGeometry(1.2, 0.04);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x9beaff, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
-    const w = new THREE.Mesh(geo, mat);
-    w.rotation.x = -Math.PI / 2;
-    w.position.set((Math.random() - 0.5) * 100, 0.07, -3 - Math.random() * 90);
-    w.userData = { speed: 0.2 + Math.random() * 0.2, phase: Math.random() * 5, baseX: w.position.x };
-    scene.add(w);
-    waves.push(w);
-}
-
-/* REPARIERTE MAKERLAB 3D GRUPPE (EXAKT IM KAMERAFELD) */
-const blasterGroup = new THREE.Group();
-camera.add(blasterGroup); 
-// Waffe ist nun perfekt ausbalanciert skaliert und steht zentriert rechts unten im First-Person-Blickfeld
-blasterGroup.position.set(0.25, -0.25, -0.7); 
-blasterGroup.rotation.set(0, -Math.PI / 2, 0); 
-
-let bodyMesh, gripMesh, barrelMesh, stockMesh;
-let springGroup, plungerMesh, dartGroup;
-
-let isLoaded = false;
-let isFlying = false;
-let dartVelocity = 0;
-let defaultDartX = 0;
-
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.4 });
-const gripMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.6 });
-const barrelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.3, roughness: 0.2 });
-const stockMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
-const springMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, metalness: 0.9 });
-const plungerMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
-const dartBodyMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8 });
-const dartCapMat = new THREE.MeshStandardMaterial({ color: 0xd946ef });
-
-/* CHROMEBOOK INPUT HANDLER */
-const keys = {};
-
-window.addEventListener("keydown", (e) => {
-    keys[e.key.toLowerCase()] = true;
-    if (e.code === "Space") jump();
-});
-
-window.addEventListener("keyup", (e) => {
-    keys[e.key.toLowerCase()] = false;
-});
-
-document.body.addEventListener("click", (e) => {
-    if (e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT" && e.target.tagName !== "BUTTON") {
-        document.body.requestPointerLock();
-    }
-});
-
-document.addEventListener("mousemove", (e) => {
-    if (document.pointerLockElement !== document.body) return;
-    yaw -= e.movementX * 0.002;
-    pitch -= e.movementY * 0.002;
-    pitch = Math.max(-1.2, Math.min(1.2, pitch));
-    player.rotation.y = yaw;
-    camera.rotation.x = pitch;
-});
-
-function jump() {
-    if (onGround) {
-        velY = 0.22;
-        onGround = false;
-    }
-}
-/* =========================================================
-   3D MODELL-BERECHNUNG (REPARIERTE SKALIERUNG)
-========================================================= */
-function rebuildModel() {
-    const type = document.getElementById('blaster-type').value;
-    const gripLen = parseFloat(document.getElementById('grip-length').value);
-    const gripThick = parseFloat(document.getElementById('grip-thickness').value);
-    const bLen = parseFloat(document.getElementById('barrel-length').value);
-
-    document.getElementById('val-grip-length').innerText = gripLen.toFixed(1);
-    document.getElementById('val-grip-thickness').innerText = gripThick.toFixed(1);
-    document.getElementById('val-barrel-length').innerText = bLen.toFixed(1);
-    document.getElementById('hud-barrel').innerText = bLen > 4.5 ? "Präzisionslauf" : "Kompaktlauf";
-
-    while (blasterGroup.children.length > 0) { 
-        blasterGroup.remove(blasterGroup.children[0]); 
-    }
-
-    // Einheitlicher, stabiler Skalierungsfaktor für Three.js-Einheiten
-    const s = 0.07; 
-
-    // 1. Gehäuse (Hauptzylinder)
-    let bodyLength = type === 'rifle' ? 5.5 : 4.0;
-    const bodyGeo = new THREE.BoxGeometry(bodyLength * s, 1.4 * s, 1.1 * s);
-    bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-    bodyMesh.name = "Gehaeuse";
-    blasterGroup.add(bodyMesh);
-
-    // 2. Details: Anpassbarer Griff
-    const gripGeo = new THREE.BoxGeometry(gripThick * s, gripLen * s, gripThick * s);
-    gripMesh = new THREE.Mesh(gripGeo, gripMat);
-    gripMesh.name = "Griff";
-    gripMesh.position.set((-bodyLength / 4) * s, (-0.7 - gripLen / 2) * s, 0);
-    gripMesh.rotation.z = -0.12;
-    blasterGroup.add(gripMesh);
-
-    // 3. Schulterstütze
-    if (type === 'rifle') {
-        const stockGeo = new THREE.BoxGeometry(2.4 * s, 1.1 * s, 0.7 * s);
-        stockMesh = new THREE.Mesh(stockGeo, stockMat);
-        stockMesh.name = "Schulterstuetze";
-        stockMesh.position.set((-bodyLength / 2 - 1.2) * s, -0.1 * s, 0);
-        blasterGroup.add(stockMesh);
-    }
-
-    // 4. Details: Anpassbarer Lauf
-    const barrelGeo = new THREE.CylinderGeometry(0.35 * s, 0.35 * s, bLen * s, 24);
-    barrelMesh = new THREE.Mesh(barrelGeo, barrelMat);
-    barrelMesh.name = "Lauf";
-    barrelMesh.rotation.z = Math.PI / 2;
-    barrelMesh.position.set((bodyLength / 2 + bLen / 2) * s, 0, 0);
-    blasterGroup.add(barrelMesh);
-
-    // 5. Sichtbare Feder im Gehäuse
-    springGroup = new THREE.Group();
-    springGroup.name = "Feder";
-    const coils = 9;
-    for (let i = 0; i < coils; i++) {
-        const coilGeo = new THREE.TorusGeometry(0.25 * s, 0.03 * s, 6, 16);
-        const coil = new THREE.Mesh(coilGeo, springMat);
-        coil.rotation.y = Math.PI / 2;
-        coil.position.x = ((i * (bodyLength * 0.05)) - (bodyLength / 3.2)) * s;
-        springGroup.add(coil);
-    }
-    blasterGroup.add(springGroup);
-
-    // 6. Plunger-Kolben
-    const plungerGeo = new THREE.CylinderGeometry(0.3 * s, 0.3 * s, 0.15 * s, 24);
-    plungerMesh = new THREE.Mesh(plungerGeo, plungerMat);
-    plungerMesh.name = "Kolben";
-    plungerMesh.rotation.z = Math.PI / 2;
-    plungerMesh.position.set((bodyLength / 5) * s, 0, 0);
-    blasterGroup.add(plungerMesh);
-
-    // 7. Stumpfe Patrone (Sicherheits-Dart)
-    dartGroup = new THREE.Group();
-    dartGroup.name = "Dart_Patrone";
-    const dartBodyGeo = new THREE.CylinderGeometry(0.2 * s, 0.2 * s, 1.2 * s, 16);
-    const dartBody = new THREE.Mesh(dartBodyGeo, dartBodyMat);
-    dartBody.rotation.z = Math.PI / 2;
-    dartGroup.add(dartBody);
-
-    const dartCapGeo = new THREE.SphereGeometry(0.2 * s, 16, 16);
-    const dartCap = new THREE.Mesh(dartCapGeo, dartCapMat);
-    dartCap.position.x = 0.6 * s;
-    dartGroup.add(dartCap);
-
-    defaultDartX = (bodyLength / 2 + 0.5) * s;
-    dartGroup.position.set(defaultDartX, 0, 0);
-    blasterGroup.add(dartGroup);
-
-    if (!isFlying) {
-        isLoaded = false;
-        document.getElementById('status-text').innerText = "Bereit";
-        document.getElementById('status-text').style.color = "#3498db";
-        if(document.getElementById('loadBtn')) document.getElementById('loadBtn').disabled = false;
-        if(document.getElementById('fireBtn')) document.getElementById('fireBtn').disabled = true;
-    }
-}
-
-function updateBlasterType() {
-    const type = document.getElementById('blaster-type').value;
-    if (type === 'rifle') {
-        document.getElementById('barrel-length').value = "4.5";
-        document.getElementById('grip-length').value = "2.2";
-        document.getElementById('grip-thickness').value = "0.9";
-    } else {
-        document.getElementById('barrel-length').value = "2.5";
-        document.getElementById('grip-length').value = "1.8";
-        document.getElementById('grip-thickness').value = "0.7";
-    }
-    rebuildModel();
-}
-
-/* MECHANIK ANSTEUERUNGEN */
-function loadBlaster() {
-    if (isLoaded) return;
-    springGroup.scale.x = 0.45;
-    springGroup.position.x = -0.02;
-    plungerMesh.position.x -= 0.04;
-    
-    document.getElementById('status-text').innerText = "GESPANNT!";
-    document.getElementById('status-text').style.color = "#e74c3c";
-    document.getElementById('loadBtn').disabled = true;
-    document.getElementById('fireBtn').disabled = false;
-    isLoaded = true;
-}
-
-function fireBlaster() {
-    if (!isLoaded) return;
-    springGroup.scale.x = 1.0;
-    springGroup.position.x = 0;
-    const type = document.getElementById('blaster-type').value;
-    plungerMesh.position.set((type === 'rifle' ? 5.5 / 5 : 4.0 / 5) * 0.07, 0, 0);
-    
-    document.getElementById('status-text').innerText = "Verschossen";
-    document.getElementById('status-text').style.color = "#27ae60";
-    
-    isFlying = true;
-    dartVelocity = 0.25; 
-    document.getElementById('fireBtn').disabled = true;
-}
-
-/* LOOP ENGINE */
-const clock = new THREE.Clock();
-
-function animate() {
-    requestAnimationFrame(animate);
-    const elapsedTime = clock.getElapsedTime();
-
-    waves.forEach((w) => {
-        w.position.x = w.userData.baseX + Math.sin(elapsedTime * w.userData.speed + w.userData.phase) * 1.2;
-    });
-
-    const runSpeed = 0.08;
-    const changeX = Math.sin(yaw) * runSpeed;
-    const changeZ = Math.cos(yaw) * runSpeed;
-
-    if (keys["w"]) { player.position.x -= changeX; player.position.z -= changeZ; }
-    if (keys["s"]) { player.position.x += changeX; player.position.z += changeZ; }
-    if (keys["a"]) { player.position.x -= changeZ; player.position.z += changeX; }
-    if (keys["d"]) { player.position.x += changeZ; player.position.z -= changeX; }
-
-    velY -= 0.015;
-    player.position.y += velY;
-    if (player.position.y <= 1.7) { player.position.y = 1.7; velY = 0; onGround = true; }
-
-    if (isFlying) {
-        dartGroup.position.x += dartVelocity;
-        if (dartGroup.position.x > defaultDartX + 0.3) {
-            dartVelocity -= 0.002;
-            dartGroup.position.y -= 0.005;
-            dartGroup.rotation.z -= 0.005;
-        }
-        if (dartGroup.position.x > 6) {
-            isFlying = false;
-            isLoaded = false;
-            rebuildModel();
-        }
-    }
-
-    renderer.render(scene, camera);
-}
-
-/* HOCHPRÄZISER OBJ EXPORTER */
-function exportToOBJ() {
-    let objOutput = "# MakerLab Blaster Simulator Export\n";
-    let vertexCount = 1;
-
-    function appendMeshToOBJ(mesh) {
-        if (!mesh) return;
-        objOutput += `g ${mesh.name}\n`;
-        mesh.updateMatrixWorld();
-        const geometry = mesh.geometry.clone();
-        geometry.applyMatrix4(mesh.matrixWorld);
-        const positions = geometry.attributes.position.array;
-        
-        for (let i = 0; i < positions.length; i += 3) {
-            objOutput += `v ${positions[i].toFixed(4)} ${positions[i+1].toFixed(4)} ${positions[i+2].toFixed(4)}\n`;
-        }
-        for (let i = 0; i < positions.length / 3; i += 3) {
-            objOutput += `f ${vertexCount} ${vertexCount+1} ${vertexCount+2}\n`;
-            vertexCount += 3;
-        }
-    }
-
-    appendMeshToOBJ(bodyMesh);
-    appendMeshToOBJ(gripMesh);
-    appendMeshToOBJ(barrelMesh);
-    if (stockMesh) appendMeshToOBJ(stockMesh);
-
-    const blob = new Blob([objOutput], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `makerlab_blaster.obj`;
-    link.click();
-}
-
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-updateBlasterType();
-animate();
-</script>
 </body>
 </html>
-
