@@ -3,123 +3,93 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Block World - Infinite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Block World 3D</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;overflow:hidden;background:#87ceeb;font-family:monospace}
-canvas{display:block}
+body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial}
 #menu{
-position:fixed;inset:0;z-index:10;
-background:linear-gradient(#0004,#0009);
-display:flex;flex-direction:column;align-items:center;
-padding-top:12vh;color:white;text-shadow:3px 3px #333
+position:fixed;inset:0;z-index:5;
+display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+background:#0009;color:white
 }
-#menu h1{font:900 clamp(35px,9vw,80px) Arial;
-transform:rotate(-4deg);margin:0 0 45px;
-text-shadow:5px 5px #333}
-button{height:48px;width:min(400px,85vw);
-background:linear-gradient(#aaa,#777);
-border:3px solid #222;box-shadow:inset 0 0 0 2px #ddd;
-color:white;font:bold 17px monospace;text-shadow:2px 2px #333;
-cursor:pointer}
-#hud{position:fixed;top:10px;left:10px;z-index:5;color:white;text-shadow:2px 2px #000;display:none}
-#cross{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-size:24px;z-index:5;display:none}
-#bar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:none;z-index:5;gap:3px}
-.slot{width:44px;height:44px;background:#555b;border:3px solid #222;color:white;text-align:center;padding-top:10px}
-.slot.active{border-color:white}
+h1{font-size:48px;text-shadow:4px 4px #222}
+button{padding:15px 60px;font-size:20px;cursor:pointer}
+#cross{position:fixed;left:50%;top:50%;color:white;font-size:25px;z-index:3}
+#info{position:fixed;top:10px;left:10px;color:white;background:#0008;padding:10px;z-index:3}
 </style>
 </head>
 <body>
 
 <div id="menu">
 <h1>BLOCK WORLD</h1>
-<div>Alpha Edition</div>
-<div style="height:35px"></div>
-<button id="play">SINGLEPLAYER</button>
-<div style="height:12px"></div>
-<button id="options">OPTIONS...</button>
-<div style="height:12px"></div>
-<button id="quit">QUIT GAME</button>
+<button id="start">Spielen</button>
 </div>
 
-<div id="hud">
-WASD · MOUSE · SPACE<br>
-Chunks: <span id="count">0</span>
-</div>
 <div id="cross">+</div>
-<div id="bar">
-<div class="slot active">1</div>
-<div class="slot">2</div>
-<div class="slot">3</div>
-<div class="slot">4</div>
-<div class="slot">5</div>
-</div>
+<div id="info">WASD · Maus · Leertaste</div>
 
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+{
+"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}
+}
 </script>
 
 <script type="module">
 import * as THREE from "three";
-import {PointerLockControls} from
-"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
+import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
 
-// SCENE
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x87ceeb);
-scene.fog=new THREE.Fog(0x87ceeb,18,34);
+scene.fog=new THREE.Fog(0x87ceeb,15,45);
 
-const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);
-camera.position.set(0,8,0);
+const camera=new THREE.PerspectiveCamera(
+75,innerWidth/innerHeight,.1,1000
+);
 
 const renderer=new THREE.WebGLRenderer({antialias:false});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(1);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 document.body.appendChild(renderer.domElement);
 
 const controls=new PointerLockControls(camera,document.body);
 const menu=document.getElementById("menu");
-const hud=document.getElementById("hud");
-const cross=document.getElementById("cross");
-const bar=document.getElementById("bar");
 
-document.getElementById("play").onclick=()=>controls.lock();
-document.getElementById("options").onclick=()=>alert("WASD: Bewegen | SPACE: Springen | Maus: Umschauen");
-document.getElementById("quit").onclick=()=>alert("Du kannst dieses Browserfenster schließen.");
+document.getElementById("start").onclick=()=>{
+controls.lock();
+};
 
 controls.addEventListener("lock",()=>{
 menu.style.display="none";
-hud.style.display="block";
-cross.style.display="block";
-bar.style.display="flex";
 });
 
 controls.addEventListener("unlock",()=>{
 menu.style.display="flex";
-hud.style.display="none";
-cross.style.display="none";
-bar.style.display="none";
 });
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x667788,2));
+scene.add(new THREE.HemisphereLight(0xffffff,0x555555,2));
 
-const sun=new THREE.DirectionalLight(0xffffff,1.5);
-sun.position.set(30,50,20);
-scene.add(sun);
+const light=new THREE.DirectionalLight(0xffffff,2);
+light.position.set(20,40,10);
+scene.add(light);
 
-// TEXTURES
-function makeTexture(base,detail){
+function pixelTexture(base,detail){
 const c=document.createElement("canvas");
-c.width=c.height=16;
+c.width=16;c.height=16;
 const ctx=c.getContext("2d");
 ctx.fillStyle=base;
 ctx.fillRect(0,0,16,16);
 
-for(let i=0;i<50;i++){
-ctx.fillStyle=detail;
-ctx.fillRect(Math.random()*16|0,Math.random()*16|0,1,1);
+for(let i=0;i<45;i++){
+ctx.fillStyle=Math.random()>.5?detail:"#00000022";
+ctx.fillRect(
+Math.floor(Math.random()*16),
+Math.floor(Math.random()*16),1,1
+);
 }
 
 const t=new THREE.CanvasTexture(c);
@@ -129,236 +99,133 @@ return t;
 }
 
 const materials={
-grass:new THREE.MeshLambertMaterial({map:makeTexture("#6ca83c","#3f7426")}),
-dirt:new THREE.MeshLambertMaterial({map:makeTexture("#93603b","#684026")}),
-stone:new THREE.MeshLambertMaterial({map:makeTexture("#888888","#666666")})
+grass:new THREE.MeshLambertMaterial({
+map:pixelTexture("#55a832","#347c25")
+}),
+dirt:new THREE.MeshLambertMaterial({
+map:pixelTexture("#80532f","#59351f")
+}),
+stone:new THREE.MeshLambertMaterial({
+map:pixelTexture("#858585","#555555")
+})
 };
 
-// CHUNK SYSTEM
-const CHUNK=16;
-const DIST=1;
-const chunks=new Map();
-const blockData=new Map();
+const geometry=new THREE.BoxGeometry(1,1,1);
+const blocks=new Map();
+const objects=[];
 
-const cube=new THREE.BoxGeometry(1,1,1);
-
-function key(x,y,z){return x+","+y+","+z}
-function ckey(x,z){return x+","+z}
-
-function heightAt(x,z){
-return Math.max(1,Math.floor(
-5+Math.sin(x*.07)*2+
-Math.cos(z*.08)*2+
-Math.sin((x+z)*.03)*2
-));
+function blockKey(x,y,z){
+return `${x},${y},${z}`;
 }
 
-function generateChunk(cx,cz){
-const ck=ckey(cx,cz);
-if(chunks.has(ck))return;
+function addBlock(x,y,z,type){
+blocks.set(blockKey(x,y,z),type);
+}
 
-const positions={
-grass:[],
-dirt:[],
-stone:[]
-};
+function generateWorld(){
+for(let x=-16;x<16;x++){
+for(let z=-16;z<16;z++){
 
-for(let x=0;x<CHUNK;x++){
-for(let z=0;z<CHUNK;z++){
-const wx=cx*CHUNK+x;
-const wz=cz*CHUNK+z;
-const h=heightAt(wx,wz);
+const height=5+
+Math.floor(
+Math.sin(x*.3)+Math.cos(z*.25)
+);
 
-for(let y=0;y<h;y++){
-const type=y===h-1?"grass":y>h-4?"dirt":"stone";
-positions[type].push({x:wx,y,z:wz});
-blockData.set(key(wx,y,wz),{x:wx,y,z:wz,type});
+for(let y=0;y<=height;y++){
+let type="stone";
+
+if(y===height)type="grass";
+else if(y>height-3)type="dirt";
+
+addBlock(x,y,z,type);
+
+const cube=new THREE.Mesh(
+geometry,materials[type]
+);
+
+cube.position.set(x,y,z);
+scene.add(cube);
+objects.push(cube);
 }
 }
 }
-
-const group=new THREE.Group();
-const dummy=new THREE.Object3D();
-
-for(const type of ["grass","dirt","stone"]){
-const arr=positions[type];
-if(!arr.length)continue;
-
-const mesh=new THREE.InstancedMesh(cube,materials[type],arr.length);
-mesh.frustumCulled=true;
-mesh.userData.positions=arr;
-mesh.userData.type=type;
-
-arr.forEach((p,i)=>{
-dummy.position.set(p.x,p.y,p.z);
-dummy.updateMatrix();
-mesh.setMatrixAt(i,dummy.matrix);
-});
-
-mesh.instanceMatrix.needsUpdate=true;
-group.add(mesh);
 }
 
-scene.add(group);
-chunks.set(ck,group);
-}
+generateWorld();
+camera.position.set(0,14,0);
 
-function unloadChunk(cx,cz){
-const ck=ckey(cx,cz);
-const group=chunks.get(ck);
-if(!group)return;
-
-group.traverse(obj=>{
-if(obj.isInstancedMesh){
-for(const p of obj.userData.positions){
-blockData.delete(key(p.x,p.y,p.z));
-}
-}
-});
-
-scene.remove(group);
-chunks.delete(ck);
-}
-
-function updateChunks(){
-const cx=Math.floor(camera.position.x/CHUNK);
-const cz=Math.floor(camera.position.z/CHUNK);
-
-for(let x=-DIST;x<=DIST;x++){
-for(let z=-DIST;z<=DIST;z++){
-generateChunk(cx+x,cz+z);
-}
-}
-
-for(const k of [...chunks.keys()]){
-const [x,z]=k.split(",").map(Number);
-
-if(Math.abs(x-cx)>DIST||Math.abs(z-cz)>DIST){
-unloadChunk(x,z);
-}
-}
-
-document.getElementById("count").textContent=chunks.size;
-}
-
-// COLLISION
-const player={
-radius:.3,
-height:1.8,
-eye:1.62,
-velocityY:0,
-grounded:false
-};
-
-function collides(pos){
-const minX=Math.floor(pos.x-player.radius);
-const maxX=Math.floor(pos.x+player.radius);
-const minY=Math.floor(pos.y-player.eye);
-const maxY=Math.floor(pos.y-player.eye+player.height);
-const minZ=Math.floor(pos.z-player.radius);
-const maxZ=Math.floor(pos.z+player.radius);
-
-for(let x=minX;x<=maxX;x++){
-for(let y=minY;y<=maxY;y++){
-for(let z=minZ;z<=maxZ;z++){
-if(blockData.has(key(x,y,z)))return true;
-}
-}
-}
-return false;
-}
-
-function move(dx,dy,dz){
-let p=camera.position.clone();
-
-p.x+=dx;
-if(!collides(p))camera.position.x=p.x;
-
-p=camera.position.clone();
-p.z+=dz;
-if(!collides(p))camera.position.z=p.z;
-
-p=camera.position.clone();
-p.y+=dy;
-
-if(!collides(p)){
-camera.position.y=p.y;
-player.grounded=false;
-}else{
-if(dy<0)player.grounded=true;
-player.velocityY=0;
-}
-}
-
-// CONTROLS
 const keys={};
+let velocityY=0;
+let grounded=false;
 
 addEventListener("keydown",e=>{
 keys[e.code]=true;
-if(e.code==="Space")e.preventDefault();
+
+if(e.code==="Space"&&grounded){
+velocityY=7;
+grounded=false;
+}
 });
 
-addEventListener("keyup",e=>keys[e.code]=false);
+addEventListener("keyup",e=>{
+keys[e.code]=false;
+});
 
-// MAIN LOOP
-const clock=new THREE.Clock();
-let timer=0;
+function collision(){
+const x=Math.floor(camera.position.x);
+const y=Math.floor(camera.position.y-1.7);
+const z=Math.floor(camera.position.z);
 
-function animate(){
-requestAnimationFrame(animate);
-const dt=Math.min(clock.getDelta(),.05);
-
-if(controls.isLocked){
-const speed=5;
-let dx=0,dz=0;
-
-if(keys.KeyW)dz+=speed*dt;
-if(keys.KeyS)dz-=speed*dt;
-if(keys.KeyA)dx-=speed*dt;
-if(keys.KeyD)dx+=speed*dt;
-
-const forward=new THREE.Vector3();
-camera.getWorldDirection(forward);
-forward.y=0;
-forward.normalize();
-
-const right=new THREE.Vector3()
-.crossVectors(forward,new THREE.Vector3(0,1,0))
-.normalize();
-
-move(
-right.x*dx+forward.x*dz,
-0,
-right.z*dx+forward.z*dz
-);
-
-if(keys.Space&&player.grounded){
-player.velocityY=7;
-player.grounded=false;
+return blocks.has(blockKey(x,y,z));
 }
 
-player.velocityY-=18*dt;
-move(0,player.velocityY*dt,0);
+let last=performance.now();
 
-timer+=dt;
-if(timer>.15){
-timer=0;
-updateChunks();
+function animate(now){
+requestAnimationFrame(animate);
+
+const dt=Math.min((now-last)/1000,.05);
+last=now;
+
+if(controls.isLocked){
+
+const speed=5;
+
+if(keys.KeyW)controls.moveForward(speed*dt);
+if(keys.KeyS)controls.moveForward(-speed*dt);
+if(keys.KeyA)controls.moveRight(-speed*dt);
+if(keys.KeyD)controls.moveRight(speed*dt);
+
+velocityY-=20*dt;
+camera.position.y+=velocityY*dt;
+
+if(collision()){
+if(velocityY<0){
+camera.position.y=Math.floor(camera.position.y-1.7)+2.7;
+grounded=true;
+}
+velocityY=0;
+}else{
+grounded=false;
+}
+
+if(camera.position.y<0){
+camera.position.set(0,14,0);
+velocityY=0;
 }
 }
 
 renderer.render(scene,camera);
 }
 
+animate(performance.now());
+
 addEventListener("resize",()=>{
 camera.aspect=innerWidth/innerHeight;
 camera.updateProjectionMatrix();
 renderer.setSize(innerWidth,innerHeight);
 });
-
-generateChunk(0,0);
-updateChunks();
-animate();
 </script>
+
 </body>
 </html>
