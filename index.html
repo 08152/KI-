@@ -1,186 +1,148 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>3D-Visualisierung: Magazin-Modell</title>
-<style>
-*{box-sizing:border-box}
-body{
- margin:0;
- overflow:hidden;
- background:#1a1a1a;
- touch-action:none;
-}
-canvas{display:block}
-#info{
- position:fixed;
- top:15px;
- left:50%;
- transform:translateX(-50%);
- background:#000b;
- color:white;
- padding:12px 18px;
- border-radius:8px;
- font:16px Arial;
- z-index:2;
- text-align:center;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Springtrap Mesh Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #111;
+            font-family: sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: #00ff00;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px #000;
+            pointer-events: none;
+        }
+    </style>
+    <!-- Three.js für die 3D-Grafik -->
+    <script src="https://cloudflare.com"></script>
+    <!-- OrbitControls für die Maus-Steuerung -->
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
-<div id="info">📐 3D-Visualisierung: Magazin-Komponenten<br><small>Ziehen zum Drehen | Scrollen zum Zoomen</small></div>
+    <div id="info">3D Springtrap Mesh Viewer<br><small>Mit der Maus ziehen zum Drehen | Scrollen zum Zoomen</small></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a1a);
+    <script>
+        // 1. Szene, Kamera und Renderer aufsetzen
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
+        scene.fog = new THREE.FogExp2(0x1a1a1a, 0.05);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 25);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 3, 5);
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-document.body.appendChild(renderer.domElement);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
 
-// Lichtquellen für bessere räumliche Tiefe
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight1.position.set(5, 10, 7);
-scene.add(dirLight1);
-const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
-dirLight2.position.set(-5, -5, -5);
-scene.add(dirLight2);
+        // 2. Steuerung (Kompatibel mit Touchpad, Maus und Touchscreen)
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 2, 0);
 
-// Hauptgruppe für die Rotation
-const magazinGruppe = new THREE.Group();
-scene.add(magazinGruppe);
+        // 3. Beleuchtung (Düstere FNAF-Atmosphäre)
+        const ambientLight = new THREE.AmbientLight(0x333333);
+        scene.add(ambientLight);
 
-// Materialien
-const metallMaterial = new THREE.MeshStandardMaterial({
-    color: 0x333333,
-    roughness: 0.5,
-    metalness: 0.8
-});
-const federMaterial = new THREE.MeshStandardMaterial({
-    color: 0x888888,
-    roughness: 0.3,
-    metalness: 0.9,
-    wireframe: true
-});
-const zubringerMaterial = new THREE.MeshStandardMaterial({
-    color: 0x555555,
-    roughness: 0.6,
-    metalness: 0.2
-});
+        const spotLight = new THREE.SpotLight(0x00ff00, 2);
+        spotLight.position.set(5, 10, 5);
+        spotLight.castShadow = true;
+        scene.add(spotLight);
 
-// 1. Gehäuse (Gekrümmte Form über Extrusion entlang eines Pfades angedeutet)
-const xBreite = 1.3, yTiefe = 3.2; // Proportionen angelehnt an Originalmaße im Maßstab
-const magazinForm = new THREE.Shape();
-magazinForm.moveTo(-xBreite/2, -yTiefe/2);
-magazinForm.lineTo(xBreite/2, -yTiefe/2);
-magazinForm.lineTo(xBreite/2, yTiefe/2);
-magazinForm.lineTo(-xBreite/2, yTiefe/2);
-magazinForm.lineTo(-xBreite/2, -yTiefe/2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(-5, 5, -5);
+        scene.add(directionalLight);
 
-const extrudeSettings = {
-    steps: 20,
-    depth: 10,
-    bevelEnabled: true,
-    bevelThickness: 0.1,
-    bevelSize: 0.05,
-    bevelSegments: 3
-};
+        // 4. Material für den Anzug (Dunkelgrün, metallisch, mit sichtbarem Gitter/Mesh)
+        const armorMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4a5d32,       // Springtrap-Grün
+            roughness: 0.7,
+            metalness: 0.6,
+            wireframe: false       // Auf true setzen, wenn NUR das Gittermodell sichtbar sein soll
+        });
 
-const gehaeuseGeo = new THREE.ExtrudeGeometry(magazinForm, extrudeSettings);
-// Gehäuse leicht krümmen/kippen zur typischen Banasenform
-gehaeuseGeo.translate(0, 0, -5);
-const gehaeuseMesh = new THREE.Mesh(gehaeuseGeo, metallMaterial);
-gehaeuseMesh.rotation.x = Math.PI / 2;
-gehaeuseMesh.position.y = -5;
-magazinGruppe.add(gehaeuseMesh);
+        // Ein zweites Material, um das Drahtgitter (Mesh) über den Körper zu legen
+        const wireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15          // Zeigt das Gitter dezent an
+        });
 
-// 2. Magazinboden (Floor Plate)
-const bodenGeo = new THREE.BoxGeometry(1.6, 0.2, 3.6);
-const bodenMesh = new THREE.Mesh(bodenGeo, metallMaterial);
-bodenMesh.position.set(0, -5.1, 0.2);
-magazinGruppe.add(bodenMesh);
+        // 5. Erstellung einer vereinfachten Springtrap-Figur aus Geometrien
+        const springtrapGroup = new THREE.Group();
 
-// 3. Interne Feder (Visualisiert als Helix/Spirale)
-const federGruppe = new THREE.Group();
-const windungen = 12;
-const punkteProWindung = 30;
-const federPunkte = [];
-for (let i = 0; i < windungen * punkteProWindung; i++) {
-    const t = i / punkteProWindung;
-    const winkel = t * Math.PI * 2;
-    const x = Math.sin(winkel) * 0.4;
-    const y = (i / (windungen * punkteProWindung)) * 9 - 4.8;
-    const z = Math.cos(winkel) * 1.0;
-    federPunkte.push(new THREE.Vector3(x, y, z));
-}
-const federKurve = new THREE.CatmullRomCurve3(federPunkte);
-const federGeo = new THREE.TubeGeometry(federKurve, 200, 0.04, 8, false);
-const federMesh = new THREE.Mesh(federGeo, federMaterial);
-magazinGruppe.add(federMesh);
+        function createPart(geometry, y, x = 0, z = 0) {
+            const mesh = new THREE.Mesh(geometry, armorMaterial);
+            const wire = new THREE.Mesh(geometry, wireframeMaterial);
+            
+            const partGroup = new THREE.Group();
+            partGroup.add(mesh);
+            partGroup.add(wire);
+            partGroup.position.set(x, y, z);
+            
+            springtrapGroup.add(partGroup);
+            return partGroup;
+        }
 
-// 4. Zubringer (Follower - sitzt oben auf der Feder)
-const zubringerGeo = new THREE.BoxGeometry(1.1, 0.5, 2.8);
-const zubringerMesh = new THREE.Mesh(zubringerGeo, zubringerMaterial);
-zubringerMesh.position.set(0, 4.4, 0);
-magazinGruppe.add(zubringerMesh);
+        // Beine
+        createPart(new THREE.CylinderGeometry(0.2, 0.2, 1.2), 0.6, -0.4, 0);
+        createPart(new THREE.CylinderGeometry(0.2, 0.2, 1.2), 0.6, 0.4, 0);
 
-// Zentriere die Gruppe in der Szene
-magazinGruppe.position.y = 0;
+        // Torso (Körper)
+        createPart(new THREE.CylinderGeometry(0.6, 0.5, 1.5, 8), 2, 0, 0);
 
-// Interaktion: Drehen mit Maus und Touch
-let dragging = false;
-let lastX = 0, lastY = 0;
+        // Kopf
+        const head = createPart(new THREE.BoxGeometry(0.8, 0.9, 0.8), 3.2, 0, 0);
 
-renderer.domElement.addEventListener("pointerdown", e => {
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    renderer.domElement.setPointerCapture(e.pointerId);
-});
+        // Ohren (Springtraps charakteristische kaputte Ohren)
+        createPart(new THREE.CylinderGeometry(0.08, 0.08, 0.6), 3.9, -0.25, 0); // Rechtes Ohr
+        createPart(new THREE.CylinderGeometry(0.08, 0.08, 0.3), 3.7, 0.25, 0);  // Linkes Ohr (abgerissen/kurz)
 
-renderer.domElement.addEventListener("pointermove", e => {
-    if (!dragging) return;
+        // Arme
+        createPart(new THREE.CylinderGeometry(0.15, 0.15, 1), 2.2, -0.8, 0).rotation.z = 0.2;
+        createPart(new THREE.CylinderGeometry(0.15, 0.15, 1), 2.2, 0.8, 0).rotation.z = -0.2;
 
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
+        scene.add(springtrapGroup);
 
-    magazinGruppe.rotation.y += dx * 0.01;
-    magazinGruppe.rotation.x += dy * 0.01;
+        // Bodenplatte
+        const floorGeo = new THREE.PlaneGeometry(10, 10);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
 
-    lastX = e.clientX;
-    lastY = e.clientY;
-});
+        // 6. Animations-Schleife
+        function animate() {
+            requestAnimationFrame(animate);
 
-renderer.domElement.addEventListener("pointerup", () => { dragging = false; });
-renderer.domElement.addEventListener("pointercancel", () => { dragging = false; });
+            // Langsame automatische Drehung zur Demonstration
+            springtrapGroup.rotation.y += 0.005;
 
-// Zoom-Funktion per Scrollrad hinzufügen
-window.addEventListener("wheel", e => {
-    camera.position.z += e.deltaY * 0.02;
-    camera.position.z = Math.max(5, Math.min(camera.position.z, 50));
-});
+            controls.update();
+            renderer.render(scene, camera);
+        }
 
-// Animationsschleife
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-animate();
+        // Fenstergröße automatisch anpassen
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
 
-// Anpassung bei Größenänderung des Fensters
-window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-</script>
+        animate();
+    </script>
 </body>
 </html>
