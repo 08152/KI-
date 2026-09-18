@@ -1,631 +1,186 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Block World</title>
+<title>3D-Visualisierung: Magazin-Modell</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial;touch-action:none}
-#ui{position:fixed;top:10px;left:10px;z-index:30;background:#000b;color:white;padding:12px;border:2px solid #555;border-radius:8px}
-button{padding:10px;margin-top:7px}
-#crosshair{position:fixed;top:50%;left:50%;color:white;font-size:24px;transform:translate(-50%,-50%);pointer-events:none;z-index:5}
-#hotbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:5px;background:#222b;padding:5px;z-index:20}
-.slot{width:52px;height:52px;background:#444;border:3px solid #777;color:white;text-align:center;font-size:10px;padding:3px}
-.slot.selected{border-color:white}
-.slot img{width:30px;height:30px;image-rendering:pixelated}
-#inventory{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#292929;border:4px solid #111;padding:15px;color:white;width:300px;z-index:50}
-#invslots{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.invslot{height:55px;background:#444;border:2px solid #777;text-align:center;padding:4px}
-.invslot img{width:30px;height:30px}
-#mobileControls{position:fixed;bottom:85px;left:15px;z-index:25;display:grid;grid-template-columns:repeat(3,60px);gap:6px}
-.moveBtn,#jumpBtn{width:60px;height:60px;font-size:23px;background:#222b;color:white;border:2px solid white;border-radius:12px;touch-action:none}
-#jumpBtn{position:fixed;right:20px;bottom:35px;width:85px;height:85px;border-radius:50%;font-size:14px;z-index:25}
-#lookArea{position:fixed;right:0;top:0;width:55%;height:75%;z-index:10;touch-action:none}
+body{
+ margin:0;
+ overflow:hidden;
+ background:#1a1a1a;
+ touch-action:none;
+}
+canvas{display:block}
+#info{
+ position:fixed;
+ top:15px;
+ left:50%;
+ transform:translateX(-50%);
+ background:#000b;
+ color:white;
+ padding:12px 18px;
+ border-radius:8px;
+ font:16px Arial;
+ z-index:2;
+ text-align:center;
+}
 </style>
 </head>
 <body>
 
-<div id="ui">
-<b>BLOCK WORLD</b><br>
-<span id="info">Lade Welt...</span><br>
-<button id="newWorld">Neue Welt</button>
-</div>
+<div id="info">📐 3D-Visualisierung: Magazin-Komponenten<br><small>Ziehen zum Drehen | Scrollen zum Zoomen</small></div>
 
-<div id="crosshair">+</div>
-<div id="hotbar"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a1a);
 
-<div id="inventory">
-<h2>Inventar</h2>
-<div id="invslots"></div>
-<br>
-<button id="closeInv">Schließen [E]</button>
-</div>
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 5, 25);
 
-<div id="lookArea"></div>
-
-<div id="mobileControls">
-<button class="moveBtn" id="forward">▲</button>
-<button class="moveBtn" id="backward">▼</button>
-<button class="moveBtn" id="left">◀</button>
-<button class="moveBtn" id="right">▶</button>
-</div>
-
-<button id="jumpBtn">SPRUNG</button>
-
-<script type="importmap">
-{
-"imports":{
-"three":"https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-}
-}
-</script>
-
-<script type="module">
-import * as THREE from "three";
-import {PointerLockControls} from
-"three/addons/controls/PointerLockControls.js";
-
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87ceeb);
-scene.fog=new THREE.Fog(0x87ceeb,35,90);
-
-const camera=new THREE.PerspectiveCamera(
-75,innerWidth/innerHeight,.05,120
-);
-
-const renderer=new THREE.WebGLRenderer({
-antialias:false,
-powerPreference:"high-performance"
-});
-
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(1);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
-const controls=new PointerLockControls(camera,document.body);
-scene.add(controls.getObject());
+// Lichtquellen für bessere räumliche Tiefe
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight1.position.set(5, 10, 7);
+scene.add(dirLight1);
+const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight2.position.set(-5, -5, -5);
+scene.add(dirLight2);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x667788,1.8));
+// Hauptgruppe für die Rotation
+const magazinGruppe = new THREE.Group();
+scene.add(magazinGruppe);
 
-const loader=new THREE.TextureLoader();
-
-function loadTexture(url){
-const t=loader.load(url);
-t.magFilter=THREE.NearestFilter;
-t.minFilter=THREE.NearestFilter;
-t.colorSpace=THREE.SRGBColorSpace;
-return t;
-}
-
-const dirtTexture=loadTexture(
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png"
-);
-
-const stoneTexture=loadTexture(
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png"
-);
-
-const materials={
-dirt:new THREE.MeshLambertMaterial({map:dirtTexture}),
-stone:new THREE.MeshLambertMaterial({map:stoneTexture})
-};
-
-const SIZE=32;
-const HEIGHT=16;
-
-let world=new Map();
-let worldMeshes=[];
-
-const key=(x,y,z)=>x+","+y+","+z;
-
-function terrainHeight(x,z){
-return Math.max(1,Math.min(
-HEIGHT-1,
-Math.floor(
-7+Math.sin(x*.2)*1.5+
-Math.cos(z*.2)*1.5+
-Math.sin((x+z)*.12)
-)
-));
-}
-
-function solid(x,y,z){
-return world.has(key(x,y,z));
-}
-
-const faces=[
-{dir:[1,0,0],corners:[[1,0,0],[1,1,0],[1,1,1],[1,0,1]]},
-{dir:[-1,0,0],corners:[[0,0,1],[0,1,1],[0,1,0],[0,0,0]]},
-{dir:[0,1,0],corners:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]},
-{dir:[0,-1,0],corners:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]},
-{dir:[0,0,1],corners:[[1,0,1],[1,1,1],[0,1,1],[0,0,1]]},
-{dir:[0,0,-1],corners:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]]}
-];
-
-const uvs=[[0,0],[1,0],[1,1],[0,1]];
-
-function buildWorldMesh(type){
-
-const positions=[];
-const normals=[];
-const uv=[];
-const indices=[];
-let vertex=0;
-
-for(let x=-SIZE/2;x<SIZE/2;x++){
-for(let z=-SIZE/2;z<SIZE/2;z++){
-
-const h=terrainHeight(x,z);
-
-for(let y=0;y<h;y++){
-
-if(world.get(key(x,y,z))!==type)continue;
-
-for(const face of faces){
-
-const [dx,dy,dz]=face.dir;
-
-if(solid(x+dx,y+dy,z+dz))continue;
-
-for(let i=0;i<4;i++){
-
-const c=face.corners[i];
-
-positions.push(x+c[0],y+c[1],z+c[2]);
-normals.push(dx,dy,dz);
-uv.push(uvs[i][0],uvs[i][1]);
-
-}
-
-indices.push(
-vertex,vertex+1,vertex+2,
-vertex,vertex+2,vertex+3
-);
-
-vertex+=4;
-}
-}
-}
-}
-
-const geometry=new THREE.BufferGeometry();
-
-geometry.setAttribute(
-"position",
-new THREE.Float32BufferAttribute(positions,3)
-);
-
-geometry.setAttribute(
-"normal",
-new THREE.Float32BufferAttribute(normals,3)
-);
-
-geometry.setAttribute(
-"uv",
-new THREE.Float32BufferAttribute(uv,2)
-);
-
-geometry.setIndex(indices);
-geometry.computeBoundingSphere();
-
-return new THREE.Mesh(geometry,materials[type]);
-}
-
-function generateWorld(){
-
-for(const mesh of worldMeshes){
-scene.remove(mesh);
-mesh.geometry.dispose();
-}
-
-worldMeshes=[];
-world.clear();
-
-for(let x=-SIZE/2;x<SIZE/2;x++){
-for(let z=-SIZE/2;z<SIZE/2;z++){
-
-const h=terrainHeight(x,z);
-
-for(let y=0;y<h;y++){
-
-world.set(
-key(x,y,z),
-y<h-2?"stone":"dirt"
-);
-
-}
-}
-}
-
-const dirtMesh=buildWorldMesh("dirt");
-const stoneMesh=buildWorldMesh("stone");
-
-worldMeshes.push(dirtMesh,stoneMesh);
-scene.add(dirtMesh,stoneMesh);
-
-document.getElementById("info").textContent=
-"Blöcke: "+world.size;
-}
-
-const player=controls.getObject();
-player.position.set(0,14,8);
-
-const playerWidth=.6;
-const playerHeight=1.8;
-
-const velocity=new THREE.Vector3();
-let onGround=false;
-
-const keys={
-KeyW:false,
-KeyA:false,
-KeyS:false,
-KeyD:false
-};
-
-function resetKeys(){
-keys.KeyW=false;
-keys.KeyA=false;
-keys.KeyS=false;
-keys.KeyD=false;
-}
-
-addEventListener("keydown",e=>{
-
-if(["KeyW","KeyA","KeyS","KeyD","Space"].includes(e.code)){
-e.preventDefault();
-}
-
-keys[e.code]=true;
-
-if(e.code==="Space"&&onGround){
-velocity.y=8.5;
-onGround=false;
-}
-
-if(e.code==="KeyE"){
-toggleInventory();
-}
-
-if(e.code.startsWith("Digit")){
-
-const n=Number(e.code.slice(5))-1;
-
-if(n>=0&&n<items.length){
-selected=n;
-renderInventory();
-}
-
-}
+// Materialien
+const metallMaterial = new THREE.MeshStandardMaterial({
+    color: 0x333333,
+    roughness: 0.5,
+    metalness: 0.8
+});
+const federMaterial = new THREE.MeshStandardMaterial({
+    color: 0x888888,
+    roughness: 0.3,
+    metalness: 0.9,
+    wireframe: true
+});
+const zubringerMaterial = new THREE.MeshStandardMaterial({
+    color: 0x555555,
+    roughness: 0.6,
+    metalness: 0.2
 });
 
-addEventListener("keyup",e=>{
-keys[e.code]=false;
-});
+// 1. Gehäuse (Gekrümmte Form über Extrusion entlang eines Pfades angedeutet)
+const xBreite = 1.3, yTiefe = 3.2; // Proportionen angelehnt an Originalmaße im Maßstab
+const magazinForm = new THREE.Shape();
+magazinForm.moveTo(-xBreite/2, -yTiefe/2);
+magazinForm.lineTo(xBreite/2, -yTiefe/2);
+magazinForm.lineTo(xBreite/2, yTiefe/2);
+magazinForm.lineTo(-xBreite/2, yTiefe/2);
+magazinForm.lineTo(-xBreite/2, -yTiefe/2);
 
-function collides(pos){
-
-const minX=Math.floor(pos.x-playerWidth/2);
-const maxX=Math.floor(pos.x+playerWidth/2);
-const minY=Math.floor(pos.y);
-const maxY=Math.floor(pos.y+playerHeight);
-const minZ=Math.floor(pos.z-playerWidth/2);
-const maxZ=Math.floor(pos.z+playerWidth/2);
-
-for(let x=minX;x<=maxX;x++){
-for(let y=minY;y<=maxY;y++){
-for(let z=minZ;z<=maxZ;z++){
-
-if(!solid(x,y,z))continue;
-
-if(
-pos.x+playerWidth/2>x&&
-pos.x-playerWidth/2<x+1&&
-pos.y+playerHeight>y&&
-pos.y<y+1&&
-pos.z+playerWidth/2>z&&
-pos.z-playerWidth/2<z+1
-)return true;
-
-}
-}
-}
-
-return false;
-}
-
-function moveAxis(axis,amount){
-
-const old=player.position[axis];
-
-player.position[axis]+=amount;
-
-if(collides(player.position)){
-player.position[axis]=old;
-return false;
-}
-
-return true;
-}
-
-function physics(dt){
-
-const speed=5.5;
-
-let forward=0;
-let side=0;
-
-if(keys.KeyW)forward++;
-if(keys.KeyS)forward--;
-if(keys.KeyA)side--;
-if(keys.KeyD)side++;
-
-const len=Math.hypot(forward,side);
-
-if(len){
-forward/=len;
-side/=len;
-}
-
-const yaw=player.rotation.y;
-
-const dx=(
-side*Math.cos(yaw)+
-forward*Math.sin(yaw)
-)*speed*dt;
-
-const dz=(
-forward*Math.cos(yaw)-
-side*Math.sin(yaw)
-)*speed*dt;
-
-moveAxis("x",dx);
-moveAxis("z",dz);
-
-// SCHWERKRAFT
-velocity.y-=28*dt;
-
-const oldY=player.position.y;
-
-player.position.y+=velocity.y*dt;
-
-if(collides(player.position)){
-
-player.position.y=oldY;
-
-if(velocity.y<0){
-onGround=true;
-}
-
-velocity.y=0;
-
-}else{
-onGround=false;
-}
-
-if(player.position.y<-20){
-
-player.position.set(0,14,8);
-velocity.set(0,0,0);
-onGround=false;
-
-}
-}
-
-const items=[
-{name:"dirt",count:64},
-{name:"stone",count:64},
-{name:"dirt",count:32},
-{name:"stone",count:32}
-];
-
-let selected=0;
-
-const hotbar=document.getElementById("hotbar");
-const invslots=document.getElementById("invslots");
-const inventory=document.getElementById("inventory");
-
-function renderInventory(){
-
-hotbar.innerHTML="";
-invslots.innerHTML="";
-
-items.forEach((item,i)=>{
-
-const imgSrc=item.name==="dirt"?
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/dirt.png":
-"https://assets.mcasset.cloud/1.21.4/assets/minecraft/textures/block/stone.png";
-
-const slot=document.createElement("div");
-
-slot.className="slot"+(
-i===selected?" selected":""
-);
-
-slot.innerHTML=
-`<img src="${imgSrc}"><br>${item.name} ${item.count}`;
-
-slot.onclick=()=>{
-selected=i;
-renderInventory();
+const extrudeSettings = {
+    steps: 20,
+    depth: 10,
+    bevelEnabled: true,
+    bevelThickness: 0.1,
+    bevelSize: 0.05,
+    bevelSegments: 3
 };
 
-hotbar.appendChild(slot);
+const gehaeuseGeo = new THREE.ExtrudeGeometry(magazinForm, extrudeSettings);
+// Gehäuse leicht krümmen/kippen zur typischen Banasenform
+gehaeuseGeo.translate(0, 0, -5);
+const gehaeuseMesh = new THREE.Mesh(gehaeuseGeo, metallMaterial);
+gehaeuseMesh.rotation.x = Math.PI / 2;
+gehaeuseMesh.position.y = -5;
+magazinGruppe.add(gehaeuseMesh);
 
-const inv=slot.cloneNode(true);
-inv.className="invslot";
-invslots.appendChild(inv);
+// 2. Magazinboden (Floor Plate)
+const bodenGeo = new THREE.BoxGeometry(1.6, 0.2, 3.6);
+const bodenMesh = new THREE.Mesh(bodenGeo, metallMaterial);
+bodenMesh.position.set(0, -5.1, 0.2);
+magazinGruppe.add(bodenMesh);
 
-});
+// 3. Interne Feder (Visualisiert als Helix/Spirale)
+const federGruppe = new THREE.Group();
+const windungen = 12;
+const punkteProWindung = 30;
+const federPunkte = [];
+for (let i = 0; i < windungen * punkteProWindung; i++) {
+    const t = i / punkteProWindung;
+    const winkel = t * Math.PI * 2;
+    const x = Math.sin(winkel) * 0.4;
+    const y = (i / (windungen * punkteProWindung)) * 9 - 4.8;
+    const z = Math.cos(winkel) * 1.0;
+    federPunkte.push(new THREE.Vector3(x, y, z));
 }
+const federKurve = new THREE.CatmullRomCurve3(federPunkte);
+const federGeo = new THREE.TubeGeometry(federKurve, 200, 0.04, 8, false);
+const federMesh = new THREE.Mesh(federGeo, federMaterial);
+magazinGruppe.add(federMesh);
 
-function toggleInventory(){
+// 4. Zubringer (Follower - sitzt oben auf der Feder)
+const zubringerGeo = new THREE.BoxGeometry(1.1, 0.5, 2.8);
+const zubringerMesh = new THREE.Mesh(zubringerGeo, zubringerMaterial);
+zubringerMesh.position.set(0, 4.4, 0);
+magazinGruppe.add(zubringerMesh);
 
-if(inventory.style.display==="block"){
+// Zentriere die Gruppe in der Szene
+magazinGruppe.position.y = 0;
 
-inventory.style.display="none";
+// Interaktion: Drehen mit Maus und Touch
+let dragging = false;
+let lastX = 0, lastY = 0;
 
-}else{
-
-inventory.style.display="block";
-controls.unlock();
-resetKeys();
-
-}
-}
-
-document.getElementById("closeInv").onclick=()=>{
-inventory.style.display="none";
-};
-
-document.getElementById("newWorld").onclick=()=>{
-
-generateWorld();
-
-player.position.set(0,14,8);
-velocity.set(0,0,0);
-onGround=false;
-
-};
-
-document.getElementById("jumpBtn").addEventListener(
-"pointerdown",e=>{
-
-e.preventDefault();
-
-if(onGround){
-
-velocity.y=8.5;
-onGround=false;
-
-}
-
-}
-);
-
-const mobileButtons={
-forward:"KeyW",
-backward:"KeyS",
-left:"KeyA",
-right:"KeyD"
-};
-
-for(const id in mobileButtons){
-
-const button=document.getElementById(id);
-const code=mobileButtons[id];
-
-const press=e=>{
-e.preventDefault();
-keys[code]=true;
-};
-
-const release=e=>{
-e.preventDefault();
-keys[code]=false;
-};
-
-button.addEventListener("pointerdown",press);
-button.addEventListener("pointerup",release);
-button.addEventListener("pointercancel",release);
-button.addEventListener("pointerleave",release);
-
-}
-
-let looking=false;
-let lastX=0;
-let lastY=0;
-
-const lookArea=document.getElementById("lookArea");
-
-lookArea.addEventListener("pointerdown",e=>{
-
-looking=true;
-lastX=e.clientX;
-lastY=e.clientY;
-
-lookArea.setPointerCapture(e.pointerId);
-
+renderer.domElement.addEventListener("pointerdown", e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    renderer.domElement.setPointerCapture(e.pointerId);
 });
 
-lookArea.addEventListener("pointermove",e=>{
+renderer.domElement.addEventListener("pointermove", e => {
+    if (!dragging) return;
 
-if(!looking)return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
 
-const dx=e.clientX-lastX;
-const dy=e.clientY-lastY;
+    magazinGruppe.rotation.y += dx * 0.01;
+    magazinGruppe.rotation.x += dy * 0.01;
 
-lastX=e.clientX;
-lastY=e.clientY;
-
-player.rotation.y-=dx*.004;
-camera.rotation.x-=dy*.004;
-
-camera.rotation.x=Math.max(
--Math.PI/2.1,
-Math.min(Math.PI/2.1,camera.rotation.x)
-);
-
+    lastX = e.clientX;
+    lastY = e.clientY;
 });
 
-lookArea.addEventListener("pointerup",()=>{
-looking=false;
+renderer.domElement.addEventListener("pointerup", () => { dragging = false; });
+renderer.domElement.addEventListener("pointercancel", () => { dragging = false; });
+
+// Zoom-Funktion per Scrollrad hinzufügen
+window.addEventListener("wheel", e => {
+    camera.position.z += e.deltaY * 0.02;
+    camera.position.z = Math.max(5, Math.min(camera.position.z, 50));
 });
 
-lookArea.addEventListener("pointercancel",()=>{
-looking=false;
-});
-
-renderer.domElement.addEventListener("click",e=>{
-
-if(e.pointerType==="mouse"&&
-inventory.style.display!=="block"){
-
-controls.lock();
-
+// Animationsschleife
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
 }
-
-});
-
-generateWorld();
-renderInventory();
-
-const clock=new THREE.Clock();
-
-function animate(){
-
-requestAnimationFrame(animate);
-
-const dt=Math.min(clock.getDelta(),.04);
-
-if(
-inventory.style.display!=="block"&&
-(controls.isLocked||innerWidth<800)
-){
-
-physics(dt);
-
-}
-
-renderer.render(scene,camera);
-
-}
-
 animate();
 
-addEventListener("resize",()=>{
-
-camera.aspect=innerWidth/innerHeight;
-camera.updateProjectionMatrix();
-
-renderer.setSize(innerWidth,innerHeight);
-
+// Anpassung bei Größenänderung des Fensters
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
 </script>
 </body>
 </html>
