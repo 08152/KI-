@@ -1,193 +1,327 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Springtrap 3D Mesh - GitHub Showcase</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #0b0f0b;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        #ui-layer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #39ff14;
-            text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
-            pointer-events: none;
-            z-index: 10;
-        }
-        h1 { 
-            margin: 0 0 5px 0; 
-            font-size: 22px; 
-            letter-spacing: 2px;
-        }
-        p { 
-            margin: 0; 
-            font-size: 12px; 
-            color: #88be88;
-        }
-    </style>
-    <!-- Sichere CDN-Links für maximale GitHub-Kompatibilität -->
-    <script src="https://cloudflare.com"></script>
-    <script src="https://jsdelivr.net"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Block World Alpha</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#000;font-family:monospace;image-rendering:pixelated}
+canvas{display:block}
+#menu{
+position:fixed;inset:0;z-index:20;
+background:linear-gradient(#0005,#0008),#7896a0;
+display:flex;flex-direction:column;align-items:center;
+padding-top:13vh;color:white;text-shadow:3px 3px #333;
+}
+#menu h1{
+font-family:Arial,sans-serif;font-size:clamp(35px,8vw,80px);
+font-weight:900;transform:rotate(-5deg);
+margin:0 0 5px;color:#fff;
+text-shadow:5px 5px #333,8px 8px #222;
+}
+.subtitle{font-size:14px;margin-bottom:45px}
+.buttons{width:min(420px,85vw);display:flex;flex-direction:column;gap:10px}
+button{
+height:48px;border:3px solid #111;
+background:linear-gradient(#aaa,#777);
+box-shadow:inset 0 0 0 2px #ddd,3px 3px #222;
+font:bold 18px monospace;color:#fff;text-shadow:2px 2px #333;
+cursor:pointer;
+}
+button:hover{background:linear-gradient(#ccc,#999)}
+#options{display:none;position:fixed;inset:0;z-index:25;background:#222e;color:white;align-items:center;justify-content:center;flex-direction:column}
+#hud{position:fixed;top:10px;left:10px;color:white;text-shadow:2px 2px #000;z-index:5;display:none}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:25px;text-shadow:2px 2px #000;z-index:5;display:none}
+#hotbar{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:none;z-index:5;gap:3px}
+.slot{width:42px;height:42px;background:#555b;border:3px solid #222;box-shadow:inset 0 0 0 2px #888;color:white;text-align:center;padding-top:9px}
+.slot.active{border-color:#fff}
+#touch{display:none;position:fixed;bottom:20px;left:20px;z-index:10}
+.touchbtn{width:50px;height:50px;margin:2px;font-size:20px;background:#555b;color:white;border:2px solid white}
+@media(pointer:coarse){#touch{display:block}}
+</style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <h1>SPRINGTRAP_MESH // ONLINE</h1>
-        <p>● Maus/Touchpad ziehen zum Rotieren</p>
-        <p>● Scrollen zum Zoomen</p>
-    </div>
+<div id="menu">
+<h1>BLOCK WORLD</h1>
+<div class="subtitle">Alpha Edition • CC0 Pixel World</div>
+<div class="buttons">
+<button id="play">Singleplayer</button>
+<button id="optionsBtn">Options...</button>
+<button id="quit">Quit Game</button>
+</div>
+<div style="margin-top:55px;font-size:12px">Block World Alpha 0.1</div>
+</div>
 
-    <script>
-        // --- 1. Szene & Kamera ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x070a07);
-        scene.fog = new THREE.FogExp2(0x070a07, 0.07);
+<div id="options">
+<h2>OPTIONS</h2>
+<p>Mouse: Umschauen</p>
+<p>WASD: Bewegen | Leertaste: Springen</p>
+<button id="back">Zurück</button>
+</div>
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2.5, 4.5);
+<div id="hud">Block World Alpha<br>WASD • SPACE • MOUSE</div>
+<div id="crosshair">+</div>
+<div id="hotbar">
+<div class="slot active">1</div>
+<div class="slot">2</div>
+<div class="slot">3</div>
+<div class="slot">4</div>
+<div class="slot">5</div>
+</div>
 
-        // --- 2. WebGL Renderer ---
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Performance-Limit für Chromebooks
-        document.body.appendChild(renderer.domElement);
+<div id="touch">
+<button class="touchbtn" id="up">▲</button><br>
+<button class="touchbtn" id="left">◀</button>
+<button class="touchbtn" id="down">▼</button>
+<button class="touchbtn" id="right">▶</button>
+</div>
 
-        // --- 3. Steuerung ---
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Kamera kann nicht unter den Boden fliegen
-        controls.target.set(0, 1.3, 0);
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
 
-        // --- 4. Beleuchtung ---
-        const ambientLight = new THREE.AmbientLight(0x112211, 1.5);
-        scene.add(ambientLight);
+<script type="module">
+import * as THREE from "three";
+import {PointerLockControls} from
+"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/PointerLockControls.js";
 
-        const greenSpot = new THREE.SpotLight(0x39ff14, 5, 15, Math.PI / 4, 0.5, 1);
-        greenSpot.position.set(3, 5, 3);
-        scene.add(greenSpot);
+const menu=document.getElementById("menu");
+const options=document.getElementById("options");
+const hud=document.getElementById("hud");
+const crosshair=document.getElementById("crosshair");
+const hotbar=document.getElementById("hotbar");
 
-        const backLight = new THREE.DirectionalLight(0xff3300, 0.8); // Rotes Warnlicht von hinten
-        backLight.position.set(-3, 2, -4);
-        scene.add(backLight);
+let started=false;
 
-        // --- 5. Materialien (Solid + Leuchtendes Gitter/Mesh) ---
-        const suitMaterial = new THREE.MeshStandardMaterial({
-            color: 0x3d4f28,       // Verrottetes Olivgrün
-            roughness: 0.8,
-            metalness: 0.3
-        });
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87b5d4);
+scene.fog=new THREE.Fog(0x87b5d4,30,80);
 
-        const meshOverlayMaterial = new THREE.MeshBasicMaterial({
-            color: 0x55ff55,       // Hellgrünes Gitternetz
-            wireframe: true,
-            transparent: true,
-            opacity: 0.35
-        });
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,150);
+camera.position.set(0,5,8);
 
-        // Helfer-Funktion für Bauteile
-        function addSuitPart(geometry, position, rotation =, parent = scene) {
-            const group = new THREE.Group();
-            
-            const baseMesh = new THREE.Mesh(geometry, suitMaterial);
-            const wireMesh = new THREE.Mesh(geometry, meshOverlayMaterial);
-            
-            group.add(baseMesh);
-            group.add(wireMesh);
-            group.position.set(...position);
-            group.rotation.set(...rotation);
-            
-            parent.add(group);
-            return group;
-        }
+const renderer=new THREE.WebGLRenderer({antialias:false});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
 
-        // --- 6. Prozeduraler Springtrap-Anzug ---
-        const springtrap = new THREE.Group();
+const controls=new PointerLockControls(camera,document.body);
 
-        // Torso & Bauch-Ausschnitt
-        const torsoGeo = new THREE.CylinderGeometry(0.5, 0.4, 1.2, 12, 4);
-        addSuitPart(torsoGeo, [0, 1.2, 0], [0,0,0], springtrap);
+document.getElementById("play").onclick=()=>{
+started=true;
+controls.lock();
+};
 
-        // Kopf
-        const headGeo = new THREE.SphereGeometry(0.38, 12, 12);
-        headGeo.scale(1, 1.1, 0.9);
-        const head = addSuitPart(headGeo, [0, 2.05, 0], [0,0,0], springtrap);
+document.getElementById("optionsBtn").onclick=()=>{
+options.style.display="flex";
+menu.style.display="none";
+};
 
-        // Kiefer / Schnauze
-        const jawGeo = new THREE.BoxGeometry(0.35, 0.15, 0.25, 4, 2, 2);
-        addSuitPart(jawGeo, [0, -0.15, 0.2], [0,0,0], head);
+document.getElementById("back").onclick=()=>{
+options.style.display="none";
+menu.style.display="flex";
+};
 
-        // Ohren (Das rechte ist lang, das linke abgebrochen)
-        const earSegmentGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.35, 6, 2);
-        
-        // Rechtes Ohr (Komplett)
-        const earR1 = addSuitPart(earSegmentGeo, [0.18, 0.45, 0], [0, 0, -0.1], head);
-        addSuitPart(earSegmentGeo, [0, 0.3, 0], [0, 0, -0.1], earR1);
+document.getElementById("quit").onclick=()=>{
+document.querySelector("#menu .subtitle").textContent="Du kannst dieses Spiel schließen.";
+};
 
-        // Linkes Ohr (Zerstörter Stumpf)
-        const earL1 = addSuitPart(earSegmentGeo, [-0.18, 0.42, 0], [0, 0, 0.1], head);
-        const stubGeo = new THREE.CylinderGeometry(0.02, 0.06, 0.1, 4, 1);
-        addSuitPart(stubGeo, [-0.02, 0.2, 0], [0, 0, 0.2], earL1);
+controls.addEventListener("lock",()=>{
+menu.style.display="none";
+options.style.display="none";
+hud.style.display="block";
+crosshair.style.display="block";
+hotbar.style.display="flex";
+});
 
-        // Arme (Schultern & Unterarme)
-        const armGeo = new THREE.CylinderGeometry(0.14, 0.12, 0.5, 8, 3);
-        
-        const leftArm = addSuitPart(armGeo, [-0.7, 1.5, 0], [0, 0, 0.5], springtrap);
-        addSuitPart(armGeo, [0, -0.4, 0.1], [0.3, 0, 0], leftArm);
+controls.addEventListener("unlock",()=>{
+if(started){
+menu.style.display="flex";
+hud.style.display="none";
+crosshair.style.display="none";
+hotbar.style.display="none";
+}
+});
 
-        const rightArm = addSuitPart(armGeo, [0.7, 1.5, 0], [0, 0, -0.5], springtrap);
-        addSuitPart(armGeo, [0, -0.4, 0.1], [0.3, 0, 0], rightArm);
+const light=new THREE.HemisphereLight(0xffffff,0x667788,2);
+scene.add(light);
 
-        // Beine
-        const legGeo = new THREE.CylinderGeometry(0.16, 0.14, 0.6, 8, 3);
-        
-        const leftLeg = addSuitPart(legGeo, [-0.25, 0.4, 0], [0, 0, 0.05], springtrap);
-        addSuitPart(legGeo, [0, -0.5, 0], [-0.1, 0, 0], leftLeg);
+const sun=new THREE.DirectionalLight(0xffffff,1.8);
+sun.position.set(20,40,10);
+scene.add(sun);
 
-        const rightLeg = addSuitPart(legGeo, [0.25, 0.4, 0], [0, 0, -0.05], springtrap);
-        addSuitPart(legGeo, [0, -0.5, 0], [-0.1, 0, 0], rightLeg);
+const geometry=new THREE.BoxGeometry(1,1,1);
 
-        scene.add(springtrap);
+function pixelTexture(base,detail){
+const c=document.createElement("canvas");
+c.width=16;c.height=16;
+const ctx=c.getContext("2d");
+ctx.fillStyle=base;
+ctx.fillRect(0,0,16,16);
+for(let i=0;i<45;i++){
+ctx.fillStyle=detail;
+ctx.fillRect(Math.random()*16|0,Math.random()*16|0,1,1);
+}
+const t=new THREE.CanvasTexture(c);
+t.magFilter=THREE.NearestFilter;
+t.minFilter=THREE.NearestFilter;
+return t;
+}
 
-        // --- 7. Boden-Gitter ---
-        const grid = new THREE.GridHelper(16, 16, 0x1f3d1f, 0x0d1a0d);
-        grid.position.y = -0.4;
-        scene.add(grid);
+const grass=pixelTexture("#6fae3b","#47752a");
+const dirt=pixelTexture("#936039","#684025");
+const stone=pixelTexture("#888888","#666666");
+const wood=pixelTexture("#98653a","#5e3d24");
+const leaves=pixelTexture("#397b32","#245526");
 
-        // --- 8. Animation Loop ---
-        const clock = new THREE.Clock();
+const materials={
+grass:new THREE.MeshLambertMaterial({map:grass}),
+dirt:new THREE.MeshLambertMaterial({map:dirt}),
+stone:new THREE.MeshLambertMaterial({map:stone}),
+wood:new THREE.MeshLambertMaterial({map:wood}),
+leaves:new THREE.MeshLambertMaterial({map:leaves})
+};
 
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const time = clock.getElapsedTime();
-            
-            // Subtiles mechanisches "Zittern" und langsame Rotation
-            springtrap.rotation.y = Math.sin(time * 0.15) * 0.25;
-            head.rotation.y = Math.sin(time * 0.8) * 0.08;
-            head.rotation.x = (Math.cos(time * 0.5) * 0.05) + 0.05;
+const blocks=new Map();
 
-            controls.update();
-            renderer.render(scene, camera);
-        }
-        animate();
+function key(x,y,z){return `${x},${y},${z}`}
 
-        // --- 9. Fenster-Resize-Management ---
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+function addBlock(x,y,z,type="grass"){
+if(blocks.has(key(x,y,z)))return;
+const mesh=new THREE.Mesh(geometry,materials[type]);
+mesh.position.set(x,y,z);
+mesh.userData={x,y,z,type};
+scene.add(mesh);
+blocks.set(key(x,y,z),mesh);
+}
+
+function removeBlock(x,y,z){
+const b=blocks.get(key(x,y,z));
+if(!b)return;
+scene.remove(b);
+blocks.delete(key(x,y,z));
+}
+
+// Welt
+for(let x=-20;x<=20;x++){
+for(let z=-20;z<=20;z++){
+let h=3+Math.floor(Math.sin(x*.35)*1.3+Math.cos(z*.3)*1.2);
+h=Math.max(1,Math.min(6,h));
+for(let y=0;y<h;y++){
+addBlock(x,y,z,y===h-1?"grass":y>h-4?"dirt":"stone");
+}
+}
+}
+
+// Bäume
+for(let x=-15;x<=15;x+=7){
+for(let z=-15;z<=15;z+=8){
+if(Math.abs(x)<4&&Math.abs(z)<4)continue;
+for(let y=4;y<7;y++)addBlock(x,y,z,"wood");
+for(let dx=-2;dx<=2;dx++){
+for(let dz=-2;dz<=2;dz++){
+for(let dy=6;dy<=8;dy++){
+if(Math.abs(dx)+Math.abs(dz)+(dy===8?1:0)<4)
+addBlock(x+dx,dy,z+dz,"leaves");
+}
+}
+}
+}
+}
+
+const keys={};
+document.addEventListener("keydown",e=>{
+keys[e.code]=true;
+if(e.code==="Space")e.preventDefault();
+});
+document.addEventListener("keyup",e=>keys[e.code]=false);
+
+let velocityY=0;
+let grounded=false;
+
+const raycaster=new THREE.Raycaster();
+const center=new THREE.Vector2(0,0);
+
+function targetBlock(){
+raycaster.setFromCamera(center,camera);
+const hits=raycaster.intersectObjects([...blocks.values()]);
+return hits.length&&hits[0].distance<6?hits[0]:null;
+}
+
+document.addEventListener("mousedown",e=>{
+if(!controls.isLocked)return;
+const hit=targetBlock();
+if(!hit)return;
+const p=hit.object.userData;
+
+if(e.button===0){
+if(p.y>0)removeBlock(p.x,p.y,p.z);
+}
+if(e.button===2){
+const n=hit.face.normal;
+addBlock(p.x+Math.round(n.x),p.y+Math.round(n.y),p.z+Math.round(n.z),"grass");
+}
+});
+
+document.addEventListener("contextmenu",e=>e.preventDefault());
+
+function bindTouch(id,code){
+const el=document.getElementById(id);
+el.addEventListener("pointerdown",e=>{e.preventDefault();keys[code]=true});
+el.addEventListener("pointerup",e=>{e.preventDefault();keys[code]=false});
+el.addEventListener("pointerleave",()=>keys[code]=false);
+}
+
+bindTouch("up","KeyW");
+bindTouch("down","KeyS");
+bindTouch("left","KeyA");
+bindTouch("right","KeyD");
+
+const clock=new THREE.Clock();
+
+function animate(){
+requestAnimationFrame(animate);
+const dt=Math.min(clock.getDelta(),.05);
+
+if(controls.isLocked){
+const speed=5;
+if(keys.KeyW)controls.moveForward(speed*dt);
+if(keys.KeyS)controls.moveForward(-speed*dt);
+if(keys.KeyA)controls.moveRight(-speed*dt);
+if(keys.KeyD)controls.moveRight(speed*dt);
+
+velocityY-=18*dt;
+camera.position.y+=velocityY*dt;
+
+if(camera.position.y<=4.5){
+camera.position.y=4.5;
+velocityY=0;
+grounded=true;
+}else grounded=false;
+
+if(keys.Space&&grounded){
+velocityY=7;
+grounded=false;
+}
+
+camera.position.x=Math.max(-19,Math.min(19,camera.position.x));
+camera.position.z=Math.max(-19,Math.min(19,camera.position.z));
+}
+
+renderer.render(scene,camera);
+}
+
+addEventListener("resize",()=>{
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth,innerHeight);
+});
+
+animate();
+</script>
 </body>
 </html>
+s
