@@ -4,40 +4,91 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ZIP → EXE</title>
+
 <style>
 *{box-sizing:border-box}
+
 body{
- margin:0;min-height:100vh;background:#080b12;color:#fff;
- font-family:Arial,sans-serif;display:flex;align-items:center;
- justify-content:center
+margin:0;
+min-height:100vh;
+background:#080b12;
+color:white;
+font-family:Arial,sans-serif;
+display:flex;
+align-items:center;
+justify-content:center
 }
+
 .box{
- width:min(700px,92%);background:#111722;border:1px solid #293244;
- border-radius:20px;padding:30px;box-shadow:0 20px 60px #0008
+width:min(700px,92%);
+background:#111722;
+border:1px solid #293244;
+border-radius:20px;
+padding:30px;
+box-shadow:0 20px 60px #0008
 }
+
 h1{margin-top:0}
-.sub{color:#9ca8bc}
+
+.sub{
+color:#9ca8bc;
+margin-bottom:25px
+}
+
 .drop{
- margin-top:25px;border:2px dashed #53627c;border-radius:16px;
- padding:45px 20px;text-align:center;cursor:pointer
+border:2px dashed #53627c;
+border-radius:16px;
+padding:45px 20px;
+text-align:center;
+cursor:pointer
 }
-.drop:hover{background:#ffffff08;border-color:#728cff}
+
+.drop:hover{
+background:#ffffff08;
+border-color:#728cff
+}
+
 input{display:none}
+
 button{
- width:100%;margin-top:20px;padding:15px;border:0;border-radius:12px;
- background:#586cff;color:white;font-size:16px;font-weight:bold;
- cursor:pointer
+width:100%;
+margin-top:20px;
+padding:15px;
+border:0;
+border-radius:12px;
+background:#586cff;
+color:white;
+font-size:16px;
+font-weight:bold;
+cursor:pointer
 }
-button:disabled{opacity:.45;cursor:not-allowed}
+
+button:disabled{
+opacity:.45;
+cursor:not-allowed
+}
+
 .status{
- margin-top:20px;padding:15px;border-radius:12px;background:#090d15;
- white-space:pre-wrap
+margin-top:20px;
+padding:15px;
+border-radius:12px;
+background:#090d15;
+white-space:pre-wrap;
+word-break:break-word
 }
+
 .download{
- display:block;margin-top:15px;padding:14px;border-radius:12px;
- background:#1c9b62;color:white;text-decoration:none;text-align:center;
- font-weight:bold
+display:block;
+margin-top:15px;
+padding:14px;
+border-radius:12px;
+background:#1c9b62;
+color:white;
+text-decoration:none;
+text-align:center;
+font-weight:bold
 }
+
 .good{color:#62e6a0}
 .bad{color:#ff7373}
 </style>
@@ -50,16 +101,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <h1>ZIP → EXE</h1>
 
 <div class="sub">
-Sichere Umwandlung einer Web-App in eine Windows-EXE
+Web-Projekt sicher als Windows-EXE verpacken
 </div>
 
 <div class="drop" id="drop">
-📦<br><br>
-ZIP-Datei auswählen
-<br>
-<small>Nur HTML/Web-Projekte</small>
 
-<input id="file" type="file" accept=".zip">
+📦<br><br>
+
+ZIP-Datei auswählen
+
+<br>
+
+<small>
+HTML / CSS / JavaScript / Bilder
+</small>
+
+<input
+id="file"
+type="file"
+accept=".zip,application/zip"
+>
+
 </div>
 
 <button id="build" disabled>
@@ -74,103 +136,173 @@ Noch keine ZIP ausgewählt.
 
 <script>
 
-const fileInput=document.getElementById("file");
-const drop=document.getElementById("drop");
-const build=document.getElementById("build");
-const status=document.getElementById("status");
+const fileInput =
+document.getElementById("file");
+
+const drop =
+document.getElementById("drop");
+
+const build =
+document.getElementById("build");
+
+const status =
+document.getElementById("status");
 
 let selectedFile=null;
 
 drop.onclick=()=>{
-    fileInput.click();
+fileInput.click();
 };
 
 fileInput.onchange=()=>{
-    if(fileInput.files.length){
-        selectedFile=fileInput.files[0];
-
-        status.textContent=
-            "Ausgewählt: "+
-            selectedFile.name+
-            "\nGröße: "+
-            (selectedFile.size/1024/1024).toFixed(2)+
-            " MB";
-
-        build.disabled=false;
-    }
+if(fileInput.files.length){
+selectFile(fileInput.files[0]);
+}
 };
 
 drop.ondragover=e=>{
-    e.preventDefault();
+e.preventDefault();
+drop.style.borderColor="#728cff";
+};
+
+drop.ondragleave=()=>{
+drop.style.borderColor="";
 };
 
 drop.ondrop=e=>{
-    e.preventDefault();
 
-    if(e.dataTransfer.files.length){
-        selectedFile=e.dataTransfer.files[0];
+e.preventDefault();
 
-        status.textContent=
-            "Ausgewählt: "+
-            selectedFile.name;
+drop.style.borderColor="";
 
-        build.disabled=false;
-    }
+if(e.dataTransfer.files.length){
+selectFile(e.dataTransfer.files[0]);
+}
+
 };
+
+function selectFile(file){
+
+selectedFile=file;
+
+if(!file.name.toLowerCase().endsWith(".zip")){
+
+status.innerHTML=
+'<span class="bad">✕</span> Nur ZIP-Dateien sind erlaubt.';
+
+build.disabled=true;
+
+return;
+}
+
+status.textContent=
+"ZIP ausgewählt:\n"+
+file.name+
+"\n\nGröße: "+
+(file.size/1024/1024).toFixed(2)+
+" MB";
+
+build.disabled=false;
+}
 
 build.onclick=async()=>{
 
-    if(!selectedFile)return;
+if(!selectedFile)return;
 
-    build.disabled=true;
+build.disabled=true;
 
-    status.textContent=
-        "ZIP wird sicher geprüft...\n"+
-        "Bitte warten.";
+status.textContent=
+"ZIP wird hochgeladen und geprüft...\n\n"+
+"Bitte warten.";
 
-    try{
+try{
 
-        const form=new FormData();
+const form=new FormData();
 
-        form.append("zip",selectedFile);
+form.append(
+"zip",
+selectedFile
+);
 
-        const response=await fetch(
-            "/api/build",
-            {
-                method:"POST",
-                body:form
-            }
-        );
+const response=await fetch(
+"/api/build",
+{
+method:"POST",
+body:form
+}
+);
 
-        const data=await response.json();
+/*
+WICHTIG:
+Nicht blind response.json() verwenden.
+Wir lesen zuerst den Text.
+*/
 
-        if(!response.ok){
-            throw new Error(
-                data.error || "Fehler"
-            );
-        }
+const text=await response.text();
 
-        status.innerHTML=
-            '<span class="good">✓ EXE erstellt</span>'+
-            '<br><br>'+
-            data.message+
-            '<a class="download" href="'+
-            data.download+
-            '" download>'+
-            'EXE herunterladen'+
-            '</a>';
+let data;
 
-    }catch(error){
+try{
 
-        status.innerHTML=
-            '<span class="bad">✕ Fehler</span>'+
-            '<br><br>'+
-            error.message;
+data=JSON.parse(text);
 
-    }
+}catch{
 
-    build.disabled=false;
+throw new Error(
+"Der Server hat keine gültige JSON-Antwort gesendet.\n\n"+
+"HTTP-Status: "+
+response.status+
+"\n\n"+
+(text
+? text.substring(0,1000)
+: "Leere Antwort vom Server.")
+);
+
+}
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Serverfehler HTTP "+
+response.status
+);
+
+}
+
+status.innerHTML=
+'<span class="good">✓ Fertig</span>'+
+'\n\n'+
+(data.message || "EXE erstellt.")+
+'<a class="download" href="'+
+data.download+
+'">EXE herunterladen</a>';
+
+}catch(error){
+
+status.innerHTML=
+'<span class="bad">✕ Fehler</span>'+
+'\n\n'+
+escapeHtml(error.message);
+
+}finally{
+
+build.disabled=false;
+
+}
+
 };
+
+function escapeHtml(text){
+
+return String(text)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
 
 </script>
 
