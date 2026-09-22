@@ -1,230 +1,177 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Block World 3D</title>
+<title>ZIP → EXE</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;overflow:hidden;background:#87ceeb;font-family:Arial}
-#menu{
-position:fixed;inset:0;z-index:5;
-display:flex;flex-direction:column;
-align-items:center;justify-content:center;
-background:#0009;color:white
+body{
+ margin:0;min-height:100vh;background:#080b12;color:#fff;
+ font-family:Arial,sans-serif;display:flex;align-items:center;
+ justify-content:center
 }
-h1{font-size:48px;text-shadow:4px 4px #222}
-button{padding:15px 60px;font-size:20px;cursor:pointer}
-#cross{position:fixed;left:50%;top:50%;color:white;font-size:25px;z-index:3}
-#info{position:fixed;top:10px;left:10px;color:white;background:#0008;padding:10px;z-index:3}
+.box{
+ width:min(700px,92%);background:#111722;border:1px solid #293244;
+ border-radius:20px;padding:30px;box-shadow:0 20px 60px #0008
+}
+h1{margin-top:0}
+.sub{color:#9ca8bc}
+.drop{
+ margin-top:25px;border:2px dashed #53627c;border-radius:16px;
+ padding:45px 20px;text-align:center;cursor:pointer
+}
+.drop:hover{background:#ffffff08;border-color:#728cff}
+input{display:none}
+button{
+ width:100%;margin-top:20px;padding:15px;border:0;border-radius:12px;
+ background:#586cff;color:white;font-size:16px;font-weight:bold;
+ cursor:pointer
+}
+button:disabled{opacity:.45;cursor:not-allowed}
+.status{
+ margin-top:20px;padding:15px;border-radius:12px;background:#090d15;
+ white-space:pre-wrap
+}
+.download{
+ display:block;margin-top:15px;padding:14px;border-radius:12px;
+ background:#1c9b62;color:white;text-decoration:none;text-align:center;
+ font-weight:bold
+}
+.good{color:#62e6a0}
+.bad{color:#ff7373}
 </style>
 </head>
+
 <body>
 
-<div id="menu">
-<h1>BLOCK WORLD</h1>
-<button id="start">Spielen</button>
+<div class="box">
+
+<h1>ZIP → EXE</h1>
+
+<div class="sub">
+Sichere Umwandlung einer Web-App in eine Windows-EXE
 </div>
 
-<div id="cross">+</div>
-<div id="info">WASD · Maus · Leertaste</div>
+<div class="drop" id="drop">
+📦<br><br>
+ZIP-Datei auswählen
+<br>
+<small>Nur HTML/Web-Projekte</small>
 
-<script type="importmap">
-{
-"imports":{
-"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-}
-}
-</script>
+<input id="file" type="file" accept=".zip">
+</div>
 
-<script type="module">
-import * as THREE from "three";
-import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
+<button id="build" disabled>
+EXE erstellen
+</button>
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87ceeb);
-scene.fog=new THREE.Fog(0x87ceeb,15,45);
+<div class="status" id="status">
+Noch keine ZIP ausgewählt.
+</div>
 
-const camera=new THREE.PerspectiveCamera(
-75,innerWidth/innerHeight,.1,1000
-);
+</div>
 
-const renderer=new THREE.WebGLRenderer({antialias:false});
-renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-document.body.appendChild(renderer.domElement);
+<script>
 
-const controls=new PointerLockControls(camera,document.body);
-const menu=document.getElementById("menu");
+const fileInput=document.getElementById("file");
+const drop=document.getElementById("drop");
+const build=document.getElementById("build");
+const status=document.getElementById("status");
 
-document.getElementById("start").onclick=()=>{
-controls.lock();
+let selectedFile=null;
+
+drop.onclick=()=>{
+    fileInput.click();
 };
 
-controls.addEventListener("lock",()=>{
-menu.style.display="none";
-});
+fileInput.onchange=()=>{
+    if(fileInput.files.length){
+        selectedFile=fileInput.files[0];
 
-controls.addEventListener("unlock",()=>{
-menu.style.display="flex";
-});
+        status.textContent=
+            "Ausgewählt: "+
+            selectedFile.name+
+            "\nGröße: "+
+            (selectedFile.size/1024/1024).toFixed(2)+
+            " MB";
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x555555,2));
-
-const light=new THREE.DirectionalLight(0xffffff,2);
-light.position.set(20,40,10);
-scene.add(light);
-
-function pixelTexture(base,detail){
-const c=document.createElement("canvas");
-c.width=16;c.height=16;
-const ctx=c.getContext("2d");
-ctx.fillStyle=base;
-ctx.fillRect(0,0,16,16);
-
-for(let i=0;i<45;i++){
-ctx.fillStyle=Math.random()>.5?detail:"#00000022";
-ctx.fillRect(
-Math.floor(Math.random()*16),
-Math.floor(Math.random()*16),1,1
-);
-}
-
-const t=new THREE.CanvasTexture(c);
-t.magFilter=THREE.NearestFilter;
-t.minFilter=THREE.NearestFilter;
-return t;
-}
-
-const materials={
-grass:new THREE.MeshLambertMaterial({
-map:pixelTexture("#55a832","#347c25")
-}),
-dirt:new THREE.MeshLambertMaterial({
-map:pixelTexture("#80532f","#59351f")
-}),
-stone:new THREE.MeshLambertMaterial({
-map:pixelTexture("#858585","#555555")
-})
+        build.disabled=false;
+    }
 };
 
-const geometry=new THREE.BoxGeometry(1,1,1);
-const blocks=new Map();
-const objects=[];
+drop.ondragover=e=>{
+    e.preventDefault();
+};
 
-function blockKey(x,y,z){
-return `${x},${y},${z}`;
-}
+drop.ondrop=e=>{
+    e.preventDefault();
 
-function addBlock(x,y,z,type){
-blocks.set(blockKey(x,y,z),type);
-}
+    if(e.dataTransfer.files.length){
+        selectedFile=e.dataTransfer.files[0];
 
-function generateWorld(){
-for(let x=-16;x<16;x++){
-for(let z=-16;z<16;z++){
+        status.textContent=
+            "Ausgewählt: "+
+            selectedFile.name;
 
-const height=5+
-Math.floor(
-Math.sin(x*.3)+Math.cos(z*.25)
-);
+        build.disabled=false;
+    }
+};
 
-for(let y=0;y<=height;y++){
-let type="stone";
+build.onclick=async()=>{
 
-if(y===height)type="grass";
-else if(y>height-3)type="dirt";
+    if(!selectedFile)return;
 
-addBlock(x,y,z,type);
+    build.disabled=true;
 
-const cube=new THREE.Mesh(
-geometry,materials[type]
-);
+    status.textContent=
+        "ZIP wird sicher geprüft...\n"+
+        "Bitte warten.";
 
-cube.position.set(x,y,z);
-scene.add(cube);
-objects.push(cube);
-}
-}
-}
-}
+    try{
 
-generateWorld();
-camera.position.set(0,14,0);
+        const form=new FormData();
 
-const keys={};
-let velocityY=0;
-let grounded=false;
+        form.append("zip",selectedFile);
 
-addEventListener("keydown",e=>{
-keys[e.code]=true;
+        const response=await fetch(
+            "/api/build",
+            {
+                method:"POST",
+                body:form
+            }
+        );
 
-if(e.code==="Space"&&grounded){
-velocityY=7;
-grounded=false;
-}
-});
+        const data=await response.json();
 
-addEventListener("keyup",e=>{
-keys[e.code]=false;
-});
+        if(!response.ok){
+            throw new Error(
+                data.error || "Fehler"
+            );
+        }
 
-function collision(){
-const x=Math.floor(camera.position.x);
-const y=Math.floor(camera.position.y-1.7);
-const z=Math.floor(camera.position.z);
+        status.innerHTML=
+            '<span class="good">✓ EXE erstellt</span>'+
+            '<br><br>'+
+            data.message+
+            '<a class="download" href="'+
+            data.download+
+            '" download>'+
+            'EXE herunterladen'+
+            '</a>';
 
-return blocks.has(blockKey(x,y,z));
-}
+    }catch(error){
 
-let last=performance.now();
+        status.innerHTML=
+            '<span class="bad">✕ Fehler</span>'+
+            '<br><br>'+
+            error.message;
 
-function animate(now){
-requestAnimationFrame(animate);
+    }
 
-const dt=Math.min((now-last)/1000,.05);
-last=now;
+    build.disabled=false;
+};
 
-if(controls.isLocked){
-
-const speed=5;
-
-if(keys.KeyW)controls.moveForward(speed*dt);
-if(keys.KeyS)controls.moveForward(-speed*dt);
-if(keys.KeyA)controls.moveRight(-speed*dt);
-if(keys.KeyD)controls.moveRight(speed*dt);
-
-velocityY-=20*dt;
-camera.position.y+=velocityY*dt;
-
-if(collision()){
-if(velocityY<0){
-camera.position.y=Math.floor(camera.position.y-1.7)+2.7;
-grounded=true;
-}
-velocityY=0;
-}else{
-grounded=false;
-}
-
-if(camera.position.y<0){
-camera.position.set(0,14,0);
-velocityY=0;
-}
-}
-
-renderer.render(scene,camera);
-}
-
-animate(performance.now());
-
-addEventListener("resize",()=>{
-camera.aspect=innerWidth/innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(innerWidth,innerHeight);
-});
 </script>
 
 </body>
