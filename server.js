@@ -1,558 +1,534 @@
 const express = require("express");
+const multer = require("multer");
+const AdmZip = require("adm-zip");
+const fs = require("fs");
 const path = require("path");
+const os = require("os");
+const crypto = require("crypto");
+const {spawn} = require("child_process");
 
 const app = express();
+
 const PORT = process.env.PORT || 10000;
 
-const MAX_RESULTS_PER_WORD = 100;
-const MAX_PAGES_PER_SEARCH = 10;
-const DELAY_BETWEEN_REQUESTS = 2500;
-const BLOCK_WAIT = 15000;
+const MAX_UPLOAD = 20 * 1024 * 1024;
+const MAX_FILES = 500;
+const MAX_TOTAL = 50 * 1024 * 1024;
 
-app.use(express.json({ limit: "2mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits:{
+        fileSize:MAX_UPLOAD,
+        files:1
+    }
+});
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+const allowed = new Set([
+    ".html",
+    ".htm",
+    ".css",
+    ".js",
+    ".mjs",
+    ".json",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".svg",
+    ".ico",
+    ".woff",
+    ".woff2",
+    ".ttf",
+    ".otf",
+    ".mp3",
+    ".wav",
+    ".ogg",
+    ".mp4",
+    ".webm"
+]);
+
+const blocked = new Set([
+    ".exe",
+    ".dll",
+    ".bat",
+    ".cmd",
+    ".com",
+    ".scr",
+    ".msi",
+    ".ps1",
+    ".vbs",
+    ".vbe",
+    ".jscript",
+    ".jse",
+    ".wsf",
+    ".wsh",
+    ".jar",
+    ".apk",
+    ".sh",
+    ".bash",
+    ".so",
+    ".dylib",
+    ".sys",
+    ".ocx"
+]);
+
+function cleanName(name){
+
+    return path
+        .basename(name)
+        .replace(/[^a-zA-Z0-9._-]/g,"_")
+        .slice(0,80) || "WebApp";
 }
 
-function decodeEntities(text) {
-    return String(text)
-        .replace(/&amp;/gi, "&")
-        .replace(/&quot;/gi, '"')
-        .replace(/&#39;/gi, "'")
-        .replace(/&#x27;/gi, "'")
-        .replace(/&lt;/gi, "<")
-        .replace(/&gt;/gi, ">")
-        .replace(/&nbsp;/gi, " ")
-        .replace(/&#(\d+);/g, (_, n) =>
-            String.fromCharCode(Number(n))
-        );
-}
+function safePath(name){
 
-function cleanText(text) {
-    return decodeEntities(
-        String(text)
-            .replace(/<script[\s\S]*?<\/script>/gi, "")
-            .replace(/<style[\s\S]*?<\/style>/gi, "")
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim()
-    );
-}
+    name=name.replace(/\\/g,"/");
 
-function cleanURL(raw) {
-    if (!raw) return null;
-
-    let url = decodeEntities(
-        String(raw).trim()
-    );
-
-    try {
-        const parsed = new URL(
-            url,
-            "https://duckduckgo.com"
-        );
-
-        const uddg =
-            parsed.searchParams.get("uddg");
-
-        if (uddg) {
-            url = uddg;
-        }
-    } catch {}
-
-    try {
-        url = decodeURIComponent(url);
-    } catch {}
-
-    if (
-        !url.startsWith("http://") &&
-        !url.startsWith("https://")
-    ) {
-        return null;
+    if(
+        name.startsWith("/") ||
+        /^[A-Za-z]:/.test(name)
+    ){
+        return false;
     }
 
-    return url;
-}
+    const parts=name.split("/");
 
-function isBlockedPage(html) {
-    const text = String(html).toLowerCase();
-
-    const indicators = [
-        "captcha",
-        "unusual traffic",
-        "automated queries",
-        "too many requests",
-        "rate limit",
-        "access denied",
-        "temporarily blocked",
-        "robot check",
-        "are you a robot"
-    ];
-
-    return indicators.some(
-        indicator =>
-            text.includes(indicator)
-    );
-}
-
-function parseResults(html) {
-    const results = [];
-    const seen = new Set();
-
-    const patterns = [
-        /<a[^>]*class=["'][^"']*result__a[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
-
-        /<a[^>]*href=["']([^"']+)["'][^>]*class=["'][^"']*result__a[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
-    ];
-
-    for (const regex of patterns) {
-        let match;
-
-        while ((match = regex.exec(html))) {
-            const url = cleanURL(match[1]);
-            const title = cleanText(match[2]);
-
-            if (!url || !title) continue;
-
-            if (
-                url.includes("duckduckgo.com") &&
-                !url.includes("uddg=")
-            ) {
-                continue;
-            }
-
-            if (seen.has(url)) continue;
-
-            seen.add(url);
-
-            results.push({
-                title,
-                url
-            });
-
-            if (
-                results.length >= 20
-            ) {
-                return results;
-            }
-        }
+    if(
+        parts.some(
+            p=>!p || p==="." || p===".."
+        )
+    ){
+        return false;
     }
 
-    return results;
+    return true;
 }
 
-async function requestDuckDuckGo(
-    query,
-    page
-) {
-    const offset = page * 30;
+function command(cmd,args,options={}){
 
-    const url =
-        "https://html.duckduckgo.com/html/?" +
-        "q=" +
-        encodeURIComponent(query) +
-        "&s=" +
-        offset;
+    return new Promise((resolve,reject)=>{
 
-    const response = await fetch(
-        url,
-        {
-            redirect: "follow",
-            headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-
-                "Accept":
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-
-                "Accept-Language":
-                    "de-DE,de;q=0.9,en;q=0.8"
+        const process=spawn(
+            cmd,
+            args,
+            {
+                ...options,
+                windowsHide:true
             }
-        }
-    );
-
-    if (
-        response.status === 403 ||
-        response.status === 429
-    ) {
-        return {
-            blocked: true,
-            results: []
-        };
-    }
-
-    if (!response.ok) {
-        throw new Error(
-            `HTTP ${response.status}`
-        );
-    }
-
-    const html =
-        await response.text();
-
-    if (isBlockedPage(html)) {
-        return {
-            blocked: true,
-            results: []
-        };
-    }
-
-    return {
-        blocked: false,
-        results: parseResults(html)
-    };
-}
-
-async function searchQuery(
-    query,
-    maxResults
-) {
-    const results = [];
-    const seen = new Set();
-
-    for (
-        let page = 0;
-        page < MAX_PAGES_PER_SEARCH;
-        page++
-    ) {
-        if (
-            results.length >=
-            maxResults
-        ) {
-            break;
-        }
-
-        let response;
-
-        try {
-            response =
-                await requestDuckDuckGo(
-                    query,
-                    page
-                );
-        } catch (error) {
-            console.error(
-                "Suchfehler:",
-                error.message
-            );
-
-            await sleep(
-                BLOCK_WAIT
-            );
-
-            continue;
-        }
-
-        if (response.blocked) {
-            console.log(
-                "DuckDuckGo blockiert momentan. Warte..."
-            );
-
-            await sleep(
-                BLOCK_WAIT
-            );
-
-            page--;
-            continue;
-        }
-
-        for (
-            const result of response.results
-        ) {
-            if (
-                seen.has(result.url)
-            ) {
-                continue;
-            }
-
-            seen.add(result.url);
-            results.push(result);
-
-            if (
-                results.length >=
-                maxResults
-            ) {
-                break;
-            }
-        }
-
-        if (
-            response.results.length === 0
-        ) {
-            await sleep(
-                DELAY_BETWEEN_REQUESTS
-            );
-            continue;
-        }
-
-        await sleep(
-            DELAY_BETWEEN_REQUESTS
-        );
-    }
-
-    return results.slice(
-        0,
-        maxResults
-    );
-}
-
-// ======================================================
-// BEDEUTUNG SUCHEN
-// ======================================================
-
-async function searchMeaning(word) {
-    const queries = [
-        `"${word}" Bedeutung`,
-        `"${word}" Definition`,
-        `"${word}" Erklärung`
-    ];
-
-    const meaningResults = [];
-    const seen = new Set();
-
-    for (const query of queries) {
-        console.log(
-            `Bedeutungssuche: ${query}`
         );
 
-        const results =
-            await searchQuery(
-                query,
-                10
-            );
+        let output="";
+        let error="";
 
-        for (const result of results) {
-            if (
-                seen.has(result.url)
-            ) {
-                continue;
-            }
-
-            seen.add(result.url);
-
-            meaningResults.push(
-                result
-            );
-
-            if (
-                meaningResults.length >= 10
-            ) {
-                break;
-            }
-        }
-
-        if (
-            meaningResults.length >= 10
-        ) {
-            break;
-        }
-    }
-
-    return meaningResults;
-}
-
-// ======================================================
-// KOMPLETTE SUCHE
-// ======================================================
-
-async function searchWord(word) {
-    console.log(
-        `Normale Suche: ${word}`
-    );
-
-    const results =
-        await searchQuery(
-            word,
-            MAX_RESULTS_PER_WORD
+        process.stdout?.on(
+            "data",
+            data=>output+=data
         );
 
-    console.log(
-        `${results.length} normale Ergebnisse`
-    );
-
-    await sleep(
-        DELAY_BETWEEN_REQUESTS
-    );
-
-    console.log(
-        `Bedeutung: ${word}`
-    );
-
-    const meaning =
-        await searchMeaning(
-            word
+        process.stderr?.on(
+            "data",
+            data=>error+=data
         );
 
-    console.log(
-        `${meaning.length} Bedeutungs-Ergebnisse`
-    );
+        process.on(
+            "error",
+            reject
+        );
 
-    return {
-        word,
-        results,
-        meaning
-    };
+        process.on(
+            "close",
+            code=>{
+
+                if(code===0){
+
+                    resolve({
+                        output,
+                        error
+                    });
+
+                }else{
+
+                    reject(
+                        new Error(
+                            error ||
+                            "7-Zip Fehler"
+                        )
+                    );
+
+                }
+
+            }
+        );
+
+    });
 }
 
-// ======================================================
-// API
-// ======================================================
+app.get("/",(req,res)=>{
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            "index.html"
+        )
+    );
+
+});
 
 app.post(
-    "/api/training/search",
-    async (req, res) => {
-        const word =
-            String(
-                req.body?.word || ""
-            ).trim();
+    "/api/build",
+    upload.single("zip"),
+    async(req,res)=>{
 
-        if (!word) {
-            return res.status(400).json({
-                error:
-                    "Kein Begriff angegeben."
-            });
-        }
+        let work=null;
 
-        try {
-            const data =
-                await searchWord(
-                    word
-                );
+        try{
 
-            res.json({
-                word: data.word,
+            if(!req.file){
 
-                results:
-                    data.results,
+                return res.status(400).json({
+                    error:"Keine ZIP-Datei."
+                });
 
-                meaning:
-                    data.meaning,
+            }
 
-                count:
-                    data.results.length,
+            if(
+                !req.file.originalname
+                    .toLowerCase()
+                    .endsWith(".zip")
+            ){
 
-                meaningCount:
-                    data.meaning.length,
+                return res.status(400).json({
+                    error:"Nur ZIP-Dateien sind erlaubt."
+                });
 
-                maxResults:
-                    MAX_RESULTS_PER_WORD
-            });
+            }
 
-        } catch (error) {
-            console.error(
-                error
+            const id=
+                crypto
+                .randomBytes(12)
+                .toString("hex");
+
+            work=path.join(
+                os.tmpdir(),
+                "safe-web-exe-"+id
             );
 
-            res.status(500).json({
-                error:
-                    "Suche fehlgeschlagen.",
-                details:
-                    error.message
+            const appDir=
+                path.join(work,"app");
+
+            await fs.promises.mkdir(
+                appDir,
+                {recursive:true}
+            );
+
+            const zip=
+                new AdmZip(
+                    req.file.buffer
+                );
+
+            const entries=
+                zip.getEntries();
+
+            if(!entries.length){
+
+                throw new Error(
+                    "Die ZIP ist leer."
+                );
+
+            }
+
+            if(entries.length>MAX_FILES){
+
+                throw new Error(
+                    "Zu viele Dateien."
+                );
+
+            }
+
+            let total=0;
+            let htmlFiles=[];
+
+            for(const entry of entries){
+
+                if(entry.isDirectory)
+                    continue;
+
+                const name=
+                    entry.entryName
+                    .replace(/\\/g,"/");
+
+                if(!safePath(name)){
+
+                    throw new Error(
+                        "Unsicherer Dateipfad."
+                    );
+
+                }
+
+                const ext=
+                    path.extname(name)
+                    .toLowerCase();
+
+                if(blocked.has(ext)){
+
+                    throw new Error(
+                        "Ausführbare Datei blockiert: "+
+                        ext
+                    );
+
+                }
+
+                if(!allowed.has(ext)){
+
+                    throw new Error(
+                        "Nicht erlaubter Dateityp: "+
+                        (ext || "unbekannt")
+                    );
+
+                }
+
+                const data=
+                    entry.getData();
+
+                total+=data.length;
+
+                if(total>MAX_TOTAL){
+
+                    throw new Error(
+                        "Die entpackten Dateien sind zu groß."
+                    );
+
+                }
+
+                const output=
+                    path.join(
+                        appDir,
+                        ...name.split("/")
+                    );
+
+                const resolved=
+                    path.resolve(output);
+
+                const root=
+                    path.resolve(appDir)+
+                    path.sep;
+
+                if(
+                    !resolved.startsWith(root)
+                ){
+
+                    throw new Error(
+                        "Unsicherer Pfad."
+                    );
+
+                }
+
+                await fs.promises.mkdir(
+                    path.dirname(output),
+                    {recursive:true}
+                );
+
+                await fs.promises.writeFile(
+                    output,
+                    data
+                );
+
+                if(
+                    ext===".html" ||
+                    ext===".htm"
+                ){
+
+                    htmlFiles.push(name);
+
+                }
+
+            }
+
+            if(!htmlFiles.length){
+
+                throw new Error(
+                    "Die ZIP benötigt mindestens eine HTML-Datei."
+                );
+
+            }
+
+            const startPage=
+                htmlFiles.find(
+                    x=>x.toLowerCase()==="index.html"
+                ) ||
+                htmlFiles[0];
+
+            const archive=
+                path.join(
+                    work,
+                    "app.7z"
+                );
+
+            const config=
+                path.join(
+                    work,
+                    "config.txt"
+                );
+
+            const output=
+                path.join(
+                    work,
+                    cleanName(
+                        req.file.originalname
+                    ).replace(
+                        /\.zip$/i,
+                        ".exe"
+                    )
+                );
+
+            const configText=
+`;!@Install@!UTF-8!
+Title="Web App"
+RunProgram="cmd.exe /c start \\"\\" \\"%TEMP%\\\\WebApp_${id}\\\\${startPage.replace(/\//g,"\\\\")}\\""
+;!@InstallEnd@!
+`;
+
+            await fs.promises.writeFile(
+                config,
+                configText
+            );
+
+            await command(
+                "7z",
+                [
+                    "a",
+                    "-t7z",
+                    "-mx=5",
+                    archive,
+                    "."
+                ],
+                {
+                    cwd:appDir
+                }
+            );
+
+            const sfx=
+                process.env.SFX_PATH ||
+                "/opt/7zip/7zS.sfx";
+
+            if(
+                !fs.existsSync(sfx)
+            ){
+
+                throw new Error(
+                    "7-Zip SFX ist auf Render nicht installiert."
+                );
+
+            }
+
+            const sfxData=
+                await fs.promises.readFile(sfx);
+
+            const configData=
+                await fs.promises.readFile(config);
+
+            const archiveData=
+                await fs.promises.readFile(archive);
+
+            await fs.promises.writeFile(
+                output,
+                Buffer.concat([
+                    sfxData,
+                    configData,
+                    archiveData
+                ])
+            );
+
+            const download=
+                "/api/download/"+
+                path.basename(output);
+
+            global.generatedFiles=
+                global.generatedFiles || {};
+
+            global.generatedFiles[
+                path.basename(output)
+            ]=output;
+
+            res.json({
+
+                message:
+                    "Die ZIP wurde geprüft und die EXE erstellt.",
+
+                filename:
+                    path.basename(output),
+
+                download
+
             });
-        }
-    }
-);
 
-// ======================================================
-// SEITEN
-// ======================================================
+        }catch(error){
 
-app.get(
-    "/training",
-    (req, res) => {
-        res.sendFile(
-            path.join(
-                __dirname,
-                "public",
-                "training.html"
-            )
-        );
-    }
-);
+            if(work){
 
-app.get(
-    "/",
-    (req, res) => {
-        res.sendFile(
-            path.join(
-                __dirname,
-                "index.html"
-            )
-        );
-    }
-);
+                await fs.promises.rm(
+                    work,
+                    {
+                        recursive:true,
+                        force:true
+                    }
+                ).catch(()=>{});
 
-// ======================================================
-// HEALTH
-// ======================================================
+            }
 
-app.get(
-    "/health",
-    (req, res) => {
-        res.json({
-            status: "ok",
-            maxResults:
-                MAX_RESULTS_PER_WORD,
-            meaningSearch: true
-        });
-    }
-);
+            res.status(400).json({
+                error:
+                    error.message ||
+                    "Erstellung fehlgeschlagen."
+            });
 
-// ======================================================
-// FALLBACK
-// ======================================================
-
-app.use(
-    (req, res, next) => {
-        if (
-            req.path.startsWith(
-                "/api/"
-            )
-        ) {
-            return next();
         }
 
-        res.sendFile(
-            path.join(
-                __dirname,
-                "index.html"
-            )
-        );
     }
 );
 
-// ======================================================
-// START
-// ======================================================
+app.get(
+    "/api/download/:file",
+    (req,res)=>{
+
+        const files=
+            global.generatedFiles || {};
+
+        const file=
+            files[req.params.file];
+
+        if(!file){
+
+            return res.status(404).send(
+                "Datei nicht gefunden."
+            );
+
+        }
+
+        res.download(
+            file,
+            path.basename(file),
+            ()=>{
+                fs.promises.rm(
+                    path.dirname(file),
+                    {
+                        recursive:true,
+                        force:true
+                    }
+                ).catch(()=>{});
+            }
+        );
+
+    }
+);
 
 app.listen(
     PORT,
-    "0.0.0.0",
-    () => {
+    ()=>{
         console.log(
-            "======================================"
-        );
-
-        console.log(
-            "Ghost AI Training Server"
-        );
-
-        console.log(
-            `Port: ${PORT}`
-        );
-
-        console.log(
-            "100 Ergebnisse pro Begriff"
-        );
-
-        console.log(
-            "Bedeutungssuche aktiviert"
-        );
-
-        console.log(
-            "======================================"
+            "ZIP → EXE läuft auf Port "+
+            PORT
         );
     }
 );
