@@ -1,15 +1,18 @@
 {
-  "name": "ghost-ai-training",
+  "name": "safe-zip-to-exe",
   "version": "1.0.0",
-  "description": "Ghost AI with separate training interface",
+  "private": true,
+  "description": "Sicherer ZIP zu EXE Web-App Builder",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "engines": {
-    "node": "24.x"
+    "node": ">=20"
   },
   "dependencies": {
-    "express": "5.1.0"
+    "adm-zip": "^0.5.16",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
   }
 }
